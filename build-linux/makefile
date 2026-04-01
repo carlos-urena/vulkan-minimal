@@ -17,11 +17,18 @@ compiler:=         g++
 compile_options:=  -std=c++20 -g -Wall
 link_options:= 
 
+imgui_git:= ~/git-ct/otros/imgui.git## imgui repository clone folder
+stb_git:=   ~/git-ct/otros/stb.git## folder with STB repository clone
+
+
 ## --------------------------------------------------------------------------------
 ## folder for library sources and link files 
 
+
+stb_include:= -I $(stb_git)
+
 vkhc_folder:= ../src/vkhc## folder with sources for the VKHC classes (Vulkan Helper Classes)
-imgui_git:=   ~/git-ct/otros/imgui.git## imgui repository clone folder
+
 
 # App-specific variables
 app_sources:=  $(wildcard $(app_src_folder)/*.cpp)
@@ -45,7 +52,7 @@ glfw_libs:= -lglfw
 ## IMGUI variables
 ## (repository must be cloned on $(imgui_git) folder)
 
-imgui_incl:= -I $(imgui_git)  -I $(imgui_git)/backends
+imgui_include:= -I $(imgui_git)  -I $(imgui_git)/backends
 imgui_src_names_1:=  imgui.cpp imgui_draw.cpp imgui_widgets.cpp imgui_tables.cpp 
 imgui_src_names_2:=imgui_impl_glfw.cpp imgui_impl_vulkan.cpp
 imgui_src_1:= $(addprefix $(imgui_git)/, $(imgui_src_names_1))
@@ -55,7 +62,7 @@ imgui_objs_2:= $(addprefix $(objs_dir)/, $(notdir $(imgui_src_names_2:.cpp=.o)))
 imgui_objs:=  $(imgui_objs_1) $(imgui_objs_2)
 
 ## include options
-opcs_incl:= $(imgui_incl) $(vkhc_include) $(app_include)
+opcs_incl:= $(imgui_include) $(vkhc_include) $(app_include) $(stb_include)
 
 ## objects to compile
 objs:= $(app_objs) $(vkhc_objs) $(imgui_objs) 
