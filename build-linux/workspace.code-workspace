@@ -22,10 +22,13 @@
     // de quitar 
     "C_Cpp.default.compilerPath"  : "/usr/bin/g++", 
     "C_Cpp.default.cppStandard"   : "c++20",
-    "C_Cpp.default.includePath"   : [ "${workspaceFolder:SRC}/cpp", 
-                                      "~/git-ct/otros/imgui.git",
-                                      "${default}"
-                                    ],
+    "C_Cpp.default.includePath"   : [ 
+      "${workspaceFolder:SRC}/vkhc",
+      "${workspaceFolder:SRC}/app-test-1", 
+      "~/git-ct/otros/imgui.git",             // IMGUI (interface)
+      "~/git-ct/otros/stb.git",               // STB (to load images)
+      "${default}"
+    ],
   },
 
   // indicar extensiones recomendadas y extensiones que no se deben usar (y que no queremos que se recomienden)

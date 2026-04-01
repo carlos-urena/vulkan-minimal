@@ -16,15 +16,20 @@ namespace vkhc
 void SwapChain::createImageView( VkImage & vk_image, VkImageView & vk_image_view )
 {
     assert( surface != nullptr ); 
+    assert( device != nullptr );
+    assert( surface->surfaceFormat.format != VK_FORMAT_UNDEFINED );
 
-    VkImageViewCreateInfo ivci{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
-    ivci.image = vk_image ;
-    ivci.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    ivci.format = surface->surfaceFormat.format;
-    ivci.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    ivci.subresourceRange.levelCount = 1;
-    ivci.subresourceRange.layerCount = 1;
-
+    VkImageViewCreateInfo ivci{ 
+        .sType    = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+        .image    = vk_image ,
+        .viewType = VK_IMAGE_VIEW_TYPE_2D,
+        .format   = surface->surfaceFormat.format,
+        .subresourceRange = {
+            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+            .levelCount = 1,
+            .layerCount = 1,
+        }
+    } ; 
     if ( vkCreateImageView( device->vk_device, &ivci, nullptr, &vk_image_view ) != VK_SUCCESS)
         throw std::runtime_error("Failed to recreate image view");
 }
@@ -86,18 +91,16 @@ void SwapChain::createImages()
 
 void SwapChain::createSwapChain()
 {
+
+    uint32_t desiredImageCount = surface->vk_capabilities.minImageCount + 1;
+    std::cout << "Creating swapchain. Image count min: " << surface->vk_capabilities.minImageCount << ", max: " << surface->vk_capabilities.maxImageCount << "." << std::endl ;
+    if (surface->vk_capabilities.maxImageCount > 0 && desiredImageCount > surface->vk_capabilities.maxImageCount)
+            desiredImageCount = surface->vk_capabilities.maxImageCount;
+    
     VkSwapchainCreateInfoKHR sci{ VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
 
     sci.surface = surface->vk_surface ;
-    {
-        uint32_t desiredImageCount = surface->vk_capabilities.minImageCount + 1;
-        std::cout << "Creating swapchain. Image count min: " << surface->vk_capabilities.minImageCount << ", max: " << surface->vk_capabilities.maxImageCount << "." << std::endl ;
-        if (surface->vk_capabilities.maxImageCount > 0 && desiredImageCount > surface->vk_capabilities.maxImageCount)
-            desiredImageCount = surface->vk_capabilities.maxImageCount;
-        sci.minImageCount = desiredImageCount;
-    }
-    min_image_count = sci.minImageCount ; // register min image count
-
+    sci.minImageCount = desiredImageCount;
     sci.imageFormat = surface->surfaceFormat.format;
     sci.imageColorSpace = surface->surfaceFormat.colorSpace;
     sci.imageExtent = surface->vk_capabilities.currentExtent;
@@ -111,6 +114,9 @@ void SwapChain::createSwapChain()
 
     if ( vkCreateSwapchainKHR(device->vk_device, &sci, nullptr, &vk_swap_chain) != VK_SUCCESS ) // crea la swap chain nueva
         throw std::runtime_error("Failed to recreate swapchain");
+
+
+    min_image_count = sci.minImageCount ; // register min image count
 }
 // -----------------------------------------------------------------------------
 
