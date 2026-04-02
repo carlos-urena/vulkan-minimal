@@ -38,59 +38,92 @@ std::string getGPUTypeDescription( VkPhysicalDeviceType type )
     }
 }
 
-// -------------------------------------------------------------------------------------------------
-// Constructor
+// ---------------------------------------------------------------------------------------------------
+// enumerate available GPUs and selects one of them .
+// initialize 'vk_ava_gpus', 'vk_ava_gpus_props', 'ava_gpus_count'
 
-Device::Device( Instance * instance )
+void Device::enumerateAvailableGPUs( ) 
 {
     assert( instance != nullptr );
-    VkInstance & vk_instance = instance->vk_instance ; 
+    assert( ava_gpus_count == 0 );
+    assert( vk_ava_gpus.empty() ); // check that the constructor is not called twice (this would cause a memory leak, because the destructor is not called for the previous device)
+    //VkInstance & vk_instance = instance->vk_instance ; 
 
-    vkEnumeratePhysicalDevices( vk_instance, &gpus_count, nullptr);
-    std::cout << "Found " << gpus_count << " Vulkan-capable device(s)" << std::endl ;
-    vk_gpus.resize( gpus_count );
-    vkEnumeratePhysicalDevices( vk_instance, &gpus_count, vk_gpus.data());
+    vkEnumeratePhysicalDevices( instance->vk_instance, &ava_gpus_count, nullptr);
+    std::cout << "Found " << ava_gpus_count << " Vulkan-capable device(s)" << std::endl ;
+    vk_ava_gpus.resize( ava_gpus_count );
+    vkEnumeratePhysicalDevices( instance->vk_instance, &ava_gpus_count, vk_ava_gpus.data());
 
-    for ( uint32_t i = 0; i < gpus_count; ++i ) 
+    using namespace std ;
+    cout << "Available GPUs:" << endl ;
+
+    // gather physical device properties for all available GPUs, 
+    vk_ava_gpus_props.resize( ava_gpus_count );
+    for ( uint32_t i = 0; i < ava_gpus_count; ++i ) 
+        vkGetPhysicalDeviceProperties( vk_ava_gpus[i], &vk_ava_gpus_props[i] );
+
+    // print available GPUs info
+    for( uint32_t i = 0; i < ava_gpus_count; ++i )
     {
-        VkPhysicalDeviceProperties props{};
-        vkGetPhysicalDeviceProperties( vk_gpus[i], &props );
-        std::string vendor_name = getVendorName( props.vendorID ) ;
-        std::cout << "Available Vulkan device [" << i << "]: "
-                << vendor_name
-                << " (vendorID == 0x" << std::hex << props.vendorID << std::dec << ")"
-                << ", device: " << props.deviceName 
-                << ", type: " << getGPUTypeDescription(props.deviceType) << std::endl ;
+        std::string vendor_name = getVendorName( vk_ava_gpus_props[i].vendorID ) ;
+        std::cout << "   GPU " << i << ": "
+                << "vendor: " << vendor_name << ", "
+                //<< " (vendorID == 0x" << std::hex << props.vendorID << std::dec << ")"
+                << "type: " << getGPUTypeDescription( vk_ava_gpus_props[i].deviceType) << ", "
+                << "name: " << vk_ava_gpus_props[i].deviceName << endl ;
     }
+}
 
-    // Select a GPU (this can be improved)
-    /// CUA TODO: 
-    // To improve check:
-    // props.deviceType
-    // This field is an enum of type VkPhysicalDeviceType, and the key values are:
-    // VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU → dedicated GPU (e.g. NVIDIA/AMD desktop GPU)
-    // VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU → integrated GPU (e.g. Intel iGPU, AMD APU)
-    // VK_PHYSICAL_DEVICE_TYPE_CPU
-    // VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU
-    // VK_PHYSICAL_DEVICE_TYPE_OTHER
+// ---------------------------------------------------------------------------------------- 
+// select a GPU from available GPUs (after enumeration)
+// computes 'gpu_index' , or aborts when no suitable GPU is found.
 
-    #ifdef __linux__
-        vk_gpu = vk_gpus[1];  // CUA: selecciono la GPU 1 porque se que es la nVidia (se puede mejorar esto)
-        std::cout << "Linux: selected GPU 1" << std::endl ;
-    #elif __APPLE__
-        vk_gpu = vk_gpus[0];  // en MACOS solo hay una GPU
-        std::cout << "Linux: selected GPU 0" << std::endl ;
-    #endif
+void Device::selectGPU() 
+{
+    if ( ava_gpus_count == 1) // just one GPU, select it
+        gpu_index = 0 ;
+    else  
+    {
+        // try to find a discrete GPU
+        gpu_index = ava_gpus_count ; 
+        for ( uint32_t i = 0; i < ava_gpus_count; ++i )
+        {   if ( vk_ava_gpus_props[i].deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU )
+            {   gpu_index = i;
+                break;
+            }
+        }
 
-    // Get properties and features of the selected GPU, and print some of them
+        // no discrete GPU found, select the first one which is not of type CPU or VIRTUAL
+        if ( gpu_index == ava_gpus_count ) 
+        {
+            for ( uint32_t i = 0; i < ava_gpus_count; ++i )
+            {   if ( vk_ava_gpus_props[i].deviceType != VK_PHYSICAL_DEVICE_TYPE_CPU && vk_ava_gpus_props[i].deviceType != VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU )
+                {   gpu_index = i;
+                    break;
+                }
+            }
+        }
+        // if no suitable GPU found, abort. 
+        if ( gpu_index == ava_gpus_count ) 
+        {
+            std::cerr << "No suitable GPU found. Available GPUs:" << std::endl;
+            exit(1);
+        }
+    }   
+}
 
-    vkGetPhysicalDeviceProperties( vk_gpu, &vk_gpu_props);  // used later ???
+// ----------------------------------------------------------------------------------------
+// Get memory properties  and the physical device features 
+// of the selected GPU, and print some of them.
+// Initializes: 'vk_mem_props', 'vk_available_feat'.
+
+void Device::initializeGPUProperties() 
+{
+    vk_gpu = vk_ava_gpus[gpu_index] ;
+    vk_gpu_props = vk_ava_gpus_props[gpu_index] ;
     vkGetPhysicalDeviceMemoryProperties( vk_gpu, &vk_mem_props ); // used later for vertex buffer creation
 
-    std::cout << "SELECTED: "
-            << getVendorName(vk_gpu_props.vendorID)
-            << " (vendorID=0x" << std::hex << vk_gpu_props.vendorID << std::dec << ")"
-            << ", device: " << vk_gpu_props.deviceName << std::endl ;
+    std::cout << "Selected GPU " << gpu_index << ": " << vk_gpu_props.deviceName << std::endl ;
 
     vkGetPhysicalDeviceFeatures( vk_gpu, &vk_available_feat );
     likelyHasTessellation = (vk_available_feat.tessellationShader == VK_TRUE);
@@ -111,13 +144,13 @@ Device::Device( Instance * instance )
         << "  Tessellation shader capability (guess)       : " << (likelyHasTessellation ? "likely yes" : "likely no") << endl 
         << "  Wireframe rendering capability (guess)       : " << (likelyHasWireframeRender ? "likely yes" : "likely no") << endl ;
 
+}
+// ----------------------------------------------------------------------------------------
+// Get the list of available extensions and check the required extensiones (if any).
+// Uses 'required_extensions_names' and updates 'supp_extensions' and 'supp_extensions_count'.
 
-    // Check the list of supported extensions for the selected GPU
-    // Para Polygon Mode (vkCmdSetPolygonModeEXT) se necesita extended dynamic state 3 (VK_EXT_extended_dynamic_state3)
-    // Ver https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdSetPolygonModeEXT.html
-
-    // get data about all supported extensions
-    
+void Device::checkAvailableExtensions() 
+{
     vkEnumerateDeviceExtensionProperties( vk_gpu, nullptr, &supp_extensions_count, nullptr );
     supp_extensions.resize( supp_extensions_count );
     vkEnumerateDeviceExtensionProperties( vk_gpu, nullptr, &supp_extensions_count, supp_extensions.data());
@@ -133,12 +166,13 @@ Device::Device( Instance * instance )
         if (! extensionIsSupported( required_extensions_names[i] ) )
             throw std::runtime_error("Selected GPU does not support required extension: " + std::string(required_extensions_names[i]));
     
+}
 
-    //vk_desired_features.tessellationShader = VK_TRUE;
-    //vk_desired_features.fillModeNonSolid = VK_TRUE;  // por ahora, no usamos tess ?
+// ----------------------------------------------------------------------------------------
+// Create logical device and gets its queue
 
-    // Create logical device and its queue
-
+void Device::createLogicalDeviceAndGetQueue()
+{
     VkDeviceQueueCreateInfo qci{ VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
     VkDeviceCreateInfo      dci{ VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
 
@@ -152,10 +186,29 @@ Device::Device( Instance * instance )
     dci.enabledExtensionCount = required_extensions_count ;
     dci.ppEnabledExtensionNames = required_extensions_names ;
 
-    vkCreateDevice( vk_gpu, &dci, nullptr, &vk_device);
-    
+    if ( vkCreateDevice( vk_gpu, &dci, nullptr, &vk_device) != VK_SUCCESS )
+    {   std::cerr << "Failed to create logical device for the selected GPU." << std::endl;
+        exit(1);
+    }
+     
     // get the queue for this device 
-    vkGetDeviceQueue( vk_device, 0, 0, &vk_queue); 
+    vkGetDeviceQueue( vk_device, 0, 0, &vk_queue ); 
+    assert( vk_queue != VK_NULL_HANDLE );
+}
+
+// -------------------------------------------------------------------------------------------------
+// Constructor
+
+Device::Device( Instance * p_instance )
+{
+    instance = p_instance ;
+    assert( instance != nullptr );
+    
+    enumerateAvailableGPUs() ;
+    selectGPU() ;
+    initializeGPUProperties();
+    checkAvailableExtensions() ;
+    createLogicalDeviceAndGetQueue() ;
 
     std::cout << "GPU selected, logical device and queue created." << std::endl ;
     

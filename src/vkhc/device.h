@@ -11,19 +11,31 @@ namespace vkhc
 class Device  // includes physical device, device and queue creation
 {
     public:
+
+    Instance * instance = nullptr ;
+
+    std::vector<VkPhysicalDevice>           vk_ava_gpus ;     // available GPUs
+    std::vector<VkPhysicalDeviceProperties> vk_ava_gpus_props; // available gpu props
+
+    uint32_t ava_gpus_count = 0 ;  // total number of available GPUs in the system
+    uint32_t gpu_index      = 0 ;  // index of selected GPU
     
-    VkPhysicalDevice              vk_gpu;               // selected GPU (physical device)
     VkDevice                      vk_device ;           // logical device created from the physical device
+    VkPhysicalDevice              vk_gpu;               // selected GPU (physical device)
+    VkPhysicalDeviceProperties    vk_gpu_props{};       // properties for the selected gpu
+    
     VkQueue                       vk_queue ;            // queue used to submit command buffers and present to the swap chain
     //VkSampler                     vk_sampler { VK_NULL_HANDLE }; // shared sampler used by texture descriptors
-    std::vector<VkPhysicalDevice> vk_gpus ;             // vector with available physical devices (GPUs) in the system
-    VkPhysicalDeviceProperties    vk_gpu_props{};       // properties for the selected gpu
+    
+    //VkPhysicalDeviceProperties    vk_gpu_props{};       // properties for the selected gpu
     VkPhysicalDeviceFeatures      vk_desired_feat{};    // requested features for physical device creation 
     VkPhysicalDeviceFeatures      vk_available_feat{};  // available features found after physical device creation
     std::vector<VkExtensionProperties> supp_extensions;      // vector with extensions supported by the physical device
     VkPhysicalDeviceMemoryProperties   vk_mem_props{};       // memory properties, used later when a vertex buffer is created..
 
-    uint32_t gpus_count = 0;       // total number of available GPUs in the system
+    
+    
+    
     uint32_t supp_extensions_count = 0; // total number of extension supported by the physical device
     
     bool likelyHasTessellation = false ;
@@ -39,6 +51,26 @@ class Device  // includes physical device, device and queue creation
     };
 
     // ---------------------------------------------------------------------------------------------------
+
+    // enumerate available GPUs and selects one of them .
+    // updates 'vk_ava_gpus', 'vk_ava_gpus_props', ava_gpus_count
+    void enumerateAvailableGPUs( ) ;
+
+    // select a GPU from available GPUs (after enumeration)
+    // updates 'vk_gpu', 'vk_gpu_props', 'vk_mem_props'
+    void selectGPU();
+
+    // Get memory properties  and the physical device features 
+    // of the selected GPU, and print some of them.
+    // Initializes: 'vk_mem_props', 'vk_available_feat'.
+    void initializeGPUProperties() ;
+
+    // Get the list of available extensions and check the required extensiones (if any).
+    // Uses 'required_extensions_names' and updates 'supp_extensions' and 'supp_extensions_count'.
+    void checkAvailableExtensions() ;
+
+    // create the vk_device and vk_queue 
+    void createLogicalDeviceAndGetQueue() ;
 
     // check if an extension is in the list of supported extensions
     bool extensionIsSupported( const char * req_ext_name ) ;
