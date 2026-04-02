@@ -346,8 +346,12 @@ void BasicPipeline::initializeShaderStages()
     //auto teseSPV = compileGLSL(teseShaderSrc, shaderc_tess_evaluation_shader);
     auto fragSPV = compileGLSL( fs_src, shaderc_fragment_shader);
 
-    VkShaderModule vk_vertex_shader_module   = createModule( vertSPV ) ; 
-    VkShaderModule vk_fragment_shader_module = createModule( fragSPV ) ;
+    vk_vertex_shader_module       = createModule( vertSPV ) ; 
+    vk_fragment_shader_module     = createModule( fragSPV ) ;
+    vk_tess_control_shader_module = VK_NULL_HANDLE ;
+    vk_tess_eval_shader_module    = VK_NULL_HANDLE ;
+
+    
     //tescMod = createModule(tescSPV);
     //VkShaderModule teseMod = createModule(teseSPV);
 
@@ -360,17 +364,32 @@ void BasicPipeline::initializeShaderStages()
         .pName  = "main"
     });
 
-    // stages[1] = {VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO};
-    // stages[1].stage = VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
-    // stages[1].module = tescMod;
-    // stages[1].pName = "main";
+    if ( shaders_sources.tess_control_shader_src != nullptr && 
+         shaders_sources.tess_eval_shader_src != nullptr ) 
+    {
+        has_tessellation_shaders = true ;
+        
+        auto tescSPV = compileGLSL( shaders_sources.tess_control_shader_src, shaderc_tess_control_shader);
+        auto teseSPV = compileGLSL( shaders_sources.tess_eval_shader_src, shaderc_tess_evaluation_shader);
 
-    // stages[2] = {VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO};
-    // stages[2].stage = VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
-    // stages[2].module = teseMod;
-    // stages[2].pName = "main";
+        vk_tess_control_shader_module = createModule( tescSPV ) ;
+        vk_tess_eval_shader_module = createModule( teseSPV ) ;
 
-    // sidx++;
+        vk_shader_stages.push_back({ 
+            .sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO, 
+            .stage  = VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT, 
+            .module = vk_tess_control_shader_module, 
+            .pName  = "main"
+        });
+
+        vk_shader_stages.push_back({ 
+            .sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO, 
+            .stage  = VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT, 
+            .module = vk_tess_eval_shader_module, 
+            .pName  = "main"
+        });
+    }
+
     vk_shader_stages.push_back({ 
         .sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO, 
         .stage  = VK_SHADER_STAGE_FRAGMENT_BIT, 
@@ -378,8 +397,11 @@ void BasicPipeline::initializeShaderStages()
         .pName  = "main"
     });
     
-    //VkPipelineTessellationStateCreateInfo tessInfo{VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO};
-    //tessInfo.patchControlPoints = 4;
+    if ( has_tessellation_shaders ) 
+    {
+        default_primitive_topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST ;
+        std::cout << "Tessellation shaders detected, using VK_PRIMITIVE_TOPOLOGY_PATCH_LIST as default topology." << std::endl ;
+    }
 }
 // ------------------------------------------------------------------------------
 
@@ -438,13 +460,23 @@ void BasicPipeline::createGraphicsPipeline()
     dyn.dynamicStateCount = 2;   // number of entries in 'dynStates' array
     dyn.pDynamicStates = dynStates;
 
+    // make 'vk_tess_info_ptr' point to 'vk_tess_info' if tessellation shaders are used, or leave it as nullptr otherwise (it will be ignored in this case, since the topology is not patch list)
+
+    VkPipelineTessellationStateCreateInfo * vk_tess_info_ptr = nullptr ;
+    VkPipelineTessellationStateCreateInfo vk_tess_info{ VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO };
+
+    if ( has_tessellation_shaders ) 
+    {   vk_tess_info.patchControlPoints = default_vertexes_per_patch; // it is 3.
+        vk_tess_info_ptr = &vk_tess_info ;
+    }
+
     VkGraphicsPipelineCreateInfo  gpci{ VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
 
     gpci.stageCount          = vk_shader_stages.size() ; 
     gpci.pStages             = vk_shader_stages.data();
     gpci.pVertexInputState   = &vi;
     gpci.pInputAssemblyState = &ia;
-    gpci.pTessellationState  = nullptr;
+    gpci.pTessellationState  = vk_tess_info_ptr;
     gpci.pMultisampleState   = &ms;
     gpci.pRasterizationState = &rs;
     gpci.pColorBlendState    = &cb;
@@ -493,7 +525,7 @@ void BasicPipeline::createGraphicsPipeline()
 
 void BasicPipeline::initialize(  ) // Device * p_device, RenderPass * p_render_pass )
 {
-    if( initialized )
+    if ( initialized )
     {   std::cerr << "Error: pipeline already initialized" << std::endl ;
         exit(1);
     }

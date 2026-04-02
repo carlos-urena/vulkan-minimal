@@ -54,6 +54,13 @@ class BasicPipeline
     VkDescriptorSetLayout         vk_textures_set_layout { VK_NULL_HANDLE }; // set=1 layout for texture samplers array used by fragment shader
     VkDescriptorPool              vk_textures_descriptor_pool { VK_NULL_HANDLE };
     VkDescriptorSet               vk_textures_descriptor_set { VK_NULL_HANDLE };
+
+    VkShaderModule vk_vertex_shader_module       = VK_NULL_HANDLE ; 
+    VkShaderModule vk_fragment_shader_module     = VK_NULL_HANDLE ;
+    VkShaderModule vk_tess_control_shader_module = VK_NULL_HANDLE ;
+    VkShaderModule vk_tess_eval_shader_module    = VK_NULL_HANDLE ;
+
+    bool has_tessellation_shaders = false ;
     
     // ----- 
     // pipeline configuration variables, should be set before calling 'initialize()' in 
@@ -96,6 +103,7 @@ class BasicPipeline
     // vkCmdSetPrimitiveTopology in Vulkan 1.3, or with 
     // vkCmdSetPrimitiveTopologyEXT if the extension VK_EXT_extended_dynamic_state3 is supported (and enabled)
     VkPrimitiveTopology default_primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST ; 
+    uint32_t default_vertexes_per_patch = 3 ; // only used if tessellation shaders are present, ignored otherwise (Vulkan spec guarantees at least 3 vertexes per patch)
 
     // shader modules and stages
     std::vector<VkPipelineShaderStageCreateInfo> vk_shader_stages ;

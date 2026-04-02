@@ -352,7 +352,7 @@ ProceduralTexture1::ProceduralTexture1( VulkanContext * p_context )
     // do all vulkan staff
     initialize() ;
 
-    std::cout << "Example procedural texture created" << std::endl ;
+    std::cout << "Example procedural texture created (" << width << " x " << height << ")" << std::endl ;
 }
 
 // --------------------------------------------------------------------------------
@@ -392,8 +392,8 @@ TextureFromFile::TextureFromFile( VulkanContext * p_context, const std::string &
     stbi_image_free( loaded_data ) ;
 
     using namespace std ;
-    cout << "Loaded texture image from file: " << file_path << endl ;
-    cout << "Image dimensions: " << width << " x " << height << ", channels: " << loaded_channels << endl ;
+    cout << "Loaded texture image from file: " << file_path 
+         << " (" << width << " x " << height << "), channels: " << loaded_channels << endl ;
 
     // initialize vulkan stuff
     initialize() ;
