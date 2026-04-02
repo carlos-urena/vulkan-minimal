@@ -14,10 +14,10 @@ namespace vkhc
 // -------------------------------------------------------------------------------
 // Graphics pipeline state.
 
-class BasicPipeline2D : public BasicPipeline
+class Pipeline2DTess : public BasicPipeline
 {
     public:
-    BasicPipeline2D( VulkanContext & vulkan_context ) ; 
+    Pipeline2DTess( VulkanContext & vulkan_context ) ; 
 
     void setViewMatrix( const glm::mat4 & view_mat ) ;
     void setProjectionMatrix( const glm::mat4 & proj_mat ) ;

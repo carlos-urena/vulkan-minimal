@@ -19,7 +19,7 @@
 /// VERTEX SHADER 
 /// ----------------------------------------------------------------------------------
 
-const char* vertShaderSrc = R"glsl(
+static const char* vertShaderSrc = R"glsl(
 #version 450
 
     // Inputs: per vertex attributes:
@@ -65,7 +65,7 @@ const char* vertShaderSrc = R"glsl(
 /// FRAGMENT SHADER 
 /// ----------------------------------------------------------------------------------
 
-const char* fragShaderSrc = R"glsl(
+static const char* fragShaderSrc = R"glsl(
 #version 450
     // Inputs: push constants block:
 
@@ -106,62 +106,6 @@ const char* fragShaderSrc = R"glsl(
     }
 )glsl";
 
-// --------------------------------------------------------------------------------
-// Tessellation shaders used for testing 
-// --------------------------------------------------------------------------------
-
-const char* tescShaderSrc = R"glsl(
-#version 450
-
-layout(vertices = 4) out;
-
-layout(push_constant) uniform Tess {
-    float inner;
-    float outer;
-} tess;
-
-void main() {
-    gl_out[gl_InvocationID].gl_Position =
-        gl_in[gl_InvocationID].gl_Position;
-
-    if(gl_InvocationID == 0) {
-        gl_TessLevelInner[0] = tess.inner;
-        gl_TessLevelInner[1] = tess.inner;
-        gl_TessLevelOuter[0] = tess.outer;
-        gl_TessLevelOuter[1] = tess.outer;
-        gl_TessLevelOuter[2] = tess.outer;
-        gl_TessLevelOuter[3] = tess.outer;
-    }
-}
-)glsl";
-
-// --------------------------------------------------------------------------------
-
-const char* teseShaderSrc = R"glsl(
-#version 450
-layout(quads, fractional_even_spacing, ccw) in;
-
-float height(vec2 p){
-    return 0.2 * sin(8*p.x) * cos(8*p.y);
-}
-
-void main() {
-    vec2 uv = gl_TessCoord.xy;
-
-    vec4 p0 = gl_in[0].gl_Position;
-    vec4 p1 = gl_in[1].gl_Position;
-    vec4 p2 = gl_in[2].gl_Position;
-    vec4 p3 = gl_in[3].gl_Position;
-
-    vec4 a = mix(p0, p1, uv.x);
-    vec4 b = mix(p3, p2, uv.x);
-    vec4 pos = mix(a, b, uv.y);
-
-    pos.z += height(pos.xy);
-
-    gl_Position = pos;
-}
-)glsl";
 
 // -----------------------------------------------------------------------------------
 

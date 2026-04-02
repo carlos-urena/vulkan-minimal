@@ -5,6 +5,7 @@
 
 #include <vulkan-context.h>
 #include <pipeline2D.h>
+#include <pipeline2D_tess.h>
 #include <vertex-array.h>
 #include <imgui-context.h>
 #include <textures.h>
@@ -22,6 +23,7 @@ int main()
 
     VulkanContext     context{ 1024, 512, "Vulkan Triangle" } ;
     BasicPipeline2D   pipeline{ context } ; 
+    //Pipeline2DTess    pipeline{ context } ;
     VertexArray       vertex_array{ context, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST } ;
     TexturesSet       textures_set{ &context } ;   
     VkClearValue      clear_color{ .color ={ .float32 ={ 0.0f, 0.0f, 0.0f, 1.0f }}};
@@ -105,6 +107,8 @@ int main()
         const float ayx    = float(ra_ext.y) / float(ra_ext.x) ; // aspect ratio (height/width) of the render area
         proj_mat = scale( vec3( std::min(1.0f, ayx), std::min(1.0f, 1.0f/ayx), 1.0f ) ) ; 
 
+        
+
         // Gives values to UBO uniforms 
         pipeline.setViewMatrix( view_mat ) ;
         pipeline.setProjectionMatrix( proj_mat ) ;
@@ -120,6 +124,12 @@ int main()
         // give initial value to the push constants 
         pipeline.setModelMatrix( cmd, model_mat ) ;
         pipeline.setTextureIndex( cmd, texture_index ) ;
+
+
+        // float inner = 1.0f ;
+        // float outer = 1.0f ;
+        // pipeline.setPushConstant( cmd, "inner",  &inner) ;
+        // pipeline.setPushConstant( cmd, "outer",  &outer) ;
     
         // draw the triangle
         vertex_array.draw( cmd ); 
