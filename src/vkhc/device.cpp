@@ -126,7 +126,15 @@ void Device::initializeGPUProperties()
     std::cout << "Selected GPU " << gpu_index << ": " << vk_gpu_props.deviceName << std::endl ;
 
     vkGetPhysicalDeviceFeatures( vk_gpu, &vk_available_feat );
+
+    VkPhysicalDeviceExtendedDynamicStateFeaturesEXT ext_dyn_feat{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT };
+    VkPhysicalDeviceFeatures2 feat2{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
+    feat2.pNext = &ext_dyn_feat;
+    vkGetPhysicalDeviceFeatures2( vk_gpu, &feat2 );
+
+    hasDynamicPrimitiveTopology = ( ext_dyn_feat.extendedDynamicState == VK_TRUE );
     likelyHasTessellation = (vk_available_feat.tessellationShader == VK_TRUE);
+    likelyHasGeometryShader = (vk_available_feat.geometryShader == VK_TRUE);
     likelyHasWireframeRender = (vk_available_feat.fillModeNonSolid == VK_TRUE);
     
     using namespace std ;
@@ -142,7 +150,9 @@ void Device::initializeGPUProperties()
             << VK_VERSION_PATCH(vk_gpu_props.driverVersion) << endl
         << "  Max size for push constants block            : " << vk_gpu_props.limits.maxPushConstantsSize << " bytes" << endl 
         << "  Tessellation shader capability (guess)       : " << (likelyHasTessellation ? "likely yes" : "likely no") << endl 
-        << "  Wireframe rendering capability (guess)       : " << (likelyHasWireframeRender ? "likely yes" : "likely no") << endl ;
+        << "  Geometry shader capability (guess)           : " << (likelyHasGeometryShader ? "likely yes" : "likely no") << endl
+        << "  Wireframe rendering capability (guess)       : " << (likelyHasWireframeRender ? "likely yes" : "likely no") << endl
+        << "  Dynamic primitive topology capability         : " << (hasDynamicPrimitiveTopology ? "yes" : "no") << endl ;
 
 }
 // ----------------------------------------------------------------------------------------
@@ -175,6 +185,20 @@ void Device::createLogicalDeviceAndGetQueue()
 {
     VkDeviceQueueCreateInfo qci{ VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
     VkDeviceCreateInfo      dci{ VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
+    VkPhysicalDeviceExtendedDynamicStateFeaturesEXT ext_dyn_feat{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT };
+
+    // Enable optional features that are available on the selected GPU.
+    // Tessellation pipelines require tessellationShader to be enabled at device creation.
+    vk_desired_feat = {};
+    if ( vk_available_feat.tessellationShader == VK_TRUE )
+        vk_desired_feat.tessellationShader = VK_TRUE;
+    if ( vk_available_feat.fillModeNonSolid == VK_TRUE )
+        vk_desired_feat.fillModeNonSolid = VK_TRUE;
+    if ( hasDynamicPrimitiveTopology )
+    {
+        ext_dyn_feat.extendedDynamicState = VK_TRUE;
+        dci.pNext = &ext_dyn_feat;
+    }
 
     qci.queueFamilyIndex = 0 ;
     qci.queueCount = 1 ;

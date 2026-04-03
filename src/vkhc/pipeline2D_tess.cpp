@@ -33,15 +33,17 @@ static const char* vertShaderSrc = R"glsl(
     layout( push_constant, std430 ) uniform push_constants_block {
         mat4 model_mat ; // model matrix (object to world)
         int  texture_index ; // active texture index, -1 if no texture is active.
-        float inner ;   // inner tessellation levels
-        float outer ;   // outer tessellation levels
+        
     } pc ;
 
     // Inputs: uniform buffer object (WIP):
 
-    layout( set=0, binding=0 ) uniform ubo_block {
+    layout( set=0, binding=0 ) uniform ubo_block 
+    {
         mat4 view_mat; // view matrix (world to camera)
         mat4 proj_mat; // projection matrix (camera to clip)
+        float tsc_inner_level ;   // inner tessellation levels
+        float tsc_outer_level ;   // outer tessellation levels
     } ubo ;
 
     // Inputs: array of texture samplers 
@@ -78,19 +80,19 @@ static const char* tescShaderSrc = R"glsl(
 layout(vertices = 3) out;
 
 // Inputs: push constants block:
-
 layout( push_constant, std430 ) uniform push_constants_block {
     mat4  model_mat ; // model matrix (object to world)
     int   texture_index ; // active texture index, -1 if no texture is active.
-    float inner ;   // inner tessellation levels
-    float outer ;   // outer tessellation levels
+    
 } pc ;
 
 // Inputs: uniform buffer object:
-
-layout( set=0, binding=0 ) uniform ubo_block {
+layout( set=0, binding=0 ) uniform ubo_block 
+{
     mat4 view_mat; // view matrix (world to camera)
     mat4 proj_mat; // projection matrix (camera to clip)
+    float tsc_inner_level ; // inner tessellation levels
+    float tsc_outer_level ; // outer tessellation levels
 } ubo ;
 
 // Inputs: an array of texture samplers (we will use the 'texture_index' push constant to index into this array and select the active texture, in the future when we implement texturing)
@@ -103,17 +105,18 @@ layout (location=1) in vec2 tex_coords_vs[] ;
 layout (location=0) out vec3 color_tsc[] ;
 layout (location=1) out vec2 tex_coords_tsc[] ;
 
-
-void main() {
+void main() 
+{
     gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
 
     color_tsc[gl_InvocationID] = color_vs[gl_InvocationID] ;
     tex_coords_tsc[gl_InvocationID] = tex_coords_vs[gl_InvocationID] ;
 
-    gl_TessLevelInner[0] = pc.inner;
-    gl_TessLevelOuter[0] = pc.outer;
-    gl_TessLevelOuter[1] = pc.outer;
-    gl_TessLevelOuter[2] = pc.outer;    
+    gl_TessLevelInner[0] = ubo.tsc_inner_level;
+
+    gl_TessLevelOuter[0] = ubo.tsc_outer_level;
+    gl_TessLevelOuter[1] = ubo.tsc_outer_level;
+    gl_TessLevelOuter[2] = ubo.tsc_outer_level;    
 }
 )glsl";
 
@@ -121,18 +124,16 @@ void main() {
 // TESSELLATION EVALUATION SHADER
 // --------------------------------------------------------------------------------
 
-
 const char* teseShaderSrc = R"glsl(
 #version 450
-layout(quads, fractional_even_spacing, ccw) in;
+layout( triangles, equal_spacing, ccw) in;
 
 // Inputs: push constants block:
 
 layout( push_constant, std430 ) uniform push_constants_block {
     mat4 model_mat ; // model matrix (object to world)
     int  texture_index ; // active texture index, -1 if no texture is active.
-    float inner ;   // inner tessellation levels
-    float outer ;   // outer tessellation levels
+    
 } pc ;
 
 // Inputs: uniform buffer object:
@@ -140,6 +141,8 @@ layout( push_constant, std430 ) uniform push_constants_block {
 layout( set=0, binding=0 ) uniform ubo_block {
     mat4 view_mat; // view matrix (world to camera)
     mat4 proj_mat; // projection matrix (camera to clip)
+    float tsc_inner_level ; // inner tessellation levels
+    float tsc_outer_level ; // outer tessellation levels
 } ubo ;
 
 // Inputs: an array of texture samplers (we will use the 'texture_index' push constant to index into this array and select the active texture, in the future when we implement texturing)
@@ -153,8 +156,25 @@ layout (location=1) in vec2 tex_coords_tsc[] ;
 layout (location=0) out vec3 color_tse ;
 layout (location=1) out vec2 tex_coords_tse ;
 
-float height(vec2 p){
-    return 0.2 * sin(8*p.x) * cos(8*p.y);
+// float height(vec2 p){
+//     return 0.2 * sin(8*p.x) * cos(8*p.y);
+// }
+
+
+
+vec4 Mix4( vec2 bcc, vec4 v0, vec4 v1, vec4 v2  )
+{
+    return bcc[0]*v0 + bcc[1]*v1 + (1.0f-bcc[0]-bcc[1])*v2 ;
+}
+
+vec3 Mix3( vec2 bcc, vec3 v0, vec3 v1, vec3 v2  )
+{
+    return bcc[0]*v0 + bcc[1]*v1 + (1.0f-bcc[0]-bcc[1])*v2 ;
+}
+
+vec2 Mix2( vec2 bcc, vec2 v0, vec2 v1, vec2 v2  )
+{
+    return bcc[0]*v0 + bcc[1]*v1 + (1.0f-bcc[0]-bcc[1])*v2 ;
 }
 
 void main() {
@@ -163,19 +183,117 @@ void main() {
     vec4 p0 = gl_in[0].gl_Position;
     vec4 p1 = gl_in[1].gl_Position;
     vec4 p2 = gl_in[2].gl_Position;
-    vec4 p3 = gl_in[3].gl_Position;
 
-    vec4 a = mix(p0, p1, uv.x);
-    vec4 b = mix(p3, p2, uv.x);
-    vec4 pos = mix(a, b, uv.y);
+    gl_Position = Mix4( uv, p0, p1, p2 ) ;
 
-    pos.z += height(pos.xy);
+    //pos.z += height(pos.xy);
 
-    color_tse = mix( mix(color_tsc[0], color_tsc[1], uv.x), mix(color_tsc[3], color_tsc[2], uv.x), uv.y ) ;
-    tex_coords_tse = mix( mix(tex_coords_tsc[0], tex_coords_tsc[1], uv.x), mix(tex_coords_tsc[3], tex_coords_tsc[2], uv.x), uv.y ) ;
-
-    gl_Position = pos;
+    color_tse = Mix3( uv, color_tsc[0], color_tsc[1], color_tsc[2] ) ;
+    tex_coords_tse = Mix2( uv, tex_coords_tsc[0], tex_coords_tsc[1], tex_coords_tsc[2] ) ;    
 }
+)glsl";
+
+/// ----------------------------------------------------------------------------------
+/// GEOMETRY SHADER
+/// ----------------------------------------------------------------------------------
+
+const char *geomShaderSrc = R"glsl(
+#version 450
+layout( triangles ) in;
+layout( triangle_strip, max_vertices = 8 ) out;
+
+// Inputs: push constants block:
+
+layout( push_constant, std430 ) uniform push_constants_block {
+    mat4 model_mat ; // model matrix (object to world)
+    int  texture_index ; // active texture index, -1 if no texture is active.
+    
+} pc ;
+
+// Inputs: uniform buffer object:
+
+layout( set=0, binding=0 ) uniform ubo_block {
+    mat4 view_mat; // view matrix (world to camera)
+    mat4 proj_mat; // projection matrix (camera to clip)
+    float tsc_inner_level ; // inner tessellation levels
+    float tsc_outer_level ; // outer tessellation levels
+} ubo ;
+
+// Inputs: an array of texture samplers (we will use the 'texture_index' push constant to index into this array and select the active texture, in the future when we implement texturing)
+const int max_textures = 64 ; // must be equal to 'TexturesSet::max_textures'
+layout( set=1, binding=0 ) uniform sampler2D textures[max_textures]; // array of texture samplers
+
+// Inputs from tessellation evaluation shader
+layout (location=0) in vec3 color_tse[];
+layout (location=1) in vec2 tex_coords_tse[];
+
+// Outputs to fragment shader
+layout (location=0) out vec3 color_geo;
+layout (location=1) out vec2 tex_coords_geo;
+
+void Passthrough()
+{
+    for ( int i = 0; i < gl_in.length(); ++i )
+    {
+        gl_Position = gl_in[i].gl_Position;
+        color_geo = color_tse[i];
+        tex_coords_geo = tex_coords_tse[i];
+        EmitVertex();
+    }
+    EndPrimitive();
+}
+
+// -----------------------------------------------------------------------------------------
+// Esta función produce pares de triángulos en cada arista del triángulo de entrada
+
+void EdgesTriangleStrip()
+{
+    // calcular el centro y los tres vectores desde el centro a los vértices
+    vec3 p0 = gl_in[0].gl_Position.xyz ;
+    vec3 p1 = gl_in[1].gl_Position.xyz ;
+    vec3 p2 = gl_in[2].gl_Position.xyz ;
+    vec3 centro = (p0 + p1 + p2) / 3.0 ;
+    
+    const float g = 0.1 ; // 0.15 ; // grosor relativo de las aristas
+
+    // emitir una tira con 6 triángulos (2 triángulos por arista)
+    // para eso se emiten 8 vértices (2 por iteración del bucle)
+    //   + primero dos vértices iniciales 
+    //   + luego cada uno de los 6 restantes cierra un triángulo
+    
+    for( int i = 0 ; i < 4 ; i++ )  // en cada iteración se emiten dos vértices
+    {
+        // j == indice del vértice original en la entrada
+        int j = ( i < 3 ) ? i : 0 ;
+
+        vec3 posj = gl_in[j].gl_Position.xyz ;
+
+        // calcular el vértice externo (original) y el interno (nuevo)
+        vec4 posic_ext = vec4( posj, 1.0 );
+        vec4 posic_int = vec4( centro + (1.0-g)*(posj - centro), 1.0 ); 
+        
+        
+        // emitir vértice interno (nuevo)
+        color_geo  = color_tse[j] ;
+        tex_coords_geo  = tex_coords_tse[j] ;
+        gl_Position = posic_int ; 
+        EmitVertex() ;
+
+        // emitir vértice externo (original)
+        color_geo  = color_tse[j] ;
+        tex_coords_geo  = tex_coords_tse[j] ;
+        gl_Position = posic_ext ;
+        EmitVertex() ;
+    }
+    EndPrimitive() ;
+}
+
+void main()
+{
+    //Passthrough();
+    EdgesTriangleStrip();
+}
+
 )glsl";
 
 
@@ -190,8 +308,6 @@ const char* fragShaderSrc = R"glsl(
     layout( push_constant, std430 ) uniform push_constants_block {
         mat4 model_mat ; // model matrix (object to world)
         int  texture_index ; // active texture index, -1 if no texture is active.
-        float inner ;   // inner tessellation levels
-        float outer ;   // outer tessellation levels
     } pc ;
 
     // Inputs: uniform buffer object:
@@ -199,6 +315,8 @@ const char* fragShaderSrc = R"glsl(
     layout( set=0, binding=0 ) uniform ubo_block {
         mat4 view_mat; // view matrix (world to camera)
         mat4 proj_mat; // projection matrix (camera to clip)
+        float tsc_inner_level ; // inner tessellation levels
+        float tsc_outer_level ; // outer tessellation levels
     } ubo ;
 
     // Inputs: an array of texture samplers (we will use the 'texture_index' push constant to index into this array and select the active texture, in the future when we implement texturing)
@@ -207,8 +325,8 @@ const char* fragShaderSrc = R"glsl(
 
     // Inputs: varying from vertex shader
 
-    layout (location=0) in vec3 color_tse;
-    layout (location=1) in vec2 tex_coords_tse ;
+    layout (location=0) in vec3 color_geo;
+    layout (location=1) in vec2 tex_coords_geo ;
 
     // Output: fragment color 
 
@@ -220,9 +338,9 @@ const char* fragShaderSrc = R"glsl(
     void main()
     {
         if ( pc.texture_index >= 0 ) // if a texture is active, use it to determine the fragment color
-             out_color = texture( textures[ pc.texture_index ], tex_coords_tse ) ;
-        else
-            out_color = vec4( color_tse, 1.0 );
+             out_color = texture( textures[ pc.texture_index ], tex_coords_geo ) ;
+        else // ulse interpolated vertex color
+            out_color = vec4( color_geo, 1.0 );
     }
 )glsl";
 
@@ -241,18 +359,20 @@ Pipeline2DTess::Pipeline2DTess( VulkanContext & vulkan_context )
     // set metadata about  push constants 
     addPushConstant( "model_mat", sizeof(glm::mat4) ); // model matrix 
     addPushConstant( "texture_index", sizeof(int) ); // active texture index, -1 if no texture is active.
-    addPushConstant( "inner", sizeof(float) ); // inner tessellation levels
-    addPushConstant( "outer", sizeof(float) ); // outer tessellation levels
+    
 
     // set metadata about UBO uniforms 
     addUBOUniform( "view_mat", sizeof(glm::mat4) ); // view matrix
     addUBOUniform( "proj_mat", sizeof(glm::mat4) ); // projection matrix
+    addUBOUniform( "tsc_inner_level", sizeof(float) ); // inner tessellation levels
+    addUBOUniform( "tsc_outer_level", sizeof(float) ); // outer tessellation levels
     
     // set shaders sources 
     shaders_sources = 
     {   .vertex_shader_src       = vertShaderSrc, 
         .tess_control_shader_src = tescShaderSrc,
         .tess_eval_shader_src    = teseShaderSrc,
+        .geometry_shader_src     = geomShaderSrc,
         .fragment_shader_src     = fragShaderSrc
     };
 
@@ -264,7 +384,10 @@ Pipeline2DTess::Pipeline2DTess( VulkanContext & vulkan_context )
     }; // color
 
     // set default (initial) primitive topology (can be changed dynamically in command buffers)
-    default_primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST ;
+    //default_primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST ;
+    default_primitive_topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST ; // default for tessellation 
+    default_vertexes_per_patch = 3 ; // default for tessellation (triangles)
+
 
     // initialize the vulkan pipeline  (in the context)
     initialize( ) ; 

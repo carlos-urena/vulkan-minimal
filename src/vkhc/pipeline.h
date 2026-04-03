@@ -56,9 +56,10 @@ class BasicPipeline
     VkDescriptorSet               vk_textures_descriptor_set { VK_NULL_HANDLE };
 
     VkShaderModule vk_vertex_shader_module       = VK_NULL_HANDLE ; 
-    VkShaderModule vk_fragment_shader_module     = VK_NULL_HANDLE ;
     VkShaderModule vk_tess_control_shader_module = VK_NULL_HANDLE ;
     VkShaderModule vk_tess_eval_shader_module    = VK_NULL_HANDLE ;
+    VkShaderModule vk_geometry_shader_module     = VK_NULL_HANDLE ;    
+    VkShaderModule vk_fragment_shader_module     = VK_NULL_HANDLE ;
 
     bool has_tessellation_shaders = false ;
     

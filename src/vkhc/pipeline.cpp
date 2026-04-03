@@ -211,7 +211,11 @@ void BasicPipeline::initializeUBODescriptor()
     ubo_binding.binding = 0;
     ubo_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     ubo_binding.descriptorCount = 1;
-    ubo_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+    ubo_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT |
+                             VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT |
+                             VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT |
+                             VK_SHADER_STAGE_GEOMETRY_BIT |
+                             VK_SHADER_STAGE_FRAGMENT_BIT;
 
     VkDescriptorSetLayoutCreateInfo ubo_set_layout_ci{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
     ubo_set_layout_ci.bindingCount = 1;
@@ -262,7 +266,10 @@ void BasicPipeline::initializeTextureSamplersDescriptor()
     textures_binding.binding = 0;
     textures_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     textures_binding.descriptorCount = max_texture_descriptors;
-    textures_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    textures_binding.stageFlags = VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT |
+                                  VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT |
+                                  VK_SHADER_STAGE_GEOMETRY_BIT |
+                                  VK_SHADER_STAGE_FRAGMENT_BIT;
 
     VkDescriptorSetLayoutCreateInfo textures_set_layout_ci{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
     textures_set_layout_ci.bindingCount = 1;
@@ -311,7 +318,7 @@ void BasicPipeline::createPipelineLayout()
         static VkPushConstantRange merged_pc_range{};
         merged_pc_range.offset = 0;
         merged_pc_range.size = pc_total_size;
-        merged_pc_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        merged_pc_range.stageFlags = allStagesFlags;
 
         plci.pushConstantRangeCount = 1;
         plci.pPushConstantRanges = &merged_pc_range;
@@ -367,6 +374,7 @@ void BasicPipeline::initializeShaderStages()
     if ( shaders_sources.tess_control_shader_src != nullptr && 
          shaders_sources.tess_eval_shader_src != nullptr ) 
     {
+        assert( device->likelyHasTessellation );
         has_tessellation_shaders = true ;
         
         auto tescSPV = compileGLSL( shaders_sources.tess_control_shader_src, shaderc_tess_control_shader);
@@ -386,6 +394,19 @@ void BasicPipeline::initializeShaderStages()
             .sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO, 
             .stage  = VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT, 
             .module = vk_tess_eval_shader_module, 
+            .pName  = "main"
+        });
+    }
+
+    if ( shaders_sources.geometry_shader_src != nullptr ) 
+    {
+        assert( device->likelyHasGeometryShader );
+        auto geomSPV = compileGLSL( shaders_sources.geometry_shader_src, shaderc_geometry_shader);
+        vk_geometry_shader_module = createModule( geomSPV ) ;
+        vk_shader_stages.push_back({ 
+            .sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO, 
+            .stage  = VK_SHADER_STAGE_GEOMETRY_BIT, 
+            .module = vk_geometry_shader_module, 
             .pName  = "main"
         });
     }
@@ -437,7 +458,7 @@ void BasicPipeline::createGraphicsPipeline()
     ms.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
     VkPipelineRasterizationStateCreateInfo rs{ VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
-    //rs.polygonMode = VK_POLYGON_MODE_LINE;  // CUA CUA funciona ? (en macOs no.... faltará algo?)
+    //rs.polygonMode = VK_POLYGON_MODE_LINE;  
     rs.polygonMode  = VK_POLYGON_MODE_FILL;
     rs.cullMode     = VK_CULL_MODE_NONE;
     rs.lineWidth    = 1.0f;
@@ -453,12 +474,16 @@ void BasicPipeline::createGraphicsPipeline()
     vp.viewportCount = 1;
     vp.scissorCount = 1;
 
-    VkDynamicState dynStates[] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+    std::array<VkDynamicState, 3> dynStates = {
+        VK_DYNAMIC_STATE_VIEWPORT,
+        VK_DYNAMIC_STATE_SCISSOR,
+        VK_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY
+    };
     VkPipelineDynamicStateCreateInfo dyn{};
 
     dyn.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-    dyn.dynamicStateCount = 2;   // number of entries in 'dynStates' array
-    dyn.pDynamicStates = dynStates;
+    dyn.dynamicStateCount = device->hasDynamicPrimitiveTopology ? 3u : 2u ;
+    dyn.pDynamicStates = dynStates.data();
 
     // make 'vk_tess_info_ptr' point to 'vk_tess_info' if tessellation shaders are used, or leave it as nullptr otherwise (it will be ignored in this case, since the topology is not patch list)
 
@@ -467,6 +492,7 @@ void BasicPipeline::createGraphicsPipeline()
 
     if ( has_tessellation_shaders ) 
     {   vk_tess_info.patchControlPoints = default_vertexes_per_patch; // it is 3.
+        std::cout << "Tessellation shaders detected, using " << default_vertexes_per_patch << " vertexes per patch." << std::endl ;
         vk_tess_info_ptr = &vk_tess_info ;
     }
 

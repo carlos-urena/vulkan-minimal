@@ -22,9 +22,10 @@ int main()
     using namespace std::chrono ;
 
     VulkanContext     context{ 1024, 512, "Vulkan Triangle" } ;
-    BasicPipeline2D   pipeline{ context } ; 
-    //Pipeline2DTess    pipeline{ context } ;
-    VertexArray       vertex_array{ context, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST } ;
+    //BasicPipeline2D   pipeline{ context } ; 
+    Pipeline2DTess    pipeline{ context } ;
+    //VertexArray       vertex_array{ context, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST } ;
+    VertexArray       vertex_array{ context, VK_PRIMITIVE_TOPOLOGY_PATCH_LIST } ;
     TexturesSet       textures_set{ &context } ;   
     VkClearValue      clear_color{ .color ={ .float32 ={ 0.0f, 0.0f, 0.0f, 1.0f }}};
     VkCommandBuffer   cmd ;
@@ -86,6 +87,9 @@ int main()
 
     bool close_requested = false ; 
 
+    float tsc_inner_level = 7.f ;
+    float tsc_outer_level = 7.f ;
+
     // enter the main loop
     while ( ! context.windowShouldClose() && ! close_requested )  
     {
@@ -107,12 +111,13 @@ int main()
         const float ayx    = float(ra_ext.y) / float(ra_ext.x) ; // aspect ratio (height/width) of the render area
         proj_mat = scale( vec3( std::min(1.0f, ayx), std::min(1.0f, 1.0f/ayx), 1.0f ) ) ; 
 
-        
-
         // Gives values to UBO uniforms 
         pipeline.setViewMatrix( view_mat ) ;
         pipeline.setProjectionMatrix( proj_mat ) ;
-        
+
+        pipeline.setUBOUniform( "tsc_inner_level", &tsc_inner_level ) ;
+        pipeline.setUBOUniform( "tsc_outer_level", &tsc_outer_level ) ;
+
         // begin frame: acquire an image from the swap chain, and get its corresponding command buffer
         if ( ! context.beginFrame( clear_color, cmd, image_index ) ) 
             continue ; 
@@ -125,12 +130,6 @@ int main()
         pipeline.setModelMatrix( cmd, model_mat ) ;
         pipeline.setTextureIndex( cmd, texture_index ) ;
 
-
-        // float inner = 1.0f ;
-        // float outer = 1.0f ;
-        // pipeline.setPushConstant( cmd, "inner",  &inner) ;
-        // pipeline.setPushConstant( cmd, "outer",  &outer) ;
-    
         // draw the triangle
         vertex_array.draw( cmd ); 
 
@@ -141,6 +140,8 @@ int main()
             {       
                 SliderFloat("Speed", &rotation_speed, 0.0f, 3.0f);
                 SliderFloat("Scale", &triangle_scale, 0.2f, 2.0f);
+                SliderFloat("Tess. inner level", &tsc_inner_level, 1.0f, 10.0f);
+                SliderFloat("Tess. outer level", &tsc_outer_level, 1.0f, 10.0f);
                 int texture_combo_index = texture_index + 1 ; // map -1..3 to 0..4 for ImGui combo
                 if ( Combo("Texture", &texture_combo_index, "No texture (vert. colors)\0Wood 1\0Wood 2\0Wood 3\0Procedural texture\0") )
                     texture_index = texture_combo_index - 1 ;

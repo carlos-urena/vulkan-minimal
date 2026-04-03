@@ -106,7 +106,8 @@ void VertexArray::draw( VkCommandBuffer & vk_cmd_buffer )
     for ( auto vertex_buffer : vertex_buffers ) 
         vertex_buffer->bind( vk_cmd_buffer, i++ ); // bind each vertex buffer to its corresponding binding point in the pipeline 
 
-    vkCmdSetPrimitiveTopology( vk_cmd_buffer, topology );
+    if ( vulkan_context.device != nullptr && vulkan_context.device->hasDynamicPrimitiveTopology )
+        vkCmdSetPrimitiveTopology( vk_cmd_buffer, topology );
 
     if ( index_buffer != nullptr ) 
     {

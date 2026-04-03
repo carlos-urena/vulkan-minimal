@@ -39,7 +39,9 @@ class Device  // includes physical device, device and queue creation
     uint32_t supp_extensions_count = 0; // total number of extension supported by the physical device
     
     bool likelyHasTessellation = false ;
+    bool likelyHasGeometryShader = false ;
     bool likelyHasWireframeRender = false ;
+    bool hasDynamicPrimitiveTopology = false ;
 
     float queuePriority = 1.0f;
 
