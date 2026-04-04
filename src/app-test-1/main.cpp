@@ -32,7 +32,7 @@ int main()
     uint32_t          image_index ;
 
     const float r  = 1.0f ;          // triangle radius (distance from the center of the triangle to its vertices)
-    const float a0 = M_PI/2.0 ;      // initial angle of the first vertex (in radians), the other vertices will be at angles a0 + 2*pi/3 and a0 + 4*pi/3, so that the triangle is equilateral and one vertex is pointing upwards.
+    const float a0 = M_PI ; //-M_PI/2.0 ;      // initial angle of the first vertex (in radians), the other vertices will be at angles a0 + 2*pi/3 and a0 + 4*pi/3, so that the triangle is equilateral and one vertex is pointing upwards.
     const float a  = M_PI*2.0/3.0 ;  // angle between vertices (in radians), for an equilateral triangle this is 2*pi/3
 
     // location 0: vertex positions
@@ -43,7 +43,7 @@ int main()
     });
 
     // location 1: vertex colors
-    vertex_array.addAttribData( vector< vec3 > {  
+    vertex_array.addAttribData( vector<vec3> {  
         { 1.0f, 0.0f, 0.0f }, 
         { 0.0f, 1.0f, 0.0f }, 
         { 0.0f, 0.0f, 1.0f }, 
@@ -68,8 +68,8 @@ int main()
     mat4 proj_mat = mat4(1.0f) ; // projection matrix passed via UBO
 
     float curr_angle_rad = M_PI/2.0f ;  // current angle in radians
-    float rotation_speed = 1.5f ; // angular speed in cycles per second 
-    float triangle_scale = 1.0f ;
+    float rotation_speed = 0.0f ; // angular speed in cycles per second 
+    float triangle_scale = 0.8f ;
 
     // create texture objects, and bnd the textures to the pipeline
     textures_set.add( "../assets/wood-1.png" );
@@ -87,8 +87,8 @@ int main()
 
     bool close_requested = false ; 
 
-    float tsc_inner_level = 7.f ;
-    float tsc_outer_level = 7.f ;
+    float tsc_inner_level = 5.2f ;
+    float tsc_outer_level = 5.2f ;
 
     // enter the main loop
     while ( ! context.windowShouldClose() && ! close_requested )  

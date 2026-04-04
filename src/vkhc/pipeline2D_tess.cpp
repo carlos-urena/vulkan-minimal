@@ -200,7 +200,10 @@ void main() {
 const char *geomShaderSrc = R"glsl(
 #version 450
 layout( triangles ) in;
-layout( triangle_strip, max_vertices = 8 ) out;
+layout( triangle_strip, max_vertices = 100 ) out;
+
+const int max_vertices = 76 ; // número máximo de vértices de salida (debe ser menor o igual que arriba, en layout)
+
 
 // Inputs: push constants block:
 
@@ -231,6 +234,10 @@ layout (location=1) in vec2 tex_coords_tse[];
 layout (location=0) out vec3 color_geo;
 layout (location=1) out vec2 tex_coords_geo;
 
+// Pass through function (no geometry shader effect, just pass 
+// through the vertices from the tessellation evaluation shader 
+// to the fragment shader)
+
 void Passthrough()
 {
     for ( int i = 0; i < gl_in.length(); ++i )
@@ -244,6 +251,95 @@ void Passthrough()
 }
 
 // -----------------------------------------------------------------------------------------
+
+const float radio_discos = 0.012f ; // radio de los discos que se dibujan en los vértices
+const float grosor_lineas = 0.006f ; // grosor de las líneas
+
+// ----------------------------------------------------------------------------
+// Emite un vértice con la posición 'pos_wcc'
+//
+void Vertice( vec4 pos, vec4 color )
+{
+    gl_Position = pos ;
+    color_geo = color.rgb ;
+    tex_coords_geo = vec2( -2.0f, -2.0f ) ; // no se usan coordenadas de textura en el shader de geometría
+    EmitVertex() ;
+}
+// ----------------------------------------------------------------------------
+// Emite las primitivas (triángulos) que forman un disco de radio w/2 centrado en centro
+
+void EmitirPrimDisco( vec4 centro, vec4 color )
+{
+    // número de triángulos que forman el disco (debe ser menor o igual que (max_vertices-4)/2/3, porque cada triángulo emite 3 vértices y cada iteración del bucle emite un triángulo)
+    const int   num_t  = ((max_vertices-4)/3)/3 ; 
+    const float angulo = 2.0f * 3.14159265f / float(num_t) ;
+    float       radio  = radio_discos ;
+
+    float f = ubo.proj_mat[0][0] / ubo.proj_mat[1][1] ; 
+
+    vec4 vert_ant  = centro + vec4( f*radio, 0.0f, 0.0f, 0.0f ) ;
+
+    
+    
+    for( int i = 1 ; i <= num_t ; i++ )
+    {
+        float a        = float(i) * angulo ;
+        vec4  vert_nue = centro + vec4( f*radio*cos(a), radio*sin(a), 0.0f, 0.0f ) ;
+        
+        Vertice( centro, color );  
+        Vertice( vert_ant, color ); 
+        Vertice( vert_nue, color );
+        EndPrimitive();
+
+        vert_ant = vert_nue ;
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Emite la primitiva (una tira de dos triángulos) que forma un segmento de recta de grosor w/2
+// desde v0 hasta v1, con colores c0 en v0 y c1 en v1 
+// (los colores se interpolan linealmente en el interior de la primitiva) 
+//
+void EmitirPrimSegmento( vec4 v0, vec4 v1, vec4 c0, vec4 c1 )
+{
+    vec4 s  = normalize( v1 - v0 ); // vector director del segmento
+    vec4 n  = (grosor_lineas/2.0f)*vec4( -s.y, s.x, 0.0f, 0.0f ); // vector normal al segmento de long w/2
+
+    Vertice( v0-n, c0 ); Vertice( v0+n, c0 );  
+    Vertice( v1-n, c1 ); Vertice( v1+n, c1 );  
+
+    EndPrimitive();
+}
+
+// ----------------------------------------------------------------------------
+// outputs segments at the edges and discs at the vertexes of the input triangle 
+
+void SegmentsAndDiscs() 
+{
+    vec4 
+        v0 = gl_in[0].gl_Position,
+        v1 = gl_in[1].gl_Position,
+        v2 = gl_in[2].gl_Position,
+        c_seg = vec4( 1.0, 1.0, 1.0, 1.0 ) , //v1_color[0] ,
+        c_dis = vec4( 1.0, 0.2, 0.2, 1.0 ) , //v1_color[2] ,
+        //c1 = v1_color[1] ,
+        dz = vec4( 0.0f, 0.0f, +0.05f, 0.0f ) ; // desplazamiento en z para evitar z-fighting
+    
+    //if ( u_visualizar_lineas )
+    
+    EmitirPrimSegmento( v0+dz, v1+dz, c_seg, c_seg );
+    EmitirPrimSegmento( v1+dz, v2+dz, c_seg, c_seg );
+    EmitirPrimSegmento( v2+dz, v0+dz, c_seg, c_seg );
+    
+    //if ( u_visualizar_puntos ) 
+    //{
+        EmitirPrimDisco( v0+2.0*dz, c_dis ); 
+        EmitirPrimDisco( v1+2.0*dz, c_dis );
+        EmitirPrimDisco( v2+2.0*dz, c_dis );
+    //}
+}
+
+// -----------------------------------------------------------------------------------------
 // Esta función produce pares de triángulos en cada arista del triángulo de entrada
 
 void EdgesTriangleStrip()
@@ -253,6 +349,8 @@ void EdgesTriangleStrip()
     vec3 p1 = gl_in[1].gl_Position.xyz ;
     vec3 p2 = gl_in[2].gl_Position.xyz ;
     vec3 centro = (p0 + p1 + p2) / 3.0 ;
+    vec3 white = vec3( 1.0, 1.0, 1.0 ) ;
+    vec4 dz = vec4( 0.0f, 0.0f, +0.05f, 0.0f ) ; // desplazamiento en z para evitar z-fighting
     
     const float g = 0.1 ; // 0.15 ; // grosor relativo de las aristas
 
@@ -269,18 +367,18 @@ void EdgesTriangleStrip()
         vec3 posj = gl_in[j].gl_Position.xyz ;
 
         // calcular el vértice externo (original) y el interno (nuevo)
-        vec4 posic_ext = vec4( posj, 1.0 );
-        vec4 posic_int = vec4( centro + (1.0-g)*(posj - centro), 1.0 ); 
+        vec4 posic_ext = vec4( posj, 1.0 ) +dz ;
+        vec4 posic_int = vec4( centro + (1.0-g)*(posj - centro), 1.0 ) +dz ; 
         
         
         // emitir vértice interno (nuevo)
-        color_geo  = color_tse[j] ;
+        color_geo  = white ;
         tex_coords_geo  = tex_coords_tse[j] ;
         gl_Position = posic_int ; 
         EmitVertex() ;
 
         // emitir vértice externo (original)
-        color_geo  = color_tse[j] ;
+        color_geo  = white ;
         tex_coords_geo  = tex_coords_tse[j] ;
         gl_Position = posic_ext ;
         EmitVertex() ;
@@ -290,8 +388,9 @@ void EdgesTriangleStrip()
 
 void main()
 {
-    //Passthrough();
-    EdgesTriangleStrip();
+    Passthrough();
+    //EdgesTriangleStrip();
+    SegmentsAndDiscs();
 }
 
 )glsl";
@@ -337,7 +436,7 @@ const char* fragShaderSrc = R"glsl(
 
     void main()
     {
-        if ( pc.texture_index >= 0 ) // if a texture is active, use it to determine the fragment color
+        if ( pc.texture_index >= 0 && tex_coords_geo.s >= -0.01 ) // if a texture is active, use it to determine the fragment color
              out_color = texture( textures[ pc.texture_index ], tex_coords_geo ) ;
         else // ulse interpolated vertex color
             out_color = vec4( color_geo, 1.0 );
