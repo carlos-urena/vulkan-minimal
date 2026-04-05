@@ -2,8 +2,69 @@
 
 #include <glfw-context.h>
 
+
 namespace vkhc
 {
+    
+// ----------------------------------------------------------------------------------
+// computes window position and size based on the resolution and size of the
+// available monitors (places it inside the monitor with the largest area).
+
+void GLFWContext::getWindowPositionAndSize( int & tamx, int & tamy, int & posx, int & posy )
+{
+
+   using namespace std ;
+
+    // read number of monitors and pointer to the monitor array
+    int num_monitors ;
+    GLFWmonitor ** monitors = glfwGetMonitors( &num_monitors );
+    unsigned       ims       = 0 ; // index of the selected monitor
+    unsigned long  area_max  = 0 ;
+
+    cout << "Monitors and GLFW window:" << endl ;
+
+    // iterate over monitors and compute in 'ims' the index of the monitor with the largest pixel area
+    for( int i = 0 ; i < num_monitors ; i++ )
+    {
+        const GLFWvidmode   * modo = glfwGetVideoMode( monitors[i] ); 
+        const unsigned long   area = (unsigned long) modo->width * (unsigned long) modo->height ; 
+        int mxpos, mypos ;
+
+        glfwGetMonitorPos( monitors[i], &mxpos, &mypos );
+        
+        cout << "   Monitor '" << glfwGetMonitorName( monitors[i] ) << "': " 
+            << "position: " << mxpos << " x " << mypos  << ", "
+            << "size: " << modo->width << " x " << modo->height << "." 
+            << endl ;
+
+        if ( area_max < area )
+        {   area_max = area ;
+            ims     = i ;
+        }
+    }
+    cout << "   Using monitor: '" << glfwGetMonitorName( monitors[ims] ) << "'." << endl ;
+    
+        // read monitor size and position
+    const GLFWvidmode * modo = glfwGetVideoMode( monitors[ims] ); // current mode of the monitor with the largest area
+    int ancho_tot = modo->width,   // total desktop width in the current mode
+        alto_tot  = modo->height,  // total desktop height in the current mode
+        mxpos,                     // X position of the monitor within the complete virtual desktop
+        mypos ;                    // Y position of the monitor within the complete virtual desktop.
+
+    glfwGetMonitorPos( monitors[ims], &mxpos, &mypos );
+
+        // compute position and size
+
+    tamx  = (alto_tot*4)/5 ;     // window width
+    tamy  = tamx ;               // window height
+    posx  = mxpos+(ancho_tot-tamx)/2 ; // window X position 
+    posy  = mypos+(alto_tot-tamy)/2;   // window Y position 
+
+    cout << "   Window: position: " << posx << " x " << posy << ", size: " << tamx << " x " << tamy << "." << endl ;
+}
+
+
+
 
 unsigned GLFWContext::instance_count = 0 ; // initialize static member variable
 
@@ -30,11 +91,21 @@ GLFWContext::GLFWContext( int width, int height, const char* title )
     }
     instance_count++ ;
 
+    const char * vers = glfwGetVersionString() ;
+    std::cout << "GLFW version: " << vers << std::endl ;
     glfwSetErrorCallback( errorFunc );
     glfwInit();
     glfwWindowHint( GLFW_CLIENT_API, GLFW_NO_API );
-    glfw_window = glfwCreateWindow(width, height, title, nullptr, nullptr);
+
+    int sizex, sizey, posx, posy ; // computed values 
+    getWindowPositionAndSize( sizex, sizey, posx, posy ) ;
+    glfwWindowHint( GLFW_RESIZABLE, GLFW_TRUE );
+    glfwWindowHint( GLFW_MAXIMIZED, GLFW_FALSE );
+    
+    glfw_window = glfwCreateWindow( sizex, sizey, title, nullptr, nullptr);
     assert( glfw_window != nullptr );
+    
+    glfwSetWindowPos( glfw_window, posx, posy );
     glfwSetFramebufferSizeCallback( glfw_window, framebufferResizeCallback );
 }
 
@@ -78,5 +149,5 @@ GLFWContext::~GLFWContext()
 
 // -----------------------------------------------------------------------------
 
-} ; // fin del namespace vkhc 
+} ; // end of namespace vkhc 
 

@@ -29,6 +29,12 @@ class GLFWContext
     
     // closes the window and terminates GLFW
     ~GLFWContext() ;
+
+
+    // computes window position and size based on the resolution and size of the
+    // available monitors (places it inside the monitor with the largest area).
+
+    void getWindowPositionAndSize( int & tamx, int & tamy, int & posx, int & posy ) ;
     
 } ;
 
