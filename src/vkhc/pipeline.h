@@ -20,12 +20,17 @@ class ShadersSources
 {
     public:
 
-    const char * vertex_shader_src       = nullptr ;
-    const char * tess_control_shader_src = nullptr ;
-    const char * tess_eval_shader_src    = nullptr ;
-    const char * geometry_shader_src     = nullptr ;
-    const char * fragment_shader_src     = nullptr ;
+    std::string * vertex_shader_src       = nullptr ;
+    std::string * tess_control_shader_src = nullptr ;
+    std::string * tess_eval_shader_src    = nullptr ;
+    std::string * geometry_shader_src     = nullptr ;
+    std::string * fragment_shader_src     = nullptr ;
 } ;
+
+// --------------------------------------------------------------------------------
+// Replaces a line starting with //#keyword with substituion text, returns new text 
+
+std::string insert_source( const std::string & src, const std::string & keyword, const std::string & substitution ) ;
 
 // -------------------------------------------------------------------------------
 // Graphics pipeline state.
@@ -115,16 +120,16 @@ class BasicPipeline
     
     // ------------------------------------------------------------------------------
     // Methods.
-    
+
     // Create a shader module from SPIR-V code (vector of uint32_t)
     VkShaderModule createModule( std::vector<uint32_t>& spirv_code ) ;
     
     // return a string with the description of a shader kind (vertex, fragment, etc.) for debugging purposes
     const std::string shaderKindDescription( shaderc_shader_kind kind );
     
-    // Compiles a shader from it GLSL source and kind. return bytes array with SPIR-V code.
+    // Compiles a shader from its GLSL source and kind. return bytes array with SPIR-V code.
     // if compilation fails, prints an error message and aborts the program.
-    std::vector<uint32_t> compileGLSL( const char* src, shaderc_shader_kind kind ) ;
+    std::vector<uint32_t> compileGLSL( const std::string & src, shaderc_shader_kind kind );
     
     // Get the size in bytes for data corresponding to a given vulkan format for 
     // a vertex attrribute (only 2 and 3 floats allowed, otherwise aborts)

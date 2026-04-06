@@ -111,6 +111,9 @@ static const char* fragShaderSrc = R"glsl(
 
 namespace vkhc
 {
+static std::string 
+    vertShaderSrc_string = std::string { vertShaderSrc },
+    fragShaderSrc_string = std::string { fragShaderSrc };
 
 BasicPipeline2D::BasicPipeline2D( VulkanContext & vulkan_context )
 
@@ -129,8 +132,8 @@ BasicPipeline2D::BasicPipeline2D( VulkanContext & vulkan_context )
     
     // set shaders sources 
     shaders_sources = 
-    {   .vertex_shader_src = vertShaderSrc, 
-        .fragment_shader_src = fragShaderSrc
+    {   .vertex_shader_src   = & vertShaderSrc_string, 
+        .fragment_shader_src = & fragShaderSrc_string
     };
 
     // set attributes formats (must correspond with inputs to the vertex shaders the shaders sources)

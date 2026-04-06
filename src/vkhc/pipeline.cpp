@@ -5,6 +5,7 @@
 // descriptor set layout for UBOs.
 
 
+#include <sstream>
 #include <pipeline.h>
 #include <device.h>
 #include <render-pass.h>
@@ -19,7 +20,30 @@
 namespace vkhc
 {
 
+// --------------------------------------------------------------------------------
+// Replaces a line starting with //#keyword with substituion text, returns new text 
 
+std::string insert_source( const std::string & src, const std::string & keyword, const std::string & substitution ) 
+{
+    using namespace std ;
+
+    istringstream iss(src);
+    ostringstream oss;
+    string line;
+
+    const string search_str = "//#" + keyword;
+
+    while ( getline( iss, line) ) {
+        if ( line.find( search_str ) == 0 ) { // line starts with the //#keyword
+            oss << substitution << endl;
+        } else {
+            oss << line << endl;
+        }
+    }
+    return oss.str();
+}
+
+// ------------------------------------------------------------------------------
 // create a shader module from SPIR-V code (vector of uint32_t)
 
 VkShaderModule BasicPipeline::createModule( std::vector<uint32_t>& spirv_code ) 
@@ -52,10 +76,14 @@ const std::string BasicPipeline::shaderKindDescription( shaderc_shader_kind kind
 
 // ------------------------------------------------------------------------------
 
-std::vector<uint32_t> BasicPipeline::compileGLSL( const char* src, shaderc_shader_kind kind ) 
+std::vector<uint32_t> BasicPipeline::compileGLSL( const std::string & src, shaderc_shader_kind kind ) 
 {
     shaderc::Compiler       compiler ;
     shaderc::CompileOptions options ;
+
+    // using namespace std ;
+    // string src_str { src };
+    // string full_src = insert_source( src_str, "common_inputs_declarations", common_decls );
     
     auto result = compiler.CompileGlslToSpv( src, kind, "shader.glsl", options );
     if ( result.GetCompilationStatus() != shaderc_compilation_status_success )
@@ -344,14 +372,14 @@ void BasicPipeline::initializeShaderStages()
     assert( ! initialized ); 
     // Initialize shader modules (compile, link, etc..)
 
-    const char * vs_src = shaders_sources.vertex_shader_src ;      assert( vs_src != nullptr );
-    const char * fs_src = shaders_sources.fragment_shader_src ;    assert( fs_src != nullptr );
+    const std::string * vs_src = shaders_sources.vertex_shader_src ;      assert( vs_src != nullptr );
+    const std::string * fs_src = shaders_sources.fragment_shader_src ;    assert( fs_src != nullptr );
 
-    auto vertSPV = compileGLSL( vs_src, shaderc_vertex_shader);
+    auto vertSPV = compileGLSL( *vs_src, shaderc_vertex_shader);
 
     //auto tescSPV = compileGLSL(tescShaderSrc, shaderc_tess_control_shader);
     //auto teseSPV = compileGLSL(teseShaderSrc, shaderc_tess_evaluation_shader);
-    auto fragSPV = compileGLSL( fs_src, shaderc_fragment_shader);
+    auto fragSPV = compileGLSL( *fs_src, shaderc_fragment_shader);
 
     vk_vertex_shader_module       = createModule( vertSPV ) ; 
     vk_fragment_shader_module     = createModule( fragSPV ) ;
@@ -376,9 +404,12 @@ void BasicPipeline::initializeShaderStages()
     {
         assert( device->likelyHasTessellation );
         has_tessellation_shaders = true ;
+
+        const std::string * tesc_src = shaders_sources.tess_control_shader_src ;    assert( tesc_src != nullptr );
+        const std::string * tese_src = shaders_sources.tess_eval_shader_src ;     assert( tese_src != nullptr );
         
-        auto tescSPV = compileGLSL( shaders_sources.tess_control_shader_src, shaderc_tess_control_shader);
-        auto teseSPV = compileGLSL( shaders_sources.tess_eval_shader_src, shaderc_tess_evaluation_shader);
+        auto tescSPV = compileGLSL( *tesc_src, shaderc_tess_control_shader);
+        auto teseSPV = compileGLSL( *tese_src, shaderc_tess_evaluation_shader);
 
         vk_tess_control_shader_module = createModule( tescSPV ) ;
         vk_tess_eval_shader_module = createModule( teseSPV ) ;
@@ -401,7 +432,8 @@ void BasicPipeline::initializeShaderStages()
     if ( shaders_sources.geometry_shader_src != nullptr ) 
     {
         assert( device->likelyHasGeometryShader );
-        auto geomSPV = compileGLSL( shaders_sources.geometry_shader_src, shaderc_geometry_shader);
+        const std::string * geom_src = shaders_sources.geometry_shader_src ;    assert( geom_src != nullptr );
+        auto geomSPV = compileGLSL( *geom_src, shaderc_geometry_shader);
         vk_geometry_shader_module = createModule( geomSPV ) ;
         vk_shader_stages.push_back({ 
             .sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO, 

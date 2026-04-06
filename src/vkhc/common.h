@@ -27,11 +27,7 @@
 #include <shaderc/shaderc.hpp>
 
 
-// declaration of shader sources for the basic pipeline (move out of here! - must be in the pipeline using them))
-// extern const char* vertShaderSrc ;
-// extern const char* fragShaderSrc ;
-// extern const char* tescShaderSrc ;
-// extern const char* teseShaderSrc ;
+
 
 // common declarations inside the vkhc namespace 
 namespace vkhc 

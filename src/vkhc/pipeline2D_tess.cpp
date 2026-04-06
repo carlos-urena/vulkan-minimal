@@ -16,55 +16,63 @@
 
 
 /// ----------------------------------------------------------------------------------
+/// Common inputs declarations for all shaders
+/// ----------------------------------------------------------------------------------
+
+static const char* common_decls = R"glsl(
+
+// Inputs: push constants block:
+
+layout( push_constant, std430 ) uniform push_constants_block {
+    mat4 model_mat ; // model matrix (object to world)
+    int  texture_index ; // active texture index, -1 if no texture is active.
+    
+} pc ;
+
+// Inputs: uniform buffer object (WIP):
+
+layout( set=0, binding=0 ) uniform ubo_block 
+{
+    mat4 view_mat; // view matrix (world to camera)
+    mat4 proj_mat; // projection matrix (camera to clip)
+    float tsc_inner_level ;   // inner tessellation levels
+    float tsc_outer_level ;   // outer tessellation levels
+} ubo ;
+
+// Inputs: array of texture samplers 
+// (we will use the 'texture_index' push constant to index into this array)
+
+const int max_textures = 64 ; // must be equal to 'TexturesSet::max_textures'
+layout( set=1, binding=0 ) uniform sampler2D textures[max_textures]; // array of texture samplers
+
+)glsl";
+
+/// ----------------------------------------------------------------------------------
 /// VERTEX SHADER 
 /// ----------------------------------------------------------------------------------
 
 static const char* vertShaderSrc = R"glsl(
 #version 450
 
+//#common_inputs_declarations
     
+// Inputs: per vertex attributes:
 
-    // Inputs: push constants block:
+layout (location=0) in vec2 in_position_occ;
+layout (location=1) in vec3 in_color;
+layout (location=2) in vec2 in_tex_coords ;
 
-    layout( push_constant, std430 ) uniform push_constants_block {
-        mat4 model_mat ; // model matrix (object to world)
-        int  texture_index ; // active texture index, -1 if no texture is active.
-        
-    } pc ;
+// Outputs: to fragment shader (or..)
 
-    // Inputs: uniform buffer object (WIP):
+layout (location=0) out vec3 out_color;
+layout (location=1) out vec2 out_tex_coords ;
 
-    layout( set=0, binding=0 ) uniform ubo_block 
-    {
-        mat4 view_mat; // view matrix (world to camera)
-        mat4 proj_mat; // projection matrix (camera to clip)
-        float tsc_inner_level ;   // inner tessellation levels
-        float tsc_outer_level ;   // outer tessellation levels
-    } ubo ;
-
-    // Inputs: array of texture samplers 
-    // (we will use the 'texture_index' push constant to index into this array)
-
-    //const int max_textures = 64 ; // must be equal to 'TexturesSet::max_textures'
-    //layout( set=1, binding=0 ) uniform sampler2D textures[max_textures]; // array of texture samplers
-
-    // Inputs: per vertex attributes:
-
-    layout (location=0) in vec2 in_position_occ;
-    layout (location=1) in vec3 in_color;
-    layout (location=2) in vec2 in_tex_coords ;
-
-    // Outputs: to fragment shader (or..)
-
-    layout (location=0) out vec3 out_color;
-    layout (location=1) out vec2 out_tex_coords ;
-
-    void main() 
-    {
-        gl_Position =  ubo.proj_mat * ubo.view_mat * pc.model_mat * vec4( in_position_occ, 0.0, 1.0);
-        out_color      = in_color ;
-        out_tex_coords = in_tex_coords ;
-    }
+void main() 
+{
+    gl_Position =  ubo.proj_mat * ubo.view_mat * pc.model_mat * vec4( in_position_occ, 0.0, 1.0);
+    out_color      = in_color ;
+    out_tex_coords = in_tex_coords ;
+}
 )glsl";
 
 
@@ -78,25 +86,8 @@ static const char* tescShaderSrc = R"glsl(
 // size 3 patches (triangles)
 layout(vertices = 3) out;
 
-// Inputs: push constants block:
-layout( push_constant, std430 ) uniform push_constants_block {
-    mat4  model_mat ; // model matrix (object to world)
-    int   texture_index ; // active texture index, -1 if no texture is active.
-    
-} pc ;
+//#common_inputs_declarations
 
-// Inputs: uniform buffer object:
-layout( set=0, binding=0 ) uniform ubo_block 
-{
-    mat4 view_mat; // view matrix (world to camera)
-    mat4 proj_mat; // projection matrix (camera to clip)
-    float tsc_inner_level ; // inner tessellation levels
-    float tsc_outer_level ; // outer tessellation levels
-} ubo ;
-
-// Inputs: an array of texture samplers (we will use the 'texture_index' push constant to index into this array and select the active texture, in the future when we implement texturing)
-const int max_textures = 64 ; // must be equal to 'TexturesSet::max_textures'
-layout( set=1, binding=0 ) uniform sampler2D textures[max_textures]; // array of texture samplers
 
 // Inputs: per vertex attributes from previous stage
 
@@ -131,26 +122,8 @@ const char* teseShaderSrc = R"glsl(
 #version 450
 layout( triangles, equal_spacing, ccw) in;
 
-// Inputs: push constants block:
+//#common_inputs_declarations
 
-layout( push_constant, std430 ) uniform push_constants_block {
-    mat4 model_mat ; // model matrix (object to world)
-    int  texture_index ; // active texture index, -1 if no texture is active.
-    
-} pc ;
-
-// Inputs: uniform buffer object:
-
-layout( set=0, binding=0 ) uniform ubo_block {
-    mat4 view_mat; // view matrix (world to camera)
-    mat4 proj_mat; // projection matrix (camera to clip)
-    float tsc_inner_level ; // inner tessellation levels
-    float tsc_outer_level ; // outer tessellation levels
-} ubo ;
-
-// Inputs: an array of texture samplers (we will use the 'texture_index' push constant to index into this array and select the active texture, in the future when we implement texturing)
-const int max_textures = 64 ; // must be equal to 'TexturesSet::max_textures'
-layout( set=1, binding=0 ) uniform sampler2D textures[max_textures]; // array of texture samplers
 
 // Inputs: per vertex attributes from previous stage
 
@@ -206,29 +179,13 @@ const char *geomShaderSrc = R"glsl(
 layout( triangles ) in;
 layout( triangle_strip, max_vertices = 100 ) out;
 
-const int max_vertices = 76 ; // número máximo de vértices de salida (debe ser menor o igual que arriba, en layout)
+const int max_vertices = 99 ; // max number of vertices that the geometry shader can emit 
+// (must be at least 3 for the triangle itself, plus 6 for the edges, plus n*3 for the discs)
+// where 'n' is the number of triangles used to draw each disc
 
 
-// Inputs: push constants block:
+//#common_inputs_declarations
 
-layout( push_constant, std430 ) uniform push_constants_block {
-    mat4 model_mat ; // model matrix (object to world)
-    int  texture_index ; // active texture index, -1 if no texture is active.
-    
-} pc ;
-
-// Inputs: uniform buffer object:
-
-layout( set=0, binding=0 ) uniform ubo_block {
-    mat4 view_mat; // view matrix (world to camera)
-    mat4 proj_mat; // projection matrix (camera to clip)
-    float tsc_inner_level ; // inner tessellation levels
-    float tsc_outer_level ; // outer tessellation levels
-} ubo ;
-
-// Inputs: an array of texture samplers (we will use the 'texture_index' push constant to index into this array and select the active texture, in the future when we implement texturing)
-const int max_textures = 64 ; // must be equal to 'TexturesSet::max_textures'
-layout( set=1, binding=0 ) uniform sampler2D textures[max_textures]; // array of texture samplers
 
 // Inputs: per vertex attributes from previous stage
 // (each one is an array with 3 elements, as we are using triangle topology for tessellation)
@@ -244,6 +201,8 @@ layout (location=1) out vec2 out_tex_coords;
 // Pass through function (no geometry shader effect, just pass 
 // through the vertices from the tessellation evaluation shader 
 // to the fragment shader)
+
+// -----------------------------------------------------------------------------------------
 
 void Passthrough()
 {
@@ -277,8 +236,12 @@ void NewVertex( vec4 pos, vec4 color )
 
 void EmitDisc( vec4 centro, vec4 color )
 {
-    // número de triángulos que forman el disco (debe ser menor o igual que (max_vertices-4)/2/3, porque cada triángulo emite 3 vértices y cada iteración del bucle emite un triángulo)
-    const int   num_t  = ((max_vertices-4)/3)/3 ; 
+    // número de triángulos que forman el disco 
+    // nt = max_vertices/3 --> numero máximo de triángulos 
+    // nt-1
+    const int   nt_ed = (max_vertices/3) -1 ; // max number of triangles for edges and discs 
+    const int   nt_d  = nt_ed - 2*3 ;          // max number of triangles for discs (6 are for edges)
+    const int   num_t  = nt_d/3 ;           // number of triangles for each of the three discs (must be at least 3)
     const float angulo = 2.0f * 3.14159265f / float(num_t) ;
     float       radio  = radio_discos ;
 
@@ -332,18 +295,15 @@ void SegmentsAndDiscs()
         //c1 = v1_color[1] ,
         dz = vec4( 0.0f, 0.0f, +0.05f, 0.0f ) ; // desplazamiento en z para evitar z-fighting
     
-    //if ( u_visualizar_lineas )
+    
     
     EmitSegment( v0+dz, v1+dz, c_seg, c_seg );
     EmitSegment( v1+dz, v2+dz, c_seg, c_seg );
     EmitSegment( v2+dz, v0+dz, c_seg, c_seg );
     
-    //if ( u_visualizar_puntos ) 
-    //{
-        EmitDisc( v0+2.0*dz, c_dis ); 
-        EmitDisc( v1+2.0*dz, c_dis );
-        EmitDisc( v2+2.0*dz, c_dis );
-    //}
+    EmitDisc( v0+2.0*dz, c_dis ); 
+    EmitDisc( v1+2.0*dz, c_dis );
+    EmitDisc( v2+2.0*dz, c_dis );
 }
 
 // -----------------------------------------------------------------------------------------
@@ -409,51 +369,49 @@ void main()
 
 const char* fragShaderSrc = R"glsl(
 #version 450
-    // Inputs: push constants block:
+    
+//#common_inputs_declarations
 
-    layout( push_constant, std430 ) uniform push_constants_block {
-        mat4 model_mat ; // model matrix (object to world)
-        int  texture_index ; // active texture index, -1 if no texture is active.
-    } pc ;
+// Inputs: per-vertex attributes from previous stage
 
-    // Inputs: uniform buffer object:
+layout (location=0) in vec3 in_color;
+layout (location=1) in vec2 in_tex_coords;
 
-    layout( set=0, binding=0 ) uniform ubo_block {
-        mat4 view_mat; // view matrix (world to camera)
-        mat4 proj_mat; // projection matrix (camera to clip)
-        float tsc_inner_level ; // inner tessellation levels
-        float tsc_outer_level ; // outer tessellation levels
-    } ubo ;
+// Output: fragment color 
 
-    // Inputs: an array of texture samplers (we will use the 'texture_index' push constant to index into this array and select the active texture, in the future when we implement texturing)
-    const int max_textures = 64 ; // must be equal to 'TexturesSet::max_textures'
-    layout( set=1, binding=0 ) uniform sampler2D textures[max_textures]; // array of texture samplers
+layout (location=0) out vec4 out_color;
 
-    // Inputs: per-vertex attributes from previous stage
+// --------------- 
+// Main function.
 
-    layout (location=0) in vec3 in_color;
-    layout (location=1) in vec2 in_tex_coords;
-
-    // Output: fragment color 
-
-    layout (location=0) out vec4 out_color;
-
-    // --------------- 
-    // Main function.
-
-    void main()
-    {
-        if ( pc.texture_index >= 0 && in_tex_coords.s >= -0.01 ) // if a texture is active, use it to determine the fragment color
-             out_color = texture( textures[ pc.texture_index ], in_tex_coords ) ;
-        else // ulse interpolated vertex color
-            out_color = vec4( in_color, 1.0 );
-    }
+void main()
+{
+    if ( pc.texture_index >= 0 && in_tex_coords.s >= -0.01 ) // if a texture is active, use it to determine the fragment color
+            out_color = texture( textures[ pc.texture_index ], in_tex_coords ) ;
+    else // ulse interpolated vertex color
+        out_color = vec4( in_color, 1.0 );
+}
 )glsl";
 
 // -----------------------------------------------------------------------------------
 
 namespace vkhc
 {
+
+static std::string processShaderSource( const std::string & shader_src ) 
+{
+    std::string result = shader_src ;
+    result =  insert_source( result, "common_inputs_declarations", common_decls ) ;
+    return result ;
+}
+
+
+static std::string 
+    vertShaderSrc_full = processShaderSource( vertShaderSrc ),
+    tescShaderSrc_full = processShaderSource( tescShaderSrc ),
+    teseShaderSrc_full = processShaderSource( teseShaderSrc ),
+    geomShaderSrc_full = processShaderSource( geomShaderSrc ),
+    fragShaderSrc_full = processShaderSource( fragShaderSrc );
 
 Pipeline2DTess::Pipeline2DTess( VulkanContext & vulkan_context )
 
@@ -472,14 +430,15 @@ Pipeline2DTess::Pipeline2DTess( VulkanContext & vulkan_context )
     addUBOUniform( "proj_mat", sizeof(glm::mat4) ); // projection matrix
     addUBOUniform( "tsc_inner_level", sizeof(float) ); // inner tessellation levels
     addUBOUniform( "tsc_outer_level", sizeof(float) ); // outer tessellation levels
-    
+
+
     // set shaders sources 
     shaders_sources = 
-    {   .vertex_shader_src       = vertShaderSrc, 
-        .tess_control_shader_src = tescShaderSrc,
-        .tess_eval_shader_src    = teseShaderSrc,
-        .geometry_shader_src     = geomShaderSrc,
-        .fragment_shader_src     = fragShaderSrc
+    {   .vertex_shader_src       = & vertShaderSrc_full, 
+        .tess_control_shader_src = & tescShaderSrc_full,
+        .tess_eval_shader_src    = & teseShaderSrc_full,
+        .geometry_shader_src     = & geomShaderSrc_full,
+        .fragment_shader_src     = & fragShaderSrc_full
     };
 
     // set attributes formats (must correspond with inputs to the vertex shaders the shaders sources)
