@@ -22,11 +22,7 @@
 static const char* vertShaderSrc = R"glsl(
 #version 450
 
-    // Inputs: per vertex attributes:
-
-    layout (location=0) in vec2 in_position;
-    layout (location=1) in vec3 in_color;
-    layout (location=2) in vec2 in_tex_coords ;
+    
 
     // Inputs: push constants block:
 
@@ -52,21 +48,24 @@ static const char* vertShaderSrc = R"glsl(
     //const int max_textures = 64 ; // must be equal to 'TexturesSet::max_textures'
     //layout( set=1, binding=0 ) uniform sampler2D textures[max_textures]; // array of texture samplers
 
+    // Inputs: per vertex attributes:
+
+    layout (location=0) in vec2 in_position_occ;
+    layout (location=1) in vec3 in_color;
+    layout (location=2) in vec2 in_tex_coords ;
+
     // Outputs: to fragment shader (or..)
 
-    layout (location=0) out vec3 color_vs;
-    layout (location=1) out vec2 tex_coords_vs;
+    layout (location=0) out vec3 out_color;
+    layout (location=1) out vec2 out_tex_coords ;
 
     void main() 
     {
-        gl_Position =  ubo.proj_mat * ubo.view_mat * pc.model_mat * vec4( in_position, 0.0, 1.0);
-        color_vs      = in_color ;
-        tex_coords_vs = in_tex_coords ;
+        gl_Position =  ubo.proj_mat * ubo.view_mat * pc.model_mat * vec4( in_position_occ, 0.0, 1.0);
+        out_color      = in_color ;
+        out_tex_coords = in_tex_coords ;
     }
 )glsl";
-
-
-
 
 
 // --------------------------------------------------------------------------------
@@ -99,18 +98,22 @@ layout( set=0, binding=0 ) uniform ubo_block
 const int max_textures = 64 ; // must be equal to 'TexturesSet::max_textures'
 layout( set=1, binding=0 ) uniform sampler2D textures[max_textures]; // array of texture samplers
 
-layout (location=0) in vec3 color_vs[];
-layout (location=1) in vec2 tex_coords_vs[] ;
+// Inputs: per vertex attributes from previous stage
 
-layout (location=0) out vec3 color_tsc[] ;
-layout (location=1) out vec2 tex_coords_tsc[] ;
+layout (location=0) in vec3 in_color[];
+layout (location=1) in vec2 in_tex_coords[] ;
+
+// Outputs: per vertex attributes to next stage
+
+layout (location=0) out vec3 out_color[] ;
+layout (location=1) out vec2 out_tex_coords[] ;
 
 void main() 
 {
     gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
 
-    color_tsc[gl_InvocationID] = color_vs[gl_InvocationID] ;
-    tex_coords_tsc[gl_InvocationID] = tex_coords_vs[gl_InvocationID] ;
+    out_color[gl_InvocationID] = in_color[gl_InvocationID] ;
+    out_tex_coords[gl_InvocationID] = in_tex_coords[gl_InvocationID] ;
 
     gl_TessLevelInner[0] = ubo.tsc_inner_level;
 
@@ -149,18 +152,19 @@ layout( set=0, binding=0 ) uniform ubo_block {
 const int max_textures = 64 ; // must be equal to 'TexturesSet::max_textures'
 layout( set=1, binding=0 ) uniform sampler2D textures[max_textures]; // array of texture samplers
 
+// Inputs: per vertex attributes from previous stage
 
-layout (location=0) in vec3 color_tsc[];
-layout (location=1) in vec2 tex_coords_tsc[] ;
+layout (location=0) in vec3 in_color[];
+layout (location=1) in vec2 in_tex_coords[] ;
 
-layout (location=0) out vec3 color_tse ;
-layout (location=1) out vec2 tex_coords_tse ;
+// Outputs: per vertex attributes to next stage
+
+layout (location=0) out vec3 out_color ;
+layout (location=1) out vec2 out_tex_coords ;
 
 // float height(vec2 p){
 //     return 0.2 * sin(8*p.x) * cos(8*p.y);
 // }
-
-
 
 vec4 Mix4( vec2 bcc, vec4 v0, vec4 v1, vec4 v2  )
 {
@@ -188,8 +192,8 @@ void main() {
 
     //pos.z += height(pos.xy);
 
-    color_tse = Mix3( uv, color_tsc[0], color_tsc[1], color_tsc[2] ) ;
-    tex_coords_tse = Mix2( uv, tex_coords_tsc[0], tex_coords_tsc[1], tex_coords_tsc[2] ) ;    
+    out_color = Mix3( uv, in_color[0], in_color[1], in_color[2] ) ;
+    out_tex_coords = Mix2( uv, in_tex_coords[0], in_tex_coords[1], in_tex_coords[2] ) ;    
 }
 )glsl";
 
@@ -226,13 +230,16 @@ layout( set=0, binding=0 ) uniform ubo_block {
 const int max_textures = 64 ; // must be equal to 'TexturesSet::max_textures'
 layout( set=1, binding=0 ) uniform sampler2D textures[max_textures]; // array of texture samplers
 
-// Inputs from tessellation evaluation shader
-layout (location=0) in vec3 color_tse[];
-layout (location=1) in vec2 tex_coords_tse[];
+// Inputs: per vertex attributes from previous stage
+// (each one is an array with 3 elements, as we are using triangle topology for tessellation)
 
-// Outputs to fragment shader
-layout (location=0) out vec3 color_geo;
-layout (location=1) out vec2 tex_coords_geo;
+layout (location=0) in vec3 in_color[];
+layout (location=1) in vec2 in_tex_coords[];
+
+// Outputs: per-vertex attributes to next stages
+
+layout (location=0) out vec3 out_color;
+layout (location=1) out vec2 out_tex_coords;
 
 // Pass through function (no geometry shader effect, just pass 
 // through the vertices from the tessellation evaluation shader 
@@ -242,9 +249,9 @@ void Passthrough()
 {
     for ( int i = 0; i < gl_in.length(); ++i )
     {
-        gl_Position = gl_in[i].gl_Position;
-        color_geo = color_tse[i];
-        tex_coords_geo = tex_coords_tse[i];
+        gl_Position    = gl_in[i].gl_Position;
+        out_color      = in_color[i];
+        out_tex_coords = in_tex_coords[i];
         EmitVertex();
     }
     EndPrimitive();
@@ -258,17 +265,17 @@ const float grosor_lineas = 0.006f ; // grosor de las líneas
 // ----------------------------------------------------------------------------
 // Emite un vértice con la posición 'pos_wcc'
 //
-void Vertice( vec4 pos, vec4 color )
+void NewVertex( vec4 pos, vec4 color )
 {
-    gl_Position = pos ;
-    color_geo = color.rgb ;
-    tex_coords_geo = vec2( -2.0f, -2.0f ) ; // no se usan coordenadas de textura en el shader de geometría
+    gl_Position    = pos ;
+    out_color      = color.rgb ;
+    out_tex_coords = vec2( -2.0f, -2.0f ) ; // do not use texturing for generated geometry
     EmitVertex() ;
 }
 // ----------------------------------------------------------------------------
 // Emite las primitivas (triángulos) que forman un disco de radio w/2 centrado en centro
 
-void EmitirPrimDisco( vec4 centro, vec4 color )
+void EmitDisc( vec4 centro, vec4 color )
 {
     // número de triángulos que forman el disco (debe ser menor o igual que (max_vertices-4)/2/3, porque cada triángulo emite 3 vértices y cada iteración del bucle emite un triángulo)
     const int   num_t  = ((max_vertices-4)/3)/3 ; 
@@ -286,9 +293,9 @@ void EmitirPrimDisco( vec4 centro, vec4 color )
         float a        = float(i) * angulo ;
         vec4  vert_nue = centro + vec4( f*radio*cos(a), radio*sin(a), 0.0f, 0.0f ) ;
         
-        Vertice( centro, color );  
-        Vertice( vert_ant, color ); 
-        Vertice( vert_nue, color );
+        NewVertex( centro, color );  
+        NewVertex( vert_ant, color ); 
+        NewVertex( vert_nue, color );
         EndPrimitive();
 
         vert_ant = vert_nue ;
@@ -300,13 +307,13 @@ void EmitirPrimDisco( vec4 centro, vec4 color )
 // desde v0 hasta v1, con colores c0 en v0 y c1 en v1 
 // (los colores se interpolan linealmente en el interior de la primitiva) 
 //
-void EmitirPrimSegmento( vec4 v0, vec4 v1, vec4 c0, vec4 c1 )
+void EmitSegment( vec4 v0, vec4 v1, vec4 c0, vec4 c1 )
 {
     vec4 s  = normalize( v1 - v0 ); // vector director del segmento
     vec4 n  = (grosor_lineas/2.0f)*vec4( -s.y, s.x, 0.0f, 0.0f ); // vector normal al segmento de long w/2
 
-    Vertice( v0-n, c0 ); Vertice( v0+n, c0 );  
-    Vertice( v1-n, c1 ); Vertice( v1+n, c1 );  
+    NewVertex( v0-n, c0 ); NewVertex( v0+n, c0 );  
+    NewVertex( v1-n, c1 ); NewVertex( v1+n, c1 );  
 
     EndPrimitive();
 }
@@ -327,15 +334,15 @@ void SegmentsAndDiscs()
     
     //if ( u_visualizar_lineas )
     
-    EmitirPrimSegmento( v0+dz, v1+dz, c_seg, c_seg );
-    EmitirPrimSegmento( v1+dz, v2+dz, c_seg, c_seg );
-    EmitirPrimSegmento( v2+dz, v0+dz, c_seg, c_seg );
+    EmitSegment( v0+dz, v1+dz, c_seg, c_seg );
+    EmitSegment( v1+dz, v2+dz, c_seg, c_seg );
+    EmitSegment( v2+dz, v0+dz, c_seg, c_seg );
     
     //if ( u_visualizar_puntos ) 
     //{
-        EmitirPrimDisco( v0+2.0*dz, c_dis ); 
-        EmitirPrimDisco( v1+2.0*dz, c_dis );
-        EmitirPrimDisco( v2+2.0*dz, c_dis );
+        EmitDisc( v0+2.0*dz, c_dis ); 
+        EmitDisc( v1+2.0*dz, c_dis );
+        EmitDisc( v2+2.0*dz, c_dis );
     //}
 }
 
@@ -372,14 +379,14 @@ void EdgesTriangleStrip()
         
         
         // emitir vértice interno (nuevo)
-        color_geo  = white ;
-        tex_coords_geo  = tex_coords_tse[j] ;
+        out_color  = white ;
+        out_tex_coords  = in_tex_coords[j] ;
         gl_Position = posic_int ; 
         EmitVertex() ;
 
         // emitir vértice externo (original)
-        color_geo  = white ;
-        tex_coords_geo  = tex_coords_tse[j] ;
+        out_color  = white ;
+        out_tex_coords  = in_tex_coords[j] ;
         gl_Position = posic_ext ;
         EmitVertex() ;
     }
@@ -422,10 +429,10 @@ const char* fragShaderSrc = R"glsl(
     const int max_textures = 64 ; // must be equal to 'TexturesSet::max_textures'
     layout( set=1, binding=0 ) uniform sampler2D textures[max_textures]; // array of texture samplers
 
-    // Inputs: varying from vertex shader
+    // Inputs: per-vertex attributes from previous stage
 
-    layout (location=0) in vec3 color_geo;
-    layout (location=1) in vec2 tex_coords_geo ;
+    layout (location=0) in vec3 in_color;
+    layout (location=1) in vec2 in_tex_coords;
 
     // Output: fragment color 
 
@@ -436,10 +443,10 @@ const char* fragShaderSrc = R"glsl(
 
     void main()
     {
-        if ( pc.texture_index >= 0 && tex_coords_geo.s >= -0.01 ) // if a texture is active, use it to determine the fragment color
-             out_color = texture( textures[ pc.texture_index ], tex_coords_geo ) ;
+        if ( pc.texture_index >= 0 && in_tex_coords.s >= -0.01 ) // if a texture is active, use it to determine the fragment color
+             out_color = texture( textures[ pc.texture_index ], in_tex_coords ) ;
         else // ulse interpolated vertex color
-            out_color = vec4( color_geo, 1.0 );
+            out_color = vec4( in_color, 1.0 );
     }
 )glsl";
 
