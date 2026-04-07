@@ -17,6 +17,7 @@
 
 /// ----------------------------------------------------------------------------------
 /// Common inputs declarations for all shaders
+/// Includes: UBO uniforms, push constants, and texture samplers
 /// ----------------------------------------------------------------------------------
 
 static const char* common_decls = R"glsl(
@@ -36,7 +37,9 @@ layout( set=0, binding=0 ) uniform ubo_block
     mat4 view_mat; // view matrix (world to camera)
     mat4 proj_mat; // projection matrix (camera to clip)
     float tsc_inner_level ;   // inner tessellation levels
-    float tsc_outer_level ;   // outer tessellation levels
+    float tsc_outer_level_0 ;   // outer tessellation levels
+    float tsc_outer_level_1 ;   // outer tessellation levels
+    float tsc_outer_level_2 ;   // outer tessellation levels
 } ubo ;
 
 // Inputs: array of texture samplers 
@@ -47,6 +50,8 @@ layout( set=1, binding=0 ) uniform sampler2D textures[max_textures]; // array of
 
 )glsl";
 
+
+
 /// ----------------------------------------------------------------------------------
 /// VERTEX SHADER 
 /// ----------------------------------------------------------------------------------
@@ -56,13 +61,13 @@ static const char* vertShaderSrc = R"glsl(
 
 //#common_inputs_declarations
     
-// Inputs: per vertex attributes:
+// Inputs: per vertex attributes from vertex buffers
 
 layout (location=0) in vec2 in_position_occ;
 layout (location=1) in vec3 in_color;
 layout (location=2) in vec2 in_tex_coords ;
 
-// Outputs: to fragment shader (or..)
+// Outputs: per vertex attributes to next stage 
 
 layout (location=0) out vec3 out_color;
 layout (location=1) out vec2 out_tex_coords ;
@@ -108,9 +113,9 @@ void main()
 
     gl_TessLevelInner[0] = ubo.tsc_inner_level;
 
-    gl_TessLevelOuter[0] = ubo.tsc_outer_level;
-    gl_TessLevelOuter[1] = ubo.tsc_outer_level;
-    gl_TessLevelOuter[2] = ubo.tsc_outer_level;    
+    gl_TessLevelOuter[0] = ubo.tsc_outer_level_0;
+    gl_TessLevelOuter[1] = ubo.tsc_outer_level_1;
+    gl_TessLevelOuter[2] = ubo.tsc_outer_level_2;    
 }
 )glsl";
 
@@ -428,8 +433,11 @@ Pipeline2DTess::Pipeline2DTess( VulkanContext & vulkan_context )
     // set metadata about UBO uniforms 
     addUBOUniform( "view_mat", sizeof(glm::mat4) ); // view matrix
     addUBOUniform( "proj_mat", sizeof(glm::mat4) ); // projection matrix
-    addUBOUniform( "tsc_inner_level", sizeof(float) ); // inner tessellation levels
-    addUBOUniform( "tsc_outer_level", sizeof(float) ); // outer tessellation levels
+    
+    addUBOUniform( "tsc_inner_level", sizeof(float) ); // outer tessellation levels
+    addUBOUniform( "tsc_outer_level_0", sizeof(float) ); // inner tessellation levels
+    addUBOUniform( "tsc_outer_level_1", sizeof(float) ); // inner tessellation levels
+    addUBOUniform( "tsc_outer_level_2", sizeof(float) ); // inner tessellation levels
 
 
     // set shaders sources 

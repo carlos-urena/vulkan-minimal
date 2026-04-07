@@ -1,8 +1,8 @@
-// Implementation of the class 'BasicPipeline' 
+// Implementation of the class 'BasicPipeline2D' 
 //
-// Encapsulates a graphics pipeline, including the Vulkan 
-// pipeline object (VkPipeline), the pipeline layout, and the 
-// descriptor set layout for UBOs.
+// Derived from 'BasicPipeline' 
+// Encapsulates a simple 2D graphics pipeline, including vertex and 
+// fragment shaders, but not tesselation or vertex shaders.
 
 
 #include <pipeline2D.h>

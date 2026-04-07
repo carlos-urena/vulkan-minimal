@@ -87,8 +87,12 @@ int main()
 
     bool close_requested = false ; 
 
-    float tsc_inner_level = 5.2f ;
-    float tsc_outer_level = 5.2f ;
+    // tessellation levels (for the pipeline with tessellation shaders)
+    int tsc_inner_level_int = 4 ;
+    int tsc_outer_level_int[3] = { tsc_inner_level_int, tsc_inner_level_int, tsc_inner_level_int } ;
+    const int max_tess_level = 20 ;
+    float tsc_inner_level = float(tsc_inner_level_int) ;
+    float tsc_outer_level[3] = { float(tsc_outer_level_int[0]), float(tsc_outer_level_int[1]), float(tsc_outer_level_int[2]) } ;
 
     // enter the main loop
     while ( ! context.windowShouldClose() && ! close_requested )  
@@ -116,7 +120,9 @@ int main()
         pipeline.setProjectionMatrix( proj_mat ) ;
 
         pipeline.setUBOUniform( "tsc_inner_level", &tsc_inner_level ) ;
-        pipeline.setUBOUniform( "tsc_outer_level", &tsc_outer_level ) ;
+        pipeline.setUBOUniform( "tsc_outer_level_0", &tsc_outer_level[0] ) ;
+        pipeline.setUBOUniform( "tsc_outer_level_1", &tsc_outer_level[1] ) ;
+        pipeline.setUBOUniform( "tsc_outer_level_2", &tsc_outer_level[2] ) ;
 
         // begin frame: acquire an image from the swap chain, and get its corresponding command buffer
         if ( ! context.beginFrame( clear_color, cmd, image_index ) ) 
@@ -140,8 +146,19 @@ int main()
             {       
                 SliderFloat("Speed", &rotation_speed, 0.0f, 3.0f);
                 SliderFloat("Scale", &triangle_scale, 0.2f, 2.0f);
-                SliderFloat("Tess. inner level", &tsc_inner_level, 1.0f, 10.0f);
-                SliderFloat("Tess. outer level", &tsc_outer_level, 1.0f, 10.0f);
+                if ( SliderInt("Tess. inner level", &tsc_inner_level_int, 1, max_tess_level) )
+                    tsc_inner_level = float(tsc_inner_level_int) ;
+                for ( int i = 0 ; i < 3 ; i++ )
+                {
+                    const std::string label = "Tess. outer level " + std::to_string(i),
+                                      ident = "tsc_outer_level_" + std::to_string(i) ;
+
+                    if ( SliderInt( label.c_str(), &tsc_outer_level_int[i], 1, max_tess_level) )
+                        tsc_outer_level[i] = float(tsc_outer_level_int[i]) ;
+                        pipeline.setUBOUniform( ident.c_str(), &tsc_outer_level[i] ) ;
+                }
+            
+                
                 int texture_combo_index = texture_index + 1 ; // map -1..3 to 0..4 for ImGui combo
                 if ( Combo("Texture", &texture_combo_index, "No texture (vert. colors)\0Wood 1\0Wood 2\0Wood 3\0Procedural texture\0") )
                     texture_index = texture_combo_index - 1 ;
