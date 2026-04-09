@@ -148,14 +148,17 @@ int main()
                 SliderFloat("Scale", &triangle_scale, 0.2f, 2.0f);
                 if ( SliderInt("Tess. inner level", &tsc_inner_level_int, 1, max_tess_level) )
                     tsc_inner_level = float(tsc_inner_level_int) ;
+                
                 for ( int i = 0 ; i < 3 ; i++ )
                 {
                     const std::string label = "Tess. outer level " + std::to_string(i),
                                       ident = "tsc_outer_level_" + std::to_string(i) ;
 
                     if ( SliderInt( label.c_str(), &tsc_outer_level_int[i], 1, max_tess_level) )
+                    {
                         tsc_outer_level[i] = float(tsc_outer_level_int[i]) ;
                         pipeline.setUBOUniform( ident.c_str(), &tsc_outer_level[i] ) ;
+                    }
                 }
             
                 
