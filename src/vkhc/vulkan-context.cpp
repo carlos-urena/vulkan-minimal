@@ -50,11 +50,10 @@ void framebufferResizeCallback( GLFWwindow* window, int nx, int ny )
 
 VulkanContext::VulkanContext( int nx, int ny, const char * title )
 {            
-    if ( ctx_instance != nullptr ) 
-        throw std::runtime_error("VulkanState instance already exists !!");
+    Assert( ctx_instance == nullptr, " VulkanContext::VulkanContext:'ctx_instance' instance already exists !!");
 
-    assert( nx > 0 );
-    assert( ny > 0 );
+    Assert( nx > 0, "VulkanContext constructor: 'nx' must be > 0" );
+    Assert( ny > 0, "VulkanContext constructor: 'ny' must be > 0" );
 
     // initialize all state objects 
     glfw_context = new GLFWContext{ nx, ny, title }; assert( glfw_context != nullptr );  
@@ -68,21 +67,26 @@ VulkanContext::VulkanContext( int nx, int ny, const char * title )
     imgui_state  = new IMGUIContext{ instance, device, surface, render_pass, swap_chain, glfw_context };                  
     assert( imgui_state != nullptr );
 
+    // register this object as the context singleton
     ctx_instance = this ;
 }
 // --------------------------------------------------------------------------------
 
 VulkanContext::~VulkanContext()
 {
-    // destruir objetos
-    delete imgui_state ;      imgui_state = nullptr ; // (se debe destruir cuando todavía existe el device)
-    delete swap_chain ;       swap_chain  = nullptr ;    
-    delete cmd_buffers ;      cmd_buffers = nullptr ;
-    
-    delete device ;     device     = nullptr ;
-    delete surface ;    surface    = nullptr ; // destruir antes de la instancia
-    delete instance ;   instance   = nullptr ;
-    delete glfw_context ; glfw_context = nullptr ;
+    // destroy object (in reverse creation order).
+
+    delete imgui_state ;      imgui_state  = nullptr ; // (must be destroyed when the device still exists))
+    delete cmd_buffers ;      cmd_buffers  = nullptr ;
+    delete swap_chain ;       swap_chain   = nullptr ;  
+    delete render_pass ;      render_pass  = nullptr ; 
+    delete surface ;          surface      = nullptr ; // destruir antes de la instancia
+    delete sync_objects ;     sync_objects = nullptr ;
+    delete device ;           device       = nullptr ;
+    delete instance ;         instance     = nullptr ;
+    delete glfw_context ;     glfw_context = nullptr ;
+
+    ctx_instance = nullptr ; // reset the context singleton pointer to null
 }
 
 // --------------------------------------------------------------------------------
@@ -239,4 +243,4 @@ void VulkanContext::endIMGUIFrame( VkCommandBuffer & vk_cmd )
     imgui_state->endFrame( vk_cmd );
 }
 
-} // fin del namespace vkhc 
+} // vkhc namespace end 

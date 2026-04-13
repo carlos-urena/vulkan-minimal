@@ -326,5 +326,5 @@ Device::~Device()
     std::cout << "Deleted device" << std::endl ;
 }
 
-}  // fin del namespace vkhc 
+}  // vkhc namespace end 
 

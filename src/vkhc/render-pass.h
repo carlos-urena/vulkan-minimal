@@ -19,15 +19,9 @@ namespace vkhc
 class RenderPass
 {
     public:
-    VkRenderPass vk_render_pass ;
-
-    Device * device = nullptr ;
-    Surface * surface = nullptr ;
-
-    VkAttachmentDescription colorAttachment {};
-    VkAttachmentReference   colorRef {};
-    VkSubpassDescription    subpass {};
-    VkRenderPassCreateInfo  rpci{ VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };
+    VkRenderPass vk_render_pass = VK_NULL_HANDLE ;
+    Device *     device  = nullptr ;
+    Surface *    surface = nullptr ;
 
     // constructor 
     RenderPass( Device * p_device, Surface * p_surface );
@@ -37,8 +31,11 @@ class RenderPass
     
     // ends a render pass on a command buffer
     void end( VkCommandBuffer & vk_cmd_buffer ) ;
+
+    // destroys the render pass 
+    ~RenderPass() ;
     
 } ;
 
-} // fin del namespace vkhc 
+} // vkhc namespace end 
 

@@ -60,5 +60,5 @@ class VertexArray
     
 } ; // fin de la clase VertexArray
 
-} // fin del namespace vkhc 
+} // vkhc namespace end 
 

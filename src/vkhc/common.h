@@ -63,22 +63,16 @@ void framebufferResizeCallback( GLFWwindow* window, int nx, int ny ) ;
 // api in use
 constexpr auto api_version_in_use = VK_API_VERSION_1_3 ;
 
-
 // get the vendor name from the vendor Id
-inline const char* getVendorName( uint32_t vendorId ) 
-{
-    switch (vendorId) {
-        case 0x10DE: return "NVIDIA";
-        case 0x1002:
-        case 0x1022: return "AMD";
-        case 0x8086: return "Intel";
-        case 0x13B5: return "ARM";
-        case 0x5143: return "Qualcomm";
-        case 0x1010: return "Imagination Technologies";
-        case 0x106B: return "Apple";
-        default: return "Unknown vendor";
-    }
-}
-// -----------------------------------------------------------------------------
+const char* getVendorName( uint32_t vendorId ) ;
+
+// assert macro
+#define Assert( condition, msg ) vkhc::AssertFunction( condition, msg, __FILE__, __LINE__ )
+void ErrorExitFunction( const std::string & msg, const char * file, const int line ) ;
+
+// error exit function
+#define ErrorExit( msg ) vkhc::ErrorExitFunction( msg, __FILE__, __LINE__ )
+void AssertFunction( bool condition, const std::string & msg, const char * file, const int line )  ;
+
 
 } // end of namespace vkhc

@@ -254,8 +254,6 @@ void EmitDisc( vec4 centro, vec4 color )
 
     vec4 vert_ant  = centro + vec4( f*radio, 0.0f, 0.0f, 0.0f ) ;
 
-    
-    
     for( int i = 1 ; i <= num_t ; i++ )
     {
         float a        = float(i) * angulo ;
@@ -311,57 +309,9 @@ void SegmentsAndDiscs()
     EmitDisc( v2+2.0*dz, c_dis );
 }
 
-// -----------------------------------------------------------------------------------------
-// Esta función produce pares de triángulos en cada arista del triángulo de entrada
-
-void EdgesTriangleStrip()
-{
-    // calcular el centro y los tres vectores desde el centro a los vértices
-    vec3 p0 = gl_in[0].gl_Position.xyz ;
-    vec3 p1 = gl_in[1].gl_Position.xyz ;
-    vec3 p2 = gl_in[2].gl_Position.xyz ;
-    vec3 centro = (p0 + p1 + p2) / 3.0 ;
-    vec3 white = vec3( 1.0, 1.0, 1.0 ) ;
-    vec4 dz = vec4( 0.0f, 0.0f, +0.05f, 0.0f ) ; // desplazamiento en z para evitar z-fighting
-    
-    const float g = 0.1 ; // 0.15 ; // grosor relativo de las aristas
-
-    // emitir una tira con 6 triángulos (2 triángulos por arista)
-    // para eso se emiten 8 vértices (2 por iteración del bucle)
-    //   + primero dos vértices iniciales 
-    //   + luego cada uno de los 6 restantes cierra un triángulo
-    
-    for( int i = 0 ; i < 4 ; i++ )  // en cada iteración se emiten dos vértices
-    {
-        // j == indice del vértice original en la entrada
-        int j = ( i < 3 ) ? i : 0 ;
-
-        vec3 posj = gl_in[j].gl_Position.xyz ;
-
-        // calcular el vértice externo (original) y el interno (nuevo)
-        vec4 posic_ext = vec4( posj, 1.0 ) +dz ;
-        vec4 posic_int = vec4( centro + (1.0-g)*(posj - centro), 1.0 ) +dz ; 
-        
-        
-        // emitir vértice interno (nuevo)
-        out_color  = white ;
-        out_tex_coords  = in_tex_coords[j] ;
-        gl_Position = posic_int ; 
-        EmitVertex() ;
-
-        // emitir vértice externo (original)
-        out_color  = white ;
-        out_tex_coords  = in_tex_coords[j] ;
-        gl_Position = posic_ext ;
-        EmitVertex() ;
-    }
-    EndPrimitive() ;
-}
-
 void main()
 {
     Passthrough();
-    //EdgesTriangleStrip();
     SegmentsAndDiscs();
 }
 

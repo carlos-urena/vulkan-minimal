@@ -58,5 +58,5 @@ class VertexBuffer
 
 } ; // fin de la clase VertexBuffer
 
-} // fin del namespace vkhc 
+} // vkhc namespace end 
 

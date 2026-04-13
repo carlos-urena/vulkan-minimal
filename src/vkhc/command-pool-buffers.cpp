@@ -131,5 +131,5 @@ void CommandPoolAndBuffers::endSingleTimeCommands( VkCommandBuffer vk_cmd )
     vkFreeCommandBuffers( device->vk_device, vk_pool, 1, &vk_cmd );
 }
 
-} // fin del namespace vkhc 
+} // vkhc namespace end 
 

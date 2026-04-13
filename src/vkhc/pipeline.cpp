@@ -56,7 +56,7 @@ VkShaderModule BasicPipeline::createModule( std::vector<uint32_t>& spirv_code )
     
     const VkResult res = vkCreateShaderModule( device->vk_device, &smci, nullptr, &vk_module);
     if ( res != VK_SUCCESS )
-        throw std::runtime_error("vkCreateShaderModule failed");
+        ErrorExit("vkCreateShaderModule failed");
     return vk_module;
 };
 
@@ -105,8 +105,9 @@ uint32_t BasicPipeline::getAttributeFormatSize( const VkFormat format )
     {
         case VK_FORMAT_R32G32_SFLOAT    : return 2 * sizeof(float); // vec2
         case VK_FORMAT_R32G32B32_SFLOAT : return 3 * sizeof(float); // vec3
-        default: throw std::runtime_error("Unsupported attribute format (creating pipeline)");
+        default: ErrorExit("Unsupported attribute format (creating pipeline)");
     }
+    return 0 ;
 }
 // -----------------------------------------------------------------------------
 // adds a push constant range. The calls order must match the push constant block in shaders 
@@ -217,7 +218,7 @@ void BasicPipeline::initializeUBODescriptor()
     ubo_bci.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
     ubo_bci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     if ( vkCreateBuffer( device->vk_device, &ubo_bci, nullptr, &vk_view_ubo_buffer ) != VK_SUCCESS )
-        throw std::runtime_error("Failed to create UBO buffer");
+        ErrorExit("Failed to create UBO buffer");
 
     VkMemoryRequirements ubo_mem_req{};
     vkGetBufferMemoryRequirements( device->vk_device, vk_view_ubo_buffer, &ubo_mem_req );
@@ -230,9 +231,9 @@ void BasicPipeline::initializeUBODescriptor()
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
 
     if ( vkAllocateMemory( device->vk_device, &ubo_mai, nullptr, &vk_view_ubo_memory ) != VK_SUCCESS )
-        throw std::runtime_error("Failed to allocate UBO memory");
+        ErrorExit("Failed to allocate UBO memory");
     if ( vkBindBufferMemory( device->vk_device, vk_view_ubo_buffer, vk_view_ubo_memory, 0 ) != VK_SUCCESS )
-        throw std::runtime_error("Failed to bind UBO memory");
+        ErrorExit("Failed to bind UBO memory");
     //setViewMatrix( glm::mat4(1.0f) );
 
     VkDescriptorSetLayoutBinding ubo_binding{};
@@ -250,7 +251,7 @@ void BasicPipeline::initializeUBODescriptor()
     ubo_set_layout_ci.pBindings = &ubo_binding;
 
     if ( vkCreateDescriptorSetLayout( device->vk_device, &ubo_set_layout_ci, nullptr, &vk_ubo_set_layout ) != VK_SUCCESS )
-        throw std::runtime_error("Failed to create UBO descriptor set layout");
+        ErrorExit("Failed to create UBO descriptor set layout");
 
     VkDescriptorPoolSize ubo_pool_size{};
     ubo_pool_size.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -261,14 +262,14 @@ void BasicPipeline::initializeUBODescriptor()
     ubo_dpci.poolSizeCount = 1;
     ubo_dpci.pPoolSizes = &ubo_pool_size;
     if ( vkCreateDescriptorPool( device->vk_device, &ubo_dpci, nullptr, &vk_ubo_descriptor_pool ) != VK_SUCCESS )
-        throw std::runtime_error("Failed to create UBO descriptor pool");
+        ErrorExit("Failed to create UBO descriptor pool");
 
     VkDescriptorSetAllocateInfo ubo_dsai{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
     ubo_dsai.descriptorPool = vk_ubo_descriptor_pool;
     ubo_dsai.descriptorSetCount = 1;
     ubo_dsai.pSetLayouts = &vk_ubo_set_layout;
     if ( vkAllocateDescriptorSets( device->vk_device, &ubo_dsai, &vk_ubo_descriptor_set ) != VK_SUCCESS )
-        throw std::runtime_error("Failed to allocate UBO descriptor set");
+        ErrorExit("Failed to allocate UBO descriptor set");
 
     VkDescriptorBufferInfo ubo_buffer_info{};
     ubo_buffer_info.buffer = vk_view_ubo_buffer;
@@ -303,7 +304,7 @@ void BasicPipeline::initializeTextureSamplersDescriptor()
     textures_set_layout_ci.bindingCount = 1;
     textures_set_layout_ci.pBindings = &textures_binding;
     if ( vkCreateDescriptorSetLayout( device->vk_device, &textures_set_layout_ci, nullptr, &vk_textures_set_layout ) != VK_SUCCESS )
-        throw std::runtime_error("Failed to create textures descriptor set layout");
+        ErrorExit("Failed to create textures descriptor set layout");
 
     VkDescriptorPoolSize textures_pool_size{};
     textures_pool_size.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -314,14 +315,14 @@ void BasicPipeline::initializeTextureSamplersDescriptor()
     textures_dpci.poolSizeCount = 1;
     textures_dpci.pPoolSizes = &textures_pool_size;
     if ( vkCreateDescriptorPool( device->vk_device, &textures_dpci, nullptr, &vk_textures_descriptor_pool ) != VK_SUCCESS )
-        throw std::runtime_error("Failed to create textures descriptor pool");
+        ErrorExit("Failed to create textures descriptor pool");
 
     VkDescriptorSetAllocateInfo textures_dsai{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
     textures_dsai.descriptorPool = vk_textures_descriptor_pool;
     textures_dsai.descriptorSetCount = 1;
     textures_dsai.pSetLayouts = &vk_textures_set_layout;
     if ( vkAllocateDescriptorSets( device->vk_device, &textures_dsai, &vk_textures_descriptor_set ) != VK_SUCCESS )
-        throw std::runtime_error("Failed to allocate textures descriptor set");
+        ErrorExit("Failed to allocate textures descriptor set");
 }
 // -----------------------------------------------------------------------------
 
@@ -363,7 +364,7 @@ void BasicPipeline::createPipelineLayout()
     
     // create the pipeline layout 
     if ( vkCreatePipelineLayout( device->vk_device, &plci, nullptr, &vk_pipeline_layout ) != VK_SUCCESS )
-        throw std::runtime_error("Failed to create pipeline layout");
+        ErrorExit("Failed to create pipeline layout");
 }
 // ------------------------------------------------------------------------------
 
@@ -546,37 +547,37 @@ void BasicPipeline::createGraphicsPipeline()
     // Validation lambda to catch common mistakes in pipeline creation. This is not exhaustive, just a sanity check.
     auto validateGpci = [](const VkGraphicsPipelineCreateInfo& info) {
         if (info.sType != VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO)
-            throw std::runtime_error("gpci.sType is invalid");
+            ErrorExit("gpci.sType is invalid");
         if (info.stageCount == 0 || info.pStages == nullptr)
-            throw std::runtime_error("gpci has no shader stages");
+            ErrorExit("gpci has no shader stages");
         if (info.pInputAssemblyState == nullptr)
-            throw std::runtime_error("gpci.pInputAssemblyState is null");
+            ErrorExit("gpci.pInputAssemblyState is null");
         if (info.pRasterizationState == nullptr)
-            throw std::runtime_error("gpci.pRasterizationState is null");
+            ErrorExit("gpci.pRasterizationState is null");
         if (info.pViewportState == nullptr)
-            throw std::runtime_error("gpci.pViewportState is null");
+            ErrorExit("gpci.pViewportState is null");
         if (info.pColorBlendState == nullptr)
-            throw std::runtime_error("gpci.pColorBlendState is null");
+            ErrorExit("gpci.pColorBlendState is null");
         if (info.layout == VK_NULL_HANDLE)
-            throw std::runtime_error("gpci.layout is null");
+            ErrorExit("gpci.layout is null");
         if (info.renderPass == VK_NULL_HANDLE)
-            throw std::runtime_error("gpci.renderPass is null");
+            ErrorExit("gpci.renderPass is null");
 
         for (uint32_t i = 0; i < info.stageCount; ++i) {
             if (info.pStages[i].module == VK_NULL_HANDLE)
-                throw std::runtime_error("gpci contains a shader stage with null module");
+                ErrorExit("gpci contains a shader stage with null module");
             if (info.pStages[i].pName == nullptr)
-                throw std::runtime_error("gpci contains a shader stage with null entry point");
+                ErrorExit("gpci contains a shader stage with null entry point");
         }
 
         if (info.pInputAssemblyState->topology == VK_PRIMITIVE_TOPOLOGY_PATCH_LIST &&
             info.pTessellationState == nullptr)
-            throw std::runtime_error("gpci.patch topology requires tessellation state");
+            ErrorExit("gpci.patch topology requires tessellation state");
     };
 
     validateGpci(gpci); 
     if ( vkCreateGraphicsPipelines( device->vk_device, VK_NULL_HANDLE, 1, &gpci, nullptr, &vk_pipeline ) != VK_SUCCESS )
-        throw std::runtime_error("Failed to create graphics pipeline");
+        ErrorExit("Failed to create graphics pipeline");
 
 }
 // ------------------------------------------------------------------------------
@@ -651,6 +652,8 @@ BasicPipeline::~BasicPipeline()
         vkDestroyBuffer( device->vk_device, vk_view_ubo_buffer, nullptr );
     if ( vk_view_ubo_memory != VK_NULL_HANDLE )
         vkFreeMemory( device->vk_device, vk_view_ubo_memory, nullptr );
+
+    std::cout << "Deleted pipeline" << std::endl ;
 }
 // ------------------------------------------------------------------------------
 

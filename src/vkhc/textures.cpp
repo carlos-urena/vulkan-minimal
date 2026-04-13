@@ -401,4 +401,4 @@ TextureFromFile::TextureFromFile( VulkanContext * p_context, const std::string &
 
 // --------------------------------------------------------------------------------
 
-} // fin del namespace vkhc 
+} // vkhc namespace end 

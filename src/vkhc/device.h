@@ -103,5 +103,5 @@ class Device  // includes physical device, device and queue creation
 
 } ; // end of Device class 
 
-} // fin del namespace vkhc 
+} // vkhc namespace end 
 

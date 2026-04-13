@@ -63,5 +63,5 @@ class SwapChain
 } ;
 
 
-} // fin del namespace vkhc 
+} // vkhc namespace end 
 

@@ -44,5 +44,5 @@ class CommandPoolAndBuffers
 
 
 
-} // fin del namespace vkhc 
+} // vkhc namespace end 
 

@@ -31,7 +31,7 @@ void SwapChain::createImageView( VkImage & vk_image, VkImageView & vk_image_view
         }
     } ; 
     if ( vkCreateImageView( device->vk_device, &ivci, nullptr, &vk_image_view ) != VK_SUCCESS)
-        throw std::runtime_error("Failed to recreate image view");
+        ErrorExit("Failed to recreate image view");
 }
 // -----------------------------------------------------------------------------
 // initializes vk_image_views from the vk_images
@@ -49,25 +49,25 @@ void SwapChain::createImageViews()
 
 void SwapChain::createFramebuffer( VkImageView & vk_image_view, VkFramebuffer & vk_framebuffer )
 {
-    assert( surface != nullptr );
-    assert( render_pass != nullptr );
+    Assert( surface != nullptr, "SwapChain::createFramebuffer 'surface' is null" );
+    Assert( render_pass != nullptr, "SwapChain::createFramebuffer 'render_pass' is null" );
 
-    VkFramebufferCreateInfo fbci{ VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
-    fbci.renderPass = render_pass->vk_render_pass ;
-    fbci.attachmentCount = 1;
-    fbci.pAttachments = &vk_image_view;
-    fbci.width = surface->vk_capabilities.currentExtent.width;
-    fbci.height = surface->vk_capabilities.currentExtent.height;
-    fbci.layers = 1;
-
+    VkFramebufferCreateInfo fbci{  .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+        .renderPass      = render_pass->vk_render_pass ,
+        .attachmentCount = 1,
+        .pAttachments    = &vk_image_view,
+        .width           = surface->vk_capabilities.currentExtent.width,
+        .height          = surface->vk_capabilities.currentExtent.height,
+        .layers          = 1,
+    } ;
     if ( vkCreateFramebuffer(device->vk_device, &fbci, nullptr, &vk_framebuffer ) != VK_SUCCESS )
-        throw std::runtime_error("Failed to create framebuffer");
+        ErrorExit("Failed to create framebuffer");
 }
 // -----------------------------------------------------------------------------
 
 void SwapChain::createFramebuffers()
 {
-    assert( imageCount > 0 );
+    Assert( imageCount > 0, "SwapChain::createFramebuffers 'imageCount' is 0" );
     framebuffers.resize( imageCount );
 
     for ( uint32_t i = 0; i < imageCount; i++) {
@@ -78,14 +78,15 @@ void SwapChain::createFramebuffers()
 
 void SwapChain::createImages()
 {
-    assert( device != nullptr );
+    Assert( device != nullptr, "SwapChain::createImages: 'device' is null" );
 
     vkGetSwapchainImagesKHR( device->vk_device, vk_swap_chain, &imageCount, nullptr);
-    assert( imageCount > 0 );
+    Assert( imageCount > 0, "SwapChain::createImages: 'imageCount' is 0" );
 
     swapchainImages.resize( imageCount );
-    vkGetSwapchainImagesKHR( device->vk_device, vk_swap_chain, &imageCount, 
+    VkResult result = vkGetSwapchainImagesKHR( device->vk_device, vk_swap_chain, &imageCount, 
                                 swapchainImages.data() );
+    Assert( result == VK_SUCCESS, "SwapChain::createImages: Failed to get swapchain images" );
 }
 // -----------------------------------------------------------------------------
 
@@ -97,24 +98,23 @@ void SwapChain::createSwapChain()
     if (surface->vk_capabilities.maxImageCount > 0 && desiredImageCount > surface->vk_capabilities.maxImageCount)
             desiredImageCount = surface->vk_capabilities.maxImageCount;
     
-    VkSwapchainCreateInfoKHR sci{ VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
-
-    sci.surface = surface->vk_surface ;
-    sci.minImageCount = desiredImageCount;
-    sci.imageFormat = surface->surfaceFormat.format;
-    sci.imageColorSpace = surface->surfaceFormat.colorSpace;
-    sci.imageExtent = surface->vk_capabilities.currentExtent;
-    sci.imageArrayLayers = 1;
-    sci.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-    sci.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    sci.preTransform = surface->vk_capabilities.currentTransform;
-    sci.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-    sci.presentMode = VK_PRESENT_MODE_FIFO_KHR;
-    sci.clipped = VK_TRUE;
-
-    if ( vkCreateSwapchainKHR(device->vk_device, &sci, nullptr, &vk_swap_chain) != VK_SUCCESS ) // crea la swap chain nueva
-        throw std::runtime_error("Failed to recreate swapchain");
-
+    VkSwapchainCreateInfoKHR sci
+    {   .sType            = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
+        .surface          = surface->vk_surface ,
+        .minImageCount    = desiredImageCount,
+        .imageFormat      = surface->surfaceFormat.format,
+        .imageColorSpace  = surface->surfaceFormat.colorSpace,
+        .imageExtent      = surface->vk_capabilities.currentExtent,
+        .imageArrayLayers = 1,
+        .imageUsage       = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+        .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        .preTransform     = surface->vk_capabilities.currentTransform,
+        .compositeAlpha   = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+        .presentMode      = VK_PRESENT_MODE_FIFO_KHR,
+        .clipped          = VK_TRUE
+    };
+    if ( vkCreateSwapchainKHR( device->vk_device, &sci, nullptr, &vk_swap_chain) != VK_SUCCESS ) // crea la swap chain nueva
+        ErrorExit("SwapChain::createSwapChain: Failed to create swap chain");
 
     min_image_count = sci.minImageCount ; // register min image count
 }
@@ -202,7 +202,7 @@ void SwapChain::presentDeviceQueue(  uint32_t * imageIndex_ptr, SyncObjects * sy
     } 
     else if ( presentResult != VK_SUCCESS ) 
     {
-        throw std::runtime_error("Failed to present swapchain image !!");
+        ErrorExit("Failed to present swapchain image !!");
     }
 }
 
@@ -240,7 +240,7 @@ bool SwapChain::acquireNextImage( SyncObjects * sync_objects, uint32_t * imageIn
         return false ;
     }
     if ( acquireResult != VK_SUCCESS && acquireResult != VK_SUBOPTIMAL_KHR )
-        throw std::runtime_error("Failed to acquire next swapchain image");
+        ErrorExit("Failed to acquire next swapchain image");
 
     *imageIndex_ptr = imageIndex ;
     return true ;
@@ -254,5 +254,5 @@ SwapChain::~SwapChain()
     std::cout << "Deleted swap chain" << std::endl ;
 }
 
-} // fin del namespace vkhc 
+} // vkhc namespace end 
 

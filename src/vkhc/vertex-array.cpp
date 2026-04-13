@@ -121,5 +121,5 @@ void VertexArray::draw( VkCommandBuffer & vk_cmd_buffer )
     }
 }
 
-} // fin del namespace vkhc 
+} // vkhc namespace end 
 
