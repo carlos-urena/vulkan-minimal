@@ -41,53 +41,116 @@ class Triangle : public vkhc::VertexArray
     }
 } ;
 
+//  ------------------------------------------------------------------------------
+
+class ExampleTexturesSet : public vkhc::TexturesSet
+{
+    public:
+    ExampleTexturesSet( vkhc::VulkanContext * p_context ) : TexturesSet( p_context ) 
+    {
+        add( "../assets/wood-1.png" );
+        add( "../assets/wood-2.png" );
+        add( "../assets/wood-3.png" );
+        add( new vkhc::ProceduralTexture1( context ) ) ;
+    }
+} ;
+
 // ----------------------------------------------------------------------------------
 
 
 class Tess1App : public ilc::Application
 {
 
+    private:
+
+    float curr_angle_rad = M_PI/2.0f ;  // current angle in radians
+    float rotation_speed = 0.0f ; // angular speed in cycles per second 
+    float triangle_scale = 0.8f ;
+
+    // tessellation levels (for the pipeline with tessellation shaders)
+
+    const int max_tess_level = 20 ;
+
+    int tsc_inner_level_int = 4 ;
+    int tsc_outer_level_int[3] = { 
+        tsc_inner_level_int, 
+        tsc_inner_level_int, 
+        tsc_inner_level_int } ;
+
+
+    float tsc_inner_level = float(tsc_inner_level_int) ;
+    float tsc_outer_level[3] = { 
+        float(tsc_outer_level_int[0]), 
+        float(tsc_outer_level_int[1]), 
+        float(tsc_outer_level_int[2]) 
+    } ;
+
+    //bool close_requested = false ; 
+
+    //uint32_t  image_index ; // index for image in use (from the swap-chain)
+    int       texture_index = -1 ;  // active texture index (-1 for none)
+
+    // model matrix and its parameters for animation 
+
+    glm::mat4 model_mat ;            // model matrix passed to the pipeline via a push constant
+    glm::mat4 view_mat = glm::mat4(1.0f); // view matrix passed via UBO
+    glm::mat4 proj_mat = glm::mat4(1.0f) ; // projection matrix passed via UBO
+
+    // ------- 
+
+    Triangle *             triangle     = nullptr ; //{ context } ;
+    vkhc::Pipeline2DTess * pipeline     = nullptr ; //{ context } ;
+    ExampleTexturesSet *   textures_set = nullptr ; // { &context } ;   
+    
+    public:
+
+    Tess1App( ) ;
+
+    void drawFrame( VkCommandBuffer & cmd, const vkhc::seconds_f  time_elapsed ) override ;
+
+    void updateViewProjMats( vkhc::VulkanContext & context, vkhc::seconds_f frame_time_s ) ;
+
+    void drawIMGUIWidgets( VkCommandBuffer & cmd ) override ;
+
+    virtual ~Tess1App()  override ; 
+    
 } ;
 
 // ----------------------------------------------------------------------------------
 
-float curr_angle_rad = M_PI/2.0f ;  // current angle in radians
-float rotation_speed = 0.0f ; // angular speed in cycles per second 
-float triangle_scale = 0.8f ;
 
-// tessellation levels (for the pipeline with tessellation shaders)
+Tess1App::Tess1App( ) 
 
-const int max_tess_level = 20 ;
+:   Application( 1024, 512, "Vulkan Tessellation demo" ) 
+{
+    using namespace vkhc ; 
 
-int tsc_inner_level_int = 4 ;
-int tsc_outer_level_int[3] = { 
-    tsc_inner_level_int, 
-    tsc_inner_level_int, 
-    tsc_inner_level_int } ;
+    Assert( context != nullptr, "Tess1App constructor: 'context' instance is null !!" );
+    
+    triangle     = new Triangle( *context ) ;             assert( triangle != nullptr ) ;
+    textures_set = new ExampleTexturesSet( context ) ;    assert( textures_set != nullptr ) ;
+    pipeline     = new vkhc::Pipeline2DTess( *context ) ; assert( pipeline != nullptr ) ;
 
+    textures_set->bindTo( *pipeline ) ; // bind the textures set to the pipeline, so that its textures can be used in the fragment shader.
 
-float tsc_inner_level = float(tsc_inner_level_int) ;
-float tsc_outer_level[3] = { 
-    float(tsc_outer_level_int[0]), 
-    float(tsc_outer_level_int[1]), 
-    float(tsc_outer_level_int[2]) 
 } ;
 
-bool close_requested = false ; 
+// ----------------------------------------------------------------------------------
 
-uint32_t  image_index ; // index for image in use (from the swap-chain)
-int       texture_index = -1 ;  // active texture index (-1 for none)
+Tess1App::~Tess1App() 
+{
+    //Assert( context != nullptr, "Tess1App destructor: 'context' instance is null !!" );
+    delete triangle ; triangle = nullptr ;
+    delete pipeline ; pipeline = nullptr ;
+    delete textures_set ; textures_set = nullptr ;
 
-// model matrix and its parameters for animation 
-
-glm::mat4 model_mat ;            // model matrix passed to the pipeline via a push constant
-glm::mat4 view_mat = glm::mat4(1.0f); // view matrix passed via UBO
-glm::mat4 proj_mat = glm::mat4(1.0f) ; // projection matrix passed via UBO
+    std::cout << "Tess1App deleted" << std::endl ;
+}
 
 // ----------------------------------------------------------------------------------
 
 
-void UpdateViewProjMats( vkhc::VulkanContext & context,  vkhc::seconds_f frame_time_s )
+void Tess1App::updateViewProjMats( vkhc::VulkanContext & context,  vkhc::seconds_f frame_time_s )
 {
     using namespace glm ;
 
@@ -107,10 +170,10 @@ void UpdateViewProjMats( vkhc::VulkanContext & context,  vkhc::seconds_f frame_t
 
 // ----------------------------------------------------------------------------------
 
-void DrawIMGUIWidgets( VkCommandBuffer & cmd, vkhc::VulkanContext & context,  vkhc::Pipeline2DTess & pipeline ) 
+void Tess1App::drawIMGUIWidgets( VkCommandBuffer & cmd ) 
 {
     using namespace ImGui ;
-    context.beginIMGUIFrame( cmd ) ;
+    //context.beginIMGUIFrame( cmd ) ;
         if ( Button("Close window" ) ) close_requested = true ;
         if (CollapsingHeader("Triangle controls", ImGuiTreeNodeFlags_DefaultOpen))
         {       
@@ -126,7 +189,7 @@ void DrawIMGUIWidgets( VkCommandBuffer & cmd, vkhc::VulkanContext & context,  vk
 
                 if ( SliderInt( label.c_str(), &tsc_outer_level_int[i], 1, max_tess_level) )
                 {   tsc_outer_level[i] = float(tsc_outer_level_int[i]) ;
-                    pipeline.setUBOUniform( ident.c_str(), &tsc_outer_level[i] ) ;
+                    pipeline->setUBOUniform( ident.c_str(), &tsc_outer_level[i] ) ;
                 }
             }    
             int texture_combo_index = texture_index + 1 ; // map -1..3 to 0..4 for ImGui combo
@@ -134,82 +197,47 @@ void DrawIMGUIWidgets( VkCommandBuffer & cmd, vkhc::VulkanContext & context,  vk
                 texture_index = texture_combo_index - 1 ;
         }
         Text("FPS: %.1f (%.1f ms)", ImGui::GetIO().Framerate, 1000.0f / ImGui::GetIO().Framerate);
-    context.endIMGUIFrame( cmd );
+    //context.endIMGUIFrame( cmd );
 }
-
-//  ------------------------------------------------------------------------------
-
-class ExampleTexturesSet : public vkhc::TexturesSet
-{
-    public:
-    ExampleTexturesSet( vkhc::VulkanContext * p_context ) : TexturesSet( p_context ) 
-    {
-        add( "../assets/wood-1.png" );
-        add( "../assets/wood-2.png" );
-        add( "../assets/wood-3.png" );
-        add( new vkhc::ProceduralTexture1( context ) ) ;
-    }
-} ;
 
 // ----------------------------------------------------------------------------------
 
+void Tess1App::drawFrame( VkCommandBuffer & cmd, const vkhc::seconds_f  frame_time_s ) 
+{
+    Assert( context != nullptr, "Tess1App::drawFrame: 'context' instance is null !!" );
+    Assert( pipeline != nullptr, "Tess1App::drawFrame: 'pipeline' instance is null !!" );
+    Assert( triangle != nullptr, "Tess1App::drawFrame: 'triangle' instance is null !!" );
+
+    // update UBO uniforms in the pipeline
+    updateViewProjMats( *context, frame_time_s ) ; // updates 'view_mat' and 'proj_mat' 
+    pipeline->setViewMatrix( view_mat ) ;
+    pipeline->setProjectionMatrix( proj_mat ) ;
+
+    pipeline->setUBOUniform( "tsc_inner_level", &tsc_inner_level ) ;
+    pipeline->setUBOUniform( "tsc_outer_level_0", &tsc_outer_level[0] ) ;
+    pipeline->setUBOUniform( "tsc_outer_level_1", &tsc_outer_level[1] ) ;
+    pipeline->setUBOUniform( "tsc_outer_level_2", &tsc_outer_level[2] ) ;
+    
+    // activate the pipeline and sets the viewport
+    pipeline->bind( cmd );
+    context->setRenderAreaViewport( cmd ) ;
+
+    // give initial values to the push constants at the begining of 'cmd'
+    pipeline->setModelMatrix( cmd, model_mat ) ;
+    pipeline->setTextureIndex( cmd, texture_index ) ;
+
+    // draw the triangle and the widgets 
+    triangle->draw( cmd );
+}
+
+
+// end of class 'Tess1App'
+// *********************************************************************************
+
 int main() 
 {
-    using namespace std ;
-    using namespace glm ;
-    
-    using namespace vkhc ;
-    using namespace std::chrono ;
-
-    VulkanContext      context{ 1024, 512, "Vulkan Triangle" } ;
-    //Pipeline2DTess     pipeline{ context } ;
-    Triangle           triangle{ context } ;
-    ExampleTexturesSet textures_set{ &context } ;   
-    VkClearValue       clear_color{ .color ={ .float32 ={ 0.0f, 0.0f, 0.0f, 1.0f }}};
-    VkCommandBuffer    cmd ;
-
-    Pipeline2DTess     pipeline{ context } ;
-
-    
-    
-    textures_set.bindTo( pipeline ) ; // bind the textures set to the pipeline
-
-    InitFrameStart();
-
-    // enter the main loop
-    while ( ! context.windowShouldClose() && ! close_requested )  
-    {
-        seconds_f frame_time_s = NextFrameStart() ; // compute delay (in seconds) from previous frame start 
-        context.pollEvents();  // process pending events 
-
-        UpdateViewProjMats( context, frame_time_s ) ; // updates 'view_mat' and 'proj_mat' 
-        pipeline.setViewMatrix( view_mat ) ;
-        pipeline.setProjectionMatrix( proj_mat ) ;
-
-        pipeline.setUBOUniform( "tsc_inner_level", &tsc_inner_level ) ;
-        pipeline.setUBOUniform( "tsc_outer_level_0", &tsc_outer_level[0] ) ;
-        pipeline.setUBOUniform( "tsc_outer_level_1", &tsc_outer_level[1] ) ;
-        pipeline.setUBOUniform( "tsc_outer_level_2", &tsc_outer_level[2] ) ;
-
-        // begin frame: acquire an image from the swap chain, and get its corresponding command buffer
-        if ( ! context.beginFrame( clear_color, cmd, image_index ) ) 
-            continue ; 
-        
-        // activate the pipeline and sets the viewport
-        pipeline.bind( cmd );
-        context.setRenderAreaViewport( cmd ) ;
-
-        // give initial value to the push constants 
-        pipeline.setModelMatrix( cmd, model_mat ) ;
-        pipeline.setTextureIndex( cmd, texture_index ) ;
-
-        // draw the triangle and the widgets 
-        triangle.draw( cmd );
-        DrawIMGUIWidgets( cmd, context, pipeline ) ;
-
-        // done, now end frame: submit the command queue and present the image.
-        context.endFrame( cmd, image_index ) ;
-    }
-    context.waitDeviceIdle() ; 
+    Tess1App app{  } ;
+    app.run() ;
     return 0 ;
 }
+

@@ -42,9 +42,6 @@ void framebufferResizeCallback( GLFWwindow* window, int nx, int ny )
         throw std::runtime_error("Warning: framebuffer resize callback called but VulkanState instance is null !!");
 }
 
-
-
-
 // -------------------------------------------------------------------------------
 // Implementación de la clase VulkanState
 
@@ -74,6 +71,10 @@ VulkanContext::VulkanContext( int nx, int ny, const std::string & title )
 
 VulkanContext::~VulkanContext()
 {
+    // Ensure no queue work is still using swapchain resources during teardown.
+    if ( device != nullptr && device->vk_device != VK_NULL_HANDLE )
+        vkDeviceWaitIdle( device->vk_device );
+
     // destroy object (in reverse creation order).
 
     delete imgui_state ;      imgui_state  = nullptr ; // (must be destroyed when the device still exists))
