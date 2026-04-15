@@ -48,7 +48,7 @@ void framebufferResizeCallback( GLFWwindow* window, int nx, int ny )
 // -------------------------------------------------------------------------------
 // Implementación de la clase VulkanState
 
-VulkanContext::VulkanContext( int nx, int ny, const char * title )
+VulkanContext::VulkanContext( int nx, int ny, const std::string & title )
 {            
     Assert( ctx_instance == nullptr, " VulkanContext::VulkanContext:'ctx_instance' instance already exists !!");
 

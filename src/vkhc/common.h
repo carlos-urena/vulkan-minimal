@@ -9,6 +9,7 @@
 #include <array>
 #include <cstring>
 #include <algorithm>
+#include <chrono>
 
 
 #define GLM_ENABLE_EXPERIMENTAL
@@ -73,6 +74,16 @@ void ErrorExitFunction( const std::string & msg, const char * file, const int li
 // error exit function
 #define ErrorExit( msg ) vkhc::ErrorExitFunction( msg, __FILE__, __LINE__ )
 void AssertFunction( bool condition, const std::string & msg, const char * file, const int line )  ;
+
+ // type for durations in seconds (used for frame time and animation speed)
+typedef std::chrono::duration<float,std::ratio<1,1>> seconds_f ;
+
+
+// register the time for first frame start
+void InitFrameStart(); 
+
+// returns the time in seconds elapsed between calls or from 'InitFrameStart()' if it is the first call. Also updates the time of the last frame start to the current time.
+seconds_f NextFrameStart() ;
 
 
 } // end of namespace vkhc

@@ -83,7 +83,7 @@ void GLFWContext::errorFunc( int error_code, const char* description)
 // -----------------------------------------------------------------------------
 // Constructor: initializes GLFW 
 
-GLFWContext::GLFWContext( int width, int height, const char* title ) 
+GLFWContext::GLFWContext( int width, int height, const std::string & title ) 
 {
     if ( instance_count > 0 ) 
     {   std::cerr << "Warning: more than one instance of GLFWState created. Aborting." << std::endl ;
@@ -102,7 +102,7 @@ GLFWContext::GLFWContext( int width, int height, const char* title )
     glfwWindowHint( GLFW_RESIZABLE, GLFW_TRUE );
     glfwWindowHint( GLFW_MAXIMIZED, GLFW_FALSE );
     
-    glfw_window = glfwCreateWindow( sizex, sizey, title, nullptr, nullptr);
+    glfw_window = glfwCreateWindow( sizex, sizey, title.c_str(), nullptr, nullptr);
     assert( glfw_window != nullptr );
     
     glfwSetWindowPos( glfw_window, posx, posy );

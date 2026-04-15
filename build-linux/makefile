@@ -17,18 +17,16 @@ compiler:=         g++
 compile_options:=  -std=c++20 -g -Wall
 link_options:= 
 
-imgui_git:= ~/git-ct/otros/imgui.git## imgui repository clone folder
-stb_git:=   ~/git-ct/otros/stb.git## folder with STB repository clone
+imgui_git   := ~/git-ct/otros/imgui.git## imgui repository clone folder
+stb_git     := ~/git-ct/otros/stb.git## folder with STB repository clone
+vkhc_folder := ../src/vkhc## folder with sources for the VKHC classes (Vulkan Helper Classes)
+ilc_folder  := ../src/ilc## folder with sources for the ILC classes (Intermediate Level Classes)
 
 
 ## --------------------------------------------------------------------------------
 ## folder for library sources and link files 
 
-
 stb_include:= -I $(stb_git)
-
-vkhc_folder:= ../src/vkhc## folder with sources for the VKHC classes (Vulkan Helper Classes)
-
 
 # App-specific variables
 app_sources:=  $(wildcard $(app_src_folder)/*.cpp)
@@ -37,17 +35,23 @@ app_include:=  -I $(app_src_folder)
 
 ## VKHC objects variables
 
-vkhc_sources:= $(wildcard $(vkhc_folder)/*.cpp)
-vkhc_headers:= $(wildcard $(vkhc_folder)/*.h)
-vkhc_objs:=    $(addprefix $(objs_dir)/, $(notdir $(vkhc_sources:.cpp=.o)))
-vkhc_include:= -I $(vkhc_folder)
+		vkhc_sources:= $(wildcard $(vkhc_folder)/*.cpp)
+		vkhc_headers:= $(wildcard $(vkhc_folder)/*.h)
+		vkhc_objs:=    $(addprefix $(objs_dir)/, $(notdir $(vkhc_sources:.cpp=.o)))
+		vkhc_include:= -I $(vkhc_folder)
+
+## ILC objects variables
+
+ilc_sources:= $(wildcard $(ilc_folder)/*.cpp)
+ilc_headers:= $(wildcard $(ilc_folder)/*.h)
+ilc_objs:=    $(addprefix $(objs_dir)/, $(notdir $(ilc_sources:.cpp=.o)))
+ilc_include:= -I $(ilc_folder)
 
 ## Vulkan related variables
 vulkan_libs:= -lshaderc -lvulkan 
 
 ## GLFW definitions 
 glfw_libs:= -lglfw
-
 
 ## IMGUI variables
 ## (repository must be cloned on $(imgui_git) folder)
@@ -62,10 +66,10 @@ imgui_objs_2:= $(addprefix $(objs_dir)/, $(notdir $(imgui_src_names_2:.cpp=.o)))
 imgui_objs:=  $(imgui_objs_1) $(imgui_objs_2)
 
 ## include options
-opcs_incl:= $(imgui_include) $(vkhc_include) $(app_include) $(stb_include)
+opcs_incl:= $(imgui_include) $(vkhc_include) $(ilc_include) $(app_include) $(stb_include)
 
 ## objects to compile
-objs:= $(app_objs) $(vkhc_objs) $(imgui_objs) 
+objs:= $(app_objs) $(vkhc_objs) $(ilc_objs) $(imgui_objs) 
 
 ## libs to link 
 libs:= $(glfw_libs) $(vulkan_libs) -ldl -lpthread
@@ -92,6 +96,10 @@ $(objs_dir)/%.o: $(imgui_git)/backends/%.cpp makefile
 
 ## compile an unit from the VKHC folder
 $(objs_dir)/%.o: $(vkhc_folder)/%.cpp $(vkhc_headers) makefile 
+	$(compiler) $(compile_flags) -c $< -o $@
+
+## compile an unit from the ILC folder
+$(objs_dir)/%.o: $(ilc_folder)/%.cpp $(ilc_headers) $(vkhc_headers) makefile 
 	$(compiler) $(compile_flags) -c $< -o $@
 
 ## compile an unit from the APP folder

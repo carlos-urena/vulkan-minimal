@@ -2,7 +2,7 @@
 
 
 #include <common.h>
-
+#include <chrono>
 
 namespace vkhc 
 {
@@ -43,6 +43,30 @@ void AssertFunction( bool condition, const std::string & msg, const char * file,
     const std::string full_msg = "assertion failed: " + msg ;
     ErrorExitFunction( full_msg, file, line ) ;
 } 
+
+
+// ----------------------------------------------------------------------------------
+
+
+
+static std::chrono::steady_clock::time_point prev_frame_start ;
+
+void InitFrameStart()
+{
+    using namespace std::chrono ; 
+    prev_frame_start = steady_clock::now() ;
+}
+
+seconds_f NextFrameStart()
+{
+    using namespace std::chrono ;
+
+    // compute delay (in seconds) from previous frame start in 'frame_time_s'
+    steady_clock::time_point curr_frame_start = steady_clock::now() ;
+    seconds_f frame_time_s = curr_frame_start - prev_frame_start  ;
+    prev_frame_start = curr_frame_start ;
+    return frame_time_s ;
+}
 
 
 } // end of namespace vkhc

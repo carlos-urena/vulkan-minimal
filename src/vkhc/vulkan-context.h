@@ -49,7 +49,7 @@ class VulkanContext
     // true right after a buffer resize event is raised, but before the SwapChain is re-configured.
     bool framebufferResized = false ;  
 
-    VulkanContext( int nx, int ny, const char * title );
+    VulkanContext( int nx, int ny, const std::string & title );
     ~VulkanContext() ;
     void resizeWindow() ;
     void framebufferResizedCallback( GLFWwindow* window, int nx, int ny );

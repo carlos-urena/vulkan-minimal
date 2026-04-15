@@ -10,6 +10,8 @@
 #include <imgui-context.h>
 #include <textures.h>
 
+#include <application.h>
+
 // -------------------------------------------------------------------------------  
 // class 'Triangle' (a 'vertex-array' like object )
 
@@ -23,15 +25,13 @@ class Triangle : public vkhc::VertexArray
         using namespace glm ;
         using namespace std ;
         const float 
-            r  = 1.0f ,          // triangle radius (distance from the center of the triangle to its vertices)
+            r  = 1.0f , // triangle radius (distance from the center of the triangle to its vertices)
             a0 = M_PI , // initial angle of the first vertex (in radians), the other vertices will be at angles a0 + 2*pi/3 and a0 + 4*pi/3, so that the triangle is equilateral and one vertex is pointing upwards.
             a  = M_PI*2.0f/3.0f ;  // angle between vertices (in radians), for an equilateral triangle this is 2*pi/3
 
-        addAttribData( vector<vec2>  // location 0: vertex positions
-        {   { r*cos( a0 ),          r*sin( a0 ) }, 
-            { r*cos( a0 + a ),      r*sin( a0 + a ) }, 
-            { r*cos( a0 + 2.0f*a ), r*sin( a0 + 2.0f*a ) },
-        });
+        // location 0: vertex positions
+        addAttribData( vector<vec2>{ {r*cos(a0),r*sin(a0)}, {r*cos(a0+a),r*sin(a0+a)}, 
+                                     {r*cos(a0+2.0f*a),r*sin(a0+2.0f*a)}  });
         // location 1: vertex colors
         addAttribData( vector<vec3>{ {1.0f,0.0f,0.0f}, {0.0f,1.0f,0.0f}, {0.0f,0.0f,1.0f} });
         // location 2: vertex texture coordinates 
@@ -43,29 +43,13 @@ class Triangle : public vkhc::VertexArray
 
 // ----------------------------------------------------------------------------------
 
-using namespace std::chrono ;
 
- // type for durations in seconds (used for frame time and animation speed)
-typedef duration<float,std::ratio<1,1>> seconds_f ;
-
-steady_clock::time_point prev_frame_start ;
-
-void InitFrameStart()
+class Tess1App : public ilc::Application
 {
-    prev_frame_start = steady_clock::now() ;
-}
 
-seconds_f NextFrameStart()
-{
-    // compute delay (in seconds) from previous frame start in 'frame_time_s'
-    steady_clock::time_point curr_frame_start = steady_clock::now() ;
-    seconds_f frame_time_s = curr_frame_start - prev_frame_start  ;
-    prev_frame_start = curr_frame_start ;
-    return frame_time_s ;
-}
+} ;
 
 // ----------------------------------------------------------------------------------
-
 
 float curr_angle_rad = M_PI/2.0f ;  // current angle in radians
 float rotation_speed = 0.0f ; // angular speed in cycles per second 
@@ -103,7 +87,7 @@ glm::mat4 proj_mat = glm::mat4(1.0f) ; // projection matrix passed via UBO
 // ----------------------------------------------------------------------------------
 
 
-void UpdateViewProjMats( vkhc::VulkanContext & context,  seconds_f frame_time_s )
+void UpdateViewProjMats( vkhc::VulkanContext & context,  vkhc::seconds_f frame_time_s )
 {
     using namespace glm ;
 
@@ -178,11 +162,15 @@ int main()
     using namespace std::chrono ;
 
     VulkanContext      context{ 1024, 512, "Vulkan Triangle" } ;
-    Pipeline2DTess     pipeline{ context } ;
+    //Pipeline2DTess     pipeline{ context } ;
     Triangle           triangle{ context } ;
     ExampleTexturesSet textures_set{ &context } ;   
     VkClearValue       clear_color{ .color ={ .float32 ={ 0.0f, 0.0f, 0.0f, 1.0f }}};
     VkCommandBuffer    cmd ;
+
+    Pipeline2DTess     pipeline{ context } ;
+
+    
     
     textures_set.bindTo( pipeline ) ; // bind the textures set to the pipeline
 

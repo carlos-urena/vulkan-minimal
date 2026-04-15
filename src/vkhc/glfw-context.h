@@ -18,8 +18,7 @@ class GLFWContext
     GLFWwindow* glfw_window = nullptr;
     static void errorFunc( int error_code, const char* description);
     
-
-    GLFWContext( int width, int height, const char* title ) ;   
+    GLFWContext( int width, int height, const std::string & title ) ;   
     
     // return a vulkan surface created from the vulkan instance
     VkSurfaceKHR* createVkSurface( VkInstance *vk_instance ) ;
