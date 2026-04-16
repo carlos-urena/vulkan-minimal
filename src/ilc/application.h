@@ -24,11 +24,17 @@ class Application
     Application( int nx, int ny, const std::string & title );
     virtual ~Application() ;
     void run() ;
-    
-    // To be defined in derived classes:
-    // adds draw commands to 'vk_cmd' to draw the frame, using 'time_ela' as the time elapsed from the previous frame start (in seconds)
+
+    // To be defined in derived classes (mandatory):
+    // configures the pipeline before starting draw commands on each frame 
     // `time_elapsed` is the time elapsed from the previous frame start (in seconds)
-    virtual void drawFrame( VkCommandBuffer & vk_cmd, const vkhc::seconds_f  time_elapsed ) = 0 ;  
+    //  (it is the same value passed to 'drawFrame' for the same frame)
+    virtual void initFrame( const vkhc::seconds_f  time_elapsed ) = 0;
+    
+    // To be defined in derived classes (mandatory):
+    // adds draw commands to 'vk_cmd' to draw the frame, using 'time_ela' as the time elapsed from the previous frame start (in seconds)
+    
+    virtual void drawFrame( VkCommandBuffer & vk_cmd ) = 0 ;  
 
     // To be defined in derived classes (optionally) 
     // adds draw commands to 'vk_cmd' to draw IMGUI widgets in each frame (default implementation does nothing)

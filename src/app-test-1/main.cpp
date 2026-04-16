@@ -106,7 +106,9 @@ class Tess1App : public ilc::Application
 
     Tess1App( ) ;
 
-    void drawFrame( VkCommandBuffer & cmd, const vkhc::seconds_f  time_elapsed ) override ;
+    void initFrame( const vkhc::seconds_f  time_elapsed ) override ;
+
+    void drawFrame( VkCommandBuffer & cmd ) override ;
 
     void updateViewProjMats( vkhc::VulkanContext & context, vkhc::seconds_f frame_time_s ) ;
 
@@ -173,43 +175,42 @@ void Tess1App::updateViewProjMats( vkhc::VulkanContext & context,  vkhc::seconds
 void Tess1App::drawIMGUIWidgets( VkCommandBuffer & cmd ) 
 {
     using namespace ImGui ;
-    //context.beginIMGUIFrame( cmd ) ;
-        if ( Button("Close window" ) ) close_requested = true ;
-        if (CollapsingHeader("Triangle controls", ImGuiTreeNodeFlags_DefaultOpen))
-        {       
-            SliderFloat("Speed", &rotation_speed, 0.0f, 3.0f);
-            SliderFloat("Scale", &triangle_scale, 0.2f, 2.0f);
-            if ( SliderInt("Tess. inner level", &tsc_inner_level_int, 1, max_tess_level) )
-                tsc_inner_level = float(tsc_inner_level_int) ;
-            
-            for ( int i = 0 ; i < 3 ; i++ )
-            {
-                const std::string label = "Tess. outer level " + std::to_string(i),
-                                    ident = "tsc_outer_level_" + std::to_string(i) ;
+    
+    if ( Button("Close window" ) ) close_requested = true ;
+    if (CollapsingHeader("Triangle controls", ImGuiTreeNodeFlags_DefaultOpen))
+    {       
+        SliderFloat("Speed", &rotation_speed, 0.0f, 3.0f);
+        SliderFloat("Scale", &triangle_scale, 0.2f, 2.0f);
+        if ( SliderInt("Tess. inner level", &tsc_inner_level_int, 1, max_tess_level) )
+            tsc_inner_level = float(tsc_inner_level_int) ;
+        
+        for ( int i = 0 ; i < 3 ; i++ )
+        {
+            const std::string label = "Tess. outer level " + std::to_string(i),
+                                ident = "tsc_outer_level_" + std::to_string(i) ;
 
-                if ( SliderInt( label.c_str(), &tsc_outer_level_int[i], 1, max_tess_level) )
-                {   tsc_outer_level[i] = float(tsc_outer_level_int[i]) ;
-                    pipeline->setUBOUniform( ident.c_str(), &tsc_outer_level[i] ) ;
-                }
-            }    
-            int texture_combo_index = texture_index + 1 ; // map -1..3 to 0..4 for ImGui combo
-            if ( Combo("Texture", &texture_combo_index, "No texture (vert. colors)\0Wood 1\0Wood 2\0Wood 3\0Procedural texture\0") )
-                texture_index = texture_combo_index - 1 ;
-        }
-        Text("FPS: %.1f (%.1f ms)", ImGui::GetIO().Framerate, 1000.0f / ImGui::GetIO().Framerate);
-    //context.endIMGUIFrame( cmd );
+            if ( SliderInt( label.c_str(), &tsc_outer_level_int[i], 1, max_tess_level) )
+            {   tsc_outer_level[i] = float(tsc_outer_level_int[i]) ;
+                pipeline->setUBOUniform( ident.c_str(), &tsc_outer_level[i] ) ;
+            }
+        }    
+        int texture_combo_index = texture_index + 1 ; // map -1..3 to 0..4 for ImGui combo
+        if ( Combo("Texture", &texture_combo_index, "No texture (vert. colors)\0Wood 1\0Wood 2\0Wood 3\0Procedural texture\0") )
+            texture_index = texture_combo_index - 1 ;
+    }
+    Text("FPS: %.1f (%.1f ms)", ImGui::GetIO().Framerate, 1000.0f / ImGui::GetIO().Framerate);
 }
 
 // ----------------------------------------------------------------------------------
 
-void Tess1App::drawFrame( VkCommandBuffer & cmd, const vkhc::seconds_f  frame_time_s ) 
+void Tess1App::initFrame( const vkhc::seconds_f  time_elapsed )
 {
     Assert( context != nullptr, "Tess1App::drawFrame: 'context' instance is null !!" );
     Assert( pipeline != nullptr, "Tess1App::drawFrame: 'pipeline' instance is null !!" );
     Assert( triangle != nullptr, "Tess1App::drawFrame: 'triangle' instance is null !!" );
 
     // update UBO uniforms in the pipeline
-    updateViewProjMats( *context, frame_time_s ) ; // updates 'view_mat' and 'proj_mat' 
+    updateViewProjMats( *context, time_elapsed ) ; // updates 'view_mat' and 'proj_mat' 
     pipeline->setViewMatrix( view_mat ) ;
     pipeline->setProjectionMatrix( proj_mat ) ;
 
@@ -218,9 +219,18 @@ void Tess1App::drawFrame( VkCommandBuffer & cmd, const vkhc::seconds_f  frame_ti
     pipeline->setUBOUniform( "tsc_outer_level_1", &tsc_outer_level[1] ) ;
     pipeline->setUBOUniform( "tsc_outer_level_2", &tsc_outer_level[2] ) ;
     
+    
+}
+
+void Tess1App::drawFrame( VkCommandBuffer & cmd ) 
+{
+    Assert( context != nullptr, "Tess1App::drawFrame: 'context' instance is null !!" );
+    Assert( pipeline != nullptr, "Tess1App::drawFrame: 'pipeline' instance is null !!" );
+    Assert( triangle != nullptr, "Tess1App::drawFrame: 'triangle' instance is null !!" );
+   
     // activate the pipeline and sets the viewport
     pipeline->bind( cmd );
-    context->setRenderAreaViewport( cmd ) ;
+    // context->setRenderAreaViewport( cmd ) ; /// THIS IS CALLED after 'initFrame' and before 'drawFrame' (does it works?)
 
     // give initial values to the push constants at the begining of 'cmd'
     pipeline->setModelMatrix( cmd, model_mat ) ;

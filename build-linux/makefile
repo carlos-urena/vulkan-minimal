@@ -35,10 +35,10 @@ app_include:=  -I $(app_src_folder)
 
 ## VKHC objects variables
 
-		vkhc_sources:= $(wildcard $(vkhc_folder)/*.cpp)
-		vkhc_headers:= $(wildcard $(vkhc_folder)/*.h)
-		vkhc_objs:=    $(addprefix $(objs_dir)/, $(notdir $(vkhc_sources:.cpp=.o)))
-		vkhc_include:= -I $(vkhc_folder)
+vkhc_sources:= $(wildcard $(vkhc_folder)/*.cpp)
+vkhc_headers:= $(wildcard $(vkhc_folder)/*.h)
+vkhc_objs:=    $(addprefix $(objs_dir)/, $(notdir $(vkhc_sources:.cpp=.o)))
+vkhc_include:= -I $(vkhc_folder)
 
 ## ILC objects variables
 

@@ -37,26 +37,33 @@ void Application::run()
     // enter the main loop
     while ( ! context->windowShouldClose() && ! close_requested )  
     {
-        frame_time_s = NextFrameStart() ; // compute delay (in seconds) from previous frame start 
+        // compute delay (in seconds) from previous frame start 
+        frame_time_s = NextFrameStart() ; 
 
-        context->pollEvents();  // process pending events 
+        // process pending events 
+        context->pollEvents();  
 
+        // call the virtual function to configure the pipeline before drawing the frame (to be defined in derived classes)
+        initFrame( frame_time_s ) ; 
+
+        // get an image_index and a command buffer from the swapchain 
+        // (if it is not possible, start over the loop, to try again)
         if ( ! context->beginFrame( clear_color, cmd, image_index ) ) 
             continue ; 
 
-        drawFrame( cmd, frame_time_s ) ; // call the virtual function to draw the frame (to be defined in derived classes)
+        // draw the frame 
+        context->setRenderAreaViewport( cmd ) ; // DOES THIS WORKS ?? set the render area to the left of the GUI
+        drawFrame( cmd ) ; // draw the frame adding commands to 'cmd'
         
+        // draw the widgets 
         context->beginIMGUIFrame( cmd ) ;
-        drawIMGUIWidgets( cmd ) ; // call the virtual function to draw the IMGUI widgets, if any.
+        drawIMGUIWidgets( cmd ) ; // draw IMGUI widgets onto 'cmd'
         context->endIMGUIFrame( cmd ) ;
 
-        context->endFrame( cmd, image_index ) ;
+        context->endFrame( cmd, image_index ) ;  // submit 'cmd' and present the image
     }
-
-    context->waitDeviceIdle() ;
-
-    //device->waitIdle() ; // wait for the device to be idle before exiting, to ensure all resources can be safely released in the destructors of the state objects.
-    
+    // wait for the device to be idle before exiting, (so all resources can be safely released)
+    context->waitDeviceIdle() ; 
 }
 
 // --------------------------------------------------------------------------------

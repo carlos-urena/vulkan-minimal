@@ -1,19 +1,22 @@
 {
   "folders":
-  [ { "name": "BUILD-MACOS",
+  [ 
+    { "name": "RAIZ",
+      "path": ".."
+    },  
+    { "name": "BUILD-MACOS",
       "path": "."
     },
     { "name": "SRC",
       "path": "../src"
     },
-    
-    
   ],
 
   "settings" :
   {
     "C_Cpp.default.cppStandard"   : "c++20",
     "C_Cpp.default.includePath"   : [ 
+        "${workspaceFolder:SRC}/ilc",
         "${workspaceFolder:SRC}/vkhc",
         "${workspaceFolder:SRC}/app-test-1",
         "~/VulkanSDK/1.4.341.1/macOS/include",  // vulkan (moltenvk) and GLM
