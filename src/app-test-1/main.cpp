@@ -63,20 +63,20 @@ class Tess1App : public ilc::Application
 
     private:
 
+    // parameters for the triangle model matrix and animation
     float curr_angle_rad = M_PI/2.0f ;  // current angle in radians
     float rotation_speed = 0.0f ; // angular speed in cycles per second 
     float triangle_scale = 0.8f ;
 
-    // tessellation levels (for the pipeline with tessellation shaders)
-
+    // max value for the tessellation levels (for the GUI sliders)
     const int max_tess_level = 20 ;
 
+    // tessellation levels (int for the GUI, and float for the pipeline)
     int tsc_inner_level_int = 4 ;
     int tsc_outer_level_int[3] = { 
         tsc_inner_level_int, 
         tsc_inner_level_int, 
         tsc_inner_level_int } ;
-
 
     float tsc_inner_level = float(tsc_inner_level_int) ;
     float tsc_outer_level[3] = { 
@@ -85,37 +85,39 @@ class Tess1App : public ilc::Application
         float(tsc_outer_level_int[2]) 
     } ;
 
-    //bool close_requested = false ; 
+    // active texture index (-1 for none)
+    int texture_index = -1 ;  
 
-    //uint32_t  image_index ; // index for image in use (from the swap-chain)
-    int       texture_index = -1 ;  // active texture index (-1 for none)
-
-    // model matrix and its parameters for animation 
-
+    // model, view and projection matrices
     glm::mat4 model_mat ;            // model matrix passed to the pipeline via a push constant
     glm::mat4 view_mat = glm::mat4(1.0f); // view matrix passed via UBO
     glm::mat4 proj_mat = glm::mat4(1.0f) ; // projection matrix passed via UBO
 
-    // ------- 
+    // triangle object which is visualized
+    Triangle *             triangle     = nullptr ; 
 
-    Triangle *             triangle     = nullptr ; //{ context } ;
-    vkhc::Pipeline2DTess * pipeline     = nullptr ; //{ context } ;
-    ExampleTexturesSet *   textures_set = nullptr ; // { &context } ;   
+    // tessellation pipeline 
+    vkhc::Pipeline2DTess * pipeline     = nullptr ; 
+
+    // textures set (used for testing textures).
+    ExampleTexturesSet *   textures_set = nullptr ; 
+
+
+    // -----------------------------------------------------------------------------
+    // Methods:
     
     public:
 
     Tess1App( ) ;
 
+    // override methods
     void initFrame( const vkhc::seconds_f  time_elapsed ) override ;
-
     void drawFrame( VkCommandBuffer & cmd ) override ;
-
-    void updateViewProjMats( vkhc::VulkanContext & context, vkhc::seconds_f frame_time_s ) ;
-
     void drawIMGUIWidgets( VkCommandBuffer & cmd ) override ;
-
     virtual ~Tess1App()  override ; 
-    
+
+    // specific methods for this application (not overrides)
+    void updateViewProjMats( vkhc::VulkanContext & context, vkhc::seconds_f frame_time_s ) ;
 } ;
 
 // ----------------------------------------------------------------------------------
@@ -165,11 +167,7 @@ void Tess1App::updateViewProjMats( vkhc::VulkanContext & context,  vkhc::seconds
     const uvec2 ra_ext = context.getRenderAreaExtent(); // render area extent (size of the render area left to GUI, in pixels)
     const float ayx    = float(ra_ext.y) / float(ra_ext.x) ; // aspect ratio (height/width) of the render area
     proj_mat = scale( vec3( std::min(1.0f, ayx), std::min(1.0f, 1.0f/ayx), 1.0f ) ) ; 
-    
-    //pipeline.setViewMatrix( view_mat ) ;
-    //pipeline.setProjectionMatrix( proj_mat ) ;
 }
-
 // ----------------------------------------------------------------------------------
 
 void Tess1App::drawIMGUIWidgets( VkCommandBuffer & cmd ) 
@@ -200,7 +198,6 @@ void Tess1App::drawIMGUIWidgets( VkCommandBuffer & cmd )
     }
     Text("FPS: %.1f (%.1f ms)", ImGui::GetIO().Framerate, 1000.0f / ImGui::GetIO().Framerate);
 }
-
 // ----------------------------------------------------------------------------------
 
 void Tess1App::initFrame( const vkhc::seconds_f  time_elapsed )
@@ -221,6 +218,7 @@ void Tess1App::initFrame( const vkhc::seconds_f  time_elapsed )
     
     
 }
+// ----------------------------------------------------------------------------------
 
 void Tess1App::drawFrame( VkCommandBuffer & cmd ) 
 {

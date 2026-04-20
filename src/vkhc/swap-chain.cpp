@@ -150,27 +150,16 @@ void SwapChain::destroy()
     Assert( device->vk_device != VK_NULL_HANDLE, "SwapChain::destroy: 'device->vk_device' is null" );
     Assert( vk_swap_chain != VK_NULL_HANDLE, "SwapChain::destroy: 'vk_swap_chain' is null" );
 
-    cout << "-- Destroying swap chain ..." << endl ;
     // destroy framebuffers and image views in the swap chain ...
     for (auto framebuffer : framebuffers)
         vkDestroyFramebuffer( device->vk_device, framebuffer, nullptr);
-
-    cout << "--- 1" << endl ;
     framebuffers.clear();
-
-    cout << "--- 2" << endl ;
 
     for ( auto imageView : vk_image_views )
         vkDestroyImageView( device->vk_device, imageView, nullptr);
-
-    cout << "--- 3" << endl ;
     vk_image_views.clear();
 
-    cout << "--- 4" << endl ;
-
     vkDestroySwapchainKHR( device->vk_device, vk_swap_chain, nullptr);  /// elimina la swap chain antigua (hacerlo antes?)
-
-    cout << "-- Swap chain destroyed" << endl ;
 }
 // --------------------------------------------------------------------------------
 // recreates the swap chain when the window is resized 
