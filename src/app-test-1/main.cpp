@@ -94,13 +94,13 @@ class Tess1App : public ilc::Application
     glm::mat4 proj_mat = glm::mat4(1.0f) ; // projection matrix passed via UBO
 
     // triangle object which is visualized
-    Triangle *             triangle     = nullptr ; 
+    Triangle *  triangle = nullptr ; 
 
     // tessellation pipeline 
-    vkhc::Pipeline2DTess * pipeline     = nullptr ; 
+    vkhc::Pipeline2DTess * pipeline = nullptr ; 
 
     // textures set (used for testing textures).
-    ExampleTexturesSet *   textures_set = nullptr ; 
+    ExampleTexturesSet * textures_set = nullptr ; 
 
 
     // -----------------------------------------------------------------------------
@@ -184,8 +184,9 @@ void Tess1App::drawIMGUIWidgets( VkCommandBuffer & cmd )
         
         for ( int i = 0 ; i < 3 ; i++ )
         {
-            const std::string label = "Tess. outer level " + std::to_string(i),
-                                ident = "tsc_outer_level_" + std::to_string(i) ;
+            const std::string 
+                label = "Tess. outer level " + std::to_string(i),
+                ident = "tsc_outer_level_" + std::to_string(i) ;
 
             if ( SliderInt( label.c_str(), &tsc_outer_level_int[i], 1, max_tess_level) )
             {   tsc_outer_level[i] = float(tsc_outer_level_int[i]) ;

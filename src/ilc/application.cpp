@@ -52,7 +52,7 @@ void Application::run()
             continue ; 
 
         // draw the frame 
-        context->setRenderAreaViewport( cmd ) ; // DOES THIS WORKS ?? set the render area to the left of the GUI
+        context->setRenderAreaViewport( cmd ) ; // set the render area to the left of the GUI
         drawFrame( cmd ) ; // draw the frame adding commands to 'cmd'
         
         // draw the widgets 

@@ -387,12 +387,6 @@ void BasicPipeline::initializeShaderStages()
     vk_tess_control_shader_module = VK_NULL_HANDLE ;
     vk_tess_eval_shader_module    = VK_NULL_HANDLE ;
 
-    
-    //tescMod = createModule(tescSPV);
-    //VkShaderModule teseMod = createModule(teseSPV);
-
-    // todo: use the shaders sources to guess which shaders the user wants to use.
-    
     vk_shader_stages.push_back({ 
         .sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
         .stage  = VK_SHADER_STAGE_VERTEX_BIT, 
@@ -400,17 +394,21 @@ void BasicPipeline::initializeShaderStages()
         .pName  = "main"
     });
 
+    // use the shaders sources to guess which shaders the user wants to use.
+
     if ( shaders_sources.tess_control_shader_src != nullptr && 
          shaders_sources.tess_eval_shader_src != nullptr ) 
     {
-        assert( device->likelyHasTessellation );
+        Assert( device->likelyHasTessellation, "The device likely has no tessellation shaders capabilities" );
         has_tessellation_shaders = true ;
 
         const std::string * tesc_src = shaders_sources.tess_control_shader_src ;    assert( tesc_src != nullptr );
         const std::string * tese_src = shaders_sources.tess_eval_shader_src ;     assert( tese_src != nullptr );
+
+        typedef std::vector<uint32_t> SPIRV_Code ;
         
-        auto tescSPV = compileGLSL( *tesc_src, shaderc_tess_control_shader);
-        auto teseSPV = compileGLSL( *tese_src, shaderc_tess_evaluation_shader);
+        SPIRV_Code tescSPV = compileGLSL( *tesc_src, shaderc_tess_control_shader);
+        SPIRV_Code teseSPV = compileGLSL( *tese_src, shaderc_tess_evaluation_shader);
 
         vk_tess_control_shader_module = createModule( tescSPV ) ;
         vk_tess_eval_shader_module = createModule( teseSPV ) ;
@@ -432,7 +430,7 @@ void BasicPipeline::initializeShaderStages()
 
     if ( shaders_sources.geometry_shader_src != nullptr ) 
     {
-        assert( device->likelyHasGeometryShader );
+        Assert( device->likelyHasGeometryShader, "The device likely has no geometry shader capabilities" );
         const std::string * geom_src = shaders_sources.geometry_shader_src ;    assert( geom_src != nullptr );
         auto geomSPV = compileGLSL( *geom_src, shaderc_geometry_shader);
         vk_geometry_shader_module = createModule( geomSPV ) ;
