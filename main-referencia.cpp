@@ -44,7 +44,7 @@ class Triangle : public vkhc::VertexArray
 // ----------------------------------------------------------------------------------
 
 
-class Tess1App : public ilc::Application
+class App2D : public ilc::Application
 {
 
 } ;

@@ -5,7 +5,6 @@
 
 #include <vulkan-context.h>
 #include <pipeline2D.h>
-#include <pipeline2D_tess.h>
 #include <vertex-array.h>
 #include <imgui-context.h>
 #include <textures.h>
@@ -20,7 +19,7 @@ class Triangle : public vkhc::VertexArray
     public: 
     
     inline Triangle( vkhc::VulkanContext & vulkan_context)
-    :   VertexArray( vulkan_context, VK_PRIMITIVE_TOPOLOGY_PATCH_LIST ) // VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST )
+    :   VertexArray( vulkan_context, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST ) // VK_PRIMITIVE_TOPOLOGY_PATCH_LIST ) 
     {
         using namespace glm ;
         using namespace std ;
@@ -68,22 +67,22 @@ class App2D : public ilc::Application
     float rotation_speed = 0.0f ; // angular speed in cycles per second 
     float triangle_scale = 0.8f ;
 
-    // max value for the tessellation levels (for the GUI sliders)
-    const int max_tess_level = 20 ;
+    // // max value for the tessellation levels (for the GUI sliders)
+    // const int max_tess_level = 20 ;
 
-    // tessellation levels (int for the GUI, and float for the pipeline)
-    int tsc_inner_level_int = 4 ;
-    int tsc_outer_level_int[3] = { 
-        tsc_inner_level_int, 
-        tsc_inner_level_int, 
-        tsc_inner_level_int } ;
+    // // tessellation levels (int for the GUI, and float for the pipeline)
+    // int tsc_inner_level_int = 4 ;
+    // int tsc_outer_level_int[3] = { 
+    //     tsc_inner_level_int, 
+    //     tsc_inner_level_int, 
+    //     tsc_inner_level_int } ;
 
-    float tsc_inner_level = float(tsc_inner_level_int) ;
-    float tsc_outer_level[3] = { 
-        float(tsc_outer_level_int[0]), 
-        float(tsc_outer_level_int[1]), 
-        float(tsc_outer_level_int[2]) 
-    } ;
+    // float tsc_inner_level = float(tsc_inner_level_int) ;
+    // float tsc_outer_level[3] = { 
+    //     float(tsc_outer_level_int[0]), 
+    //     float(tsc_outer_level_int[1]), 
+    //     float(tsc_outer_level_int[2]) 
+    // } ;
 
     // active texture index (-1 for none)
     int texture_index = -1 ;  
@@ -96,8 +95,8 @@ class App2D : public ilc::Application
     // triangle object which is visualized
     Triangle *  triangle = nullptr ; 
 
-    // tessellation pipeline 
-    vkhc::Pipeline2DTess * pipeline = nullptr ; 
+    // basic 2D pipeline 
+    vkhc::BasicPipeline2D * pipeline = nullptr ; 
 
     // textures set (used for testing textures).
     ExampleTexturesSet * textures_set = nullptr ; 
@@ -122,7 +121,6 @@ class App2D : public ilc::Application
 
 // ----------------------------------------------------------------------------------
 
-
 App2D::App2D( ) 
 
 :   Application( 1024, 512, "Vulkan Tessellation demo" ) 
@@ -131,12 +129,11 @@ App2D::App2D( )
 
     Assert( context != nullptr, "Tess1App constructor: 'context' instance is null !!" );
     
-    triangle     = new Triangle( *context ) ;             assert( triangle != nullptr ) ;
-    textures_set = new ExampleTexturesSet( context ) ;    assert( textures_set != nullptr ) ;
-    pipeline     = new vkhc::Pipeline2DTess( *context ) ; assert( pipeline != nullptr ) ;
+    triangle     = new Triangle( *context ) ;              assert( triangle != nullptr ) ;
+    textures_set = new ExampleTexturesSet( context ) ;     assert( textures_set != nullptr ) ;
+    pipeline     = new vkhc::BasicPipeline2D( *context ) ; assert( pipeline != nullptr ) ;
 
     textures_set->bindTo( *pipeline ) ; // bind the textures set to the pipeline, so that its textures can be used in the fragment shader.
-
 } ;
 
 // ----------------------------------------------------------------------------------
@@ -179,20 +176,20 @@ void App2D::drawIMGUIWidgets( VkCommandBuffer & cmd )
     {       
         SliderFloat("Speed", &rotation_speed, 0.0f, 3.0f);
         SliderFloat("Scale", &triangle_scale, 0.2f, 2.0f);
-        if ( SliderInt("Tess. inner level", &tsc_inner_level_int, 1, max_tess_level) )
-            tsc_inner_level = float(tsc_inner_level_int) ;
+        // if ( SliderInt("Tess. inner level", &tsc_inner_level_int, 1, max_tess_level) )
+        //     tsc_inner_level = float(tsc_inner_level_int) ;
         
-        for ( int i = 0 ; i < 3 ; i++ )
-        {
-            const std::string 
-                label = "Tess. outer level " + std::to_string(i),
-                ident = "tsc_outer_level_" + std::to_string(i) ;
+        // for ( int i = 0 ; i < 3 ; i++ )
+        // {
+        //     const std::string 
+        //         label = "Tess. outer level " + std::to_string(i),
+        //         ident = "tsc_outer_level_" + std::to_string(i) ;
 
-            if ( SliderInt( label.c_str(), &tsc_outer_level_int[i], 1, max_tess_level) )
-            {   tsc_outer_level[i] = float(tsc_outer_level_int[i]) ;
-                pipeline->setUBOUniform( ident.c_str(), &tsc_outer_level[i] ) ;
-            }
-        }    
+        //     if ( SliderInt( label.c_str(), &tsc_outer_level_int[i], 1, max_tess_level) )
+        //     {   tsc_outer_level[i] = float(tsc_outer_level_int[i]) ;
+        //         pipeline->setUBOUniform( ident.c_str(), &tsc_outer_level[i] ) ;
+        //     }
+        // }    
         int texture_combo_index = texture_index + 1 ; // map -1..3 to 0..4 for ImGui combo
         if ( Combo("Texture", &texture_combo_index, "No texture (vert. colors)\0Wood 1\0Wood 2\0Wood 3\0Procedural texture\0") )
             texture_index = texture_combo_index - 1 ;
@@ -212,10 +209,10 @@ void App2D::initFrame( const vkhc::seconds_f  time_elapsed )
     pipeline->setViewMatrix( view_mat ) ;
     pipeline->setProjectionMatrix( proj_mat ) ;
 
-    pipeline->setUBOUniform( "tsc_inner_level", &tsc_inner_level ) ;
-    pipeline->setUBOUniform( "tsc_outer_level_0", &tsc_outer_level[0] ) ;
-    pipeline->setUBOUniform( "tsc_outer_level_1", &tsc_outer_level[1] ) ;
-    pipeline->setUBOUniform( "tsc_outer_level_2", &tsc_outer_level[2] ) ;
+    // pipeline->setUBOUniform( "tsc_inner_level", &tsc_inner_level ) ;
+    // pipeline->setUBOUniform( "tsc_outer_level_0", &tsc_outer_level[0] ) ;
+    // pipeline->setUBOUniform( "tsc_outer_level_1", &tsc_outer_level[1] ) ;
+    // pipeline->setUBOUniform( "tsc_outer_level_2", &tsc_outer_level[2] ) ;
     
     
 }

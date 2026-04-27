@@ -2,6 +2,6 @@
 .PHONY: x clean 
 
 app_src_folder:=  ../src/app-2dtess## folder with sources for the test application
-target:=           test1_exe
+target:=           app-2dtess_exe
 
 include include.make
