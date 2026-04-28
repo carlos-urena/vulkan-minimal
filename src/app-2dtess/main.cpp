@@ -58,7 +58,7 @@ class ExampleTexturesSet : public vkhc::TexturesSet
 // ----------------------------------------------------------------------------------
 
 
-class App2D : public ilc::Application
+class App2DTess : public ilc::Application
 {
 
     private:
@@ -108,13 +108,13 @@ class App2D : public ilc::Application
     
     public:
 
-    App2D( ) ;
+    App2DTess( ) ;
 
     // override methods
     void initFrame( const vkhc::seconds_f  time_elapsed ) override ;
     void drawFrame( VkCommandBuffer & cmd ) override ;
     void drawIMGUIWidgets( VkCommandBuffer & cmd ) override ;
-    virtual ~App2D()  override ; 
+    virtual ~App2DTess()  override ; 
 
     // specific methods for this application (not overrides)
     void updateViewProjMats( vkhc::VulkanContext & context, vkhc::seconds_f frame_time_s ) ;
@@ -123,7 +123,7 @@ class App2D : public ilc::Application
 // ----------------------------------------------------------------------------------
 
 
-App2D::App2D( ) 
+App2DTess::App2DTess( ) 
 
 :   Application( 1024, 512, "Vulkan Tessellation demo" ) 
 {
@@ -141,7 +141,7 @@ App2D::App2D( )
 
 // ----------------------------------------------------------------------------------
 
-App2D::~App2D() 
+App2DTess::~App2DTess() 
 {
     //Assert( context != nullptr, "Tess1App destructor: 'context' instance is null !!" );
     delete triangle ; triangle = nullptr ;
@@ -154,7 +154,7 @@ App2D::~App2D()
 // ----------------------------------------------------------------------------------
 
 
-void App2D::updateViewProjMats( vkhc::VulkanContext & context,  vkhc::seconds_f frame_time_s )
+void App2DTess::updateViewProjMats( vkhc::VulkanContext & context,  vkhc::seconds_f frame_time_s )
 {
     using namespace glm ;
 
@@ -170,7 +170,7 @@ void App2D::updateViewProjMats( vkhc::VulkanContext & context,  vkhc::seconds_f 
 }
 // ----------------------------------------------------------------------------------
 
-void App2D::drawIMGUIWidgets( VkCommandBuffer & cmd ) 
+void App2DTess::drawIMGUIWidgets( VkCommandBuffer & cmd ) 
 {
     using namespace ImGui ;
     
@@ -201,7 +201,7 @@ void App2D::drawIMGUIWidgets( VkCommandBuffer & cmd )
 }
 // ----------------------------------------------------------------------------------
 
-void App2D::initFrame( const vkhc::seconds_f  time_elapsed )
+void App2DTess::initFrame( const vkhc::seconds_f  time_elapsed )
 {
     Assert( context != nullptr, "Tess1App::drawFrame: 'context' instance is null !!" );
     Assert( pipeline != nullptr, "Tess1App::drawFrame: 'pipeline' instance is null !!" );
@@ -221,7 +221,7 @@ void App2D::initFrame( const vkhc::seconds_f  time_elapsed )
 }
 // ----------------------------------------------------------------------------------
 
-void App2D::drawFrame( VkCommandBuffer & cmd ) 
+void App2DTess::drawFrame( VkCommandBuffer & cmd ) 
 {
     Assert( context != nullptr, "Tess1App::drawFrame: 'context' instance is null !!" );
     Assert( pipeline != nullptr, "Tess1App::drawFrame: 'pipeline' instance is null !!" );
@@ -245,7 +245,7 @@ void App2D::drawFrame( VkCommandBuffer & cmd )
 
 int main() 
 {
-    App2D app{  } ;
+    App2DTess app{  } ;
     app.run() ;
     return 0 ;
 }
