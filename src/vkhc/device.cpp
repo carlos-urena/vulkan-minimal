@@ -109,7 +109,7 @@ void Device::selectGPU()
             std::cerr << "No suitable GPU found. Available GPUs:" << std::endl;
             exit(1);
         }
-    }   
+    }  
 }
 
 // ----------------------------------------------------------------------------------------
