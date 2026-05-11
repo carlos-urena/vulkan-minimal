@@ -27,12 +27,42 @@ Surface::Surface( Device * p_device, Instance * p_instance, GLFWContext * glfw_c
         throw std::runtime_error("Failed to create GLFW window surface");
     }
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR( device->vk_gpu, vk_surface, &vk_capabilities);
+    const VkExtent2D ce = vk_capabilities.currentExtent;
+    const uint32_t   min_w = vk_capabilities.minImageExtent.width ,
+                     min_h = vk_capabilities.minImageExtent.height ,
+                     max_w = vk_capabilities.maxImageExtent.width ,
+                     max_h = vk_capabilities.maxImageExtent.height ;
+
+    // On Wayland, the current extent in vk_capabilities is set by GLFW to the special value (UINT32_MAX, UINT32_MAX), (¿why?)
+    // So we get real window size from GLFW to set the surface size in vK_capabilities
+    // https://stackoverflow.com/questions/79507696/in-my-vulkan-program-glfw-opens-window-but-crashes-on-vkcreateswapchainkhr-wha
+    
+    if ( ce.width < min_w || ce.width > max_w || ce.height < min_h || ce.height > max_h  ) 
+    {   
+        cout << "Current surface extent from vk_capabilities is invalid (width: " << ce.width << ", height: " << ce.height << "). Getting window size from GLFW window." << endl ;
+        int w,h ;
+        glfwGetWindowSize( glfw_context->glfw_window, &w, &h );
+        if ( w < 0 || h < 0 )
+        {   std::cerr << "Error: window size (" << w << " x " << h << ") is invalid. Cannot create surface." << std::endl ;
+            exit(1) ;
+        }
+        const uint32_t uw = uint32_t(w) ,
+                       uh = uint32_t(h) ;
+        cout << "Window size: " << uw << " x " << uh << endl ;
+        if ( uw < min_w || uw > max_w || uh < min_h || uh > max_h )
+        {   std::cerr << "Error: window size is off-limits. Cannot create surface." << std::endl ;
+            exit(1) ;
+        }
+        vk_capabilities.currentExtent.width = uint32_t(w) ;
+        vk_capabilities.currentExtent.height = uint32_t(h) ;
+    }
+
     vkGetPhysicalDeviceSurfaceFormatsKHR( device->vk_gpu, vk_surface, &formatCount, nullptr);
     formats.resize( formatCount );
     vkGetPhysicalDeviceSurfaceFormatsKHR( device->vk_gpu, vk_surface, &formatCount, formats.data());
     cout << "Surface supports " << formatCount << " formats" << endl ;
 
-        // NUEVO !! probar en no-wayland
+        
     bool found = false ;
     for (const auto& availableFormat : formats) {
         if (availableFormat.format == VK_FORMAT_R8G8B8A8_UNORM  && //VK_FORMAT_B8G8R8A8_UNORM && 

@@ -92,11 +92,15 @@ void SwapChain::createImages()
 
 void SwapChain::createSwapChain()
 {
-
     uint32_t desiredImageCount = surface->vk_capabilities.minImageCount + 1;
     std::cout << "Creating swapchain. Image count min: " << surface->vk_capabilities.minImageCount << ", max: " << surface->vk_capabilities.maxImageCount << "." << std::endl ;
     if (surface->vk_capabilities.maxImageCount > 0 && desiredImageCount > surface->vk_capabilities.maxImageCount)
             desiredImageCount = surface->vk_capabilities.maxImageCount;
+
+    // debug
+    using namespace std ;
+    VkExtent2D e= surface->vk_capabilities.currentExtent;
+    cout << "Creating swapchain extent == " << e.width << " x " << e.height << endl ;
     
     VkSwapchainCreateInfoKHR sci
     {   .sType            = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
