@@ -167,8 +167,9 @@ void Device::checkAvailableExtensions()
     std::cout << "Selected GPU supports " << supp_extensions_count << " Vulkan device extension(s)" << std::endl;
 
     // Do not print the whole list, unless when you want to debug it
-    //for (const auto &ext : supp_extensions) 
-    //    std::cout << "  - " << ext.extensionName << " (specVersion=" << ext.specVersion << ")" << std::endl;
+    if ( false)
+        for (const auto &ext : supp_extensions) 
+            std::cout << "  - " << ext.extensionName << " (specVersion=" << ext.specVersion << ")" << std::endl;
 
     // check whether each required extension is supported
     

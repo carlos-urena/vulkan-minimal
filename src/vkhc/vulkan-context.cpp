@@ -53,11 +53,11 @@ VulkanContext::VulkanContext( int nx, int ny, const std::string & title )
     Assert( ny > 0, "VulkanContext constructor: 'ny' must be > 0" );
 
     // initialize all state objects 
-    glfw_context = new GLFWContext{ nx, ny, title }; assert( glfw_context != nullptr );  
+    glfw_context = new GLFWContext{ nx, ny, title };                assert( glfw_context != nullptr );  
     instance     = new Instance{};                                  assert( instance != nullptr );
     device       = new Device{ instance };                          assert( device != nullptr );
     sync_objects = new SyncObjects{ device };                       assert( sync_objects != nullptr );
-    surface      = new Surface{ device, instance, glfw_context };     assert( surface != nullptr );
+    surface      = new Surface{ device, instance, glfw_context };   assert( surface != nullptr );
     render_pass  = new RenderPass{ device, surface };               assert( render_pass != nullptr );
     swap_chain   = new SwapChain{ device, surface, render_pass };   assert( swap_chain != nullptr );
     cmd_buffers  = new CommandPoolAndBuffers{ device, swap_chain }; assert( cmd_buffers != nullptr );

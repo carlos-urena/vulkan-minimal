@@ -105,7 +105,7 @@ GLFWContext::GLFWContext( int width, int height, const std::string & title )
     glfw_window = glfwCreateWindow( sizex, sizey, title.c_str(), nullptr, nullptr);
     assert( glfw_window != nullptr );
     
-    glfwSetWindowPos( glfw_window, posx, posy );
+    //glfwSetWindowPos( glfw_window, posx, posy ); // not available in wayland
     glfwSetFramebufferSizeCallback( glfw_window, framebufferResizeCallback );
 }
 

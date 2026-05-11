@@ -14,6 +14,7 @@ namespace vkhc
 
 Surface::Surface( Device * p_device, Instance * p_instance, GLFWContext * glfw_context ) 
 {
+    using namespace std ;
     device = p_device ;
     instance = p_instance ;
 
@@ -21,12 +22,31 @@ Surface::Surface( Device * p_device, Instance * p_instance, GLFWContext * glfw_c
     assert( instance != nullptr );
     assert( glfw_context != nullptr );
     
-    glfwCreateWindowSurface( instance->vk_instance, glfw_context->glfw_window, nullptr, &vk_surface );
+    VkResult err = glfwCreateWindowSurface( instance->vk_instance, glfw_context->glfw_window, nullptr, &vk_surface );
+    if (err != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create GLFW window surface");
+    }
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR( device->vk_gpu, vk_surface, &vk_capabilities);
     vkGetPhysicalDeviceSurfaceFormatsKHR( device->vk_gpu, vk_surface, &formatCount, nullptr);
     formats.resize( formatCount );
     vkGetPhysicalDeviceSurfaceFormatsKHR( device->vk_gpu, vk_surface, &formatCount, formats.data());
-    surfaceFormat = formats[0];
+    cout << "Surface supports " << formatCount << " formats" << endl ;
+
+        // NUEVO !! probar en no-wayland
+    bool found = false ;
+    for (const auto& availableFormat : formats) {
+        if (availableFormat.format == VK_FORMAT_R8G8B8A8_UNORM  && //VK_FORMAT_B8G8R8A8_UNORM && 
+            availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+            surfaceFormat = availableFormat;
+            found = true ;
+            break;
+        }
+    }
+    if (!found) {
+        surfaceFormat = formats[0];
+        std::cout << "Preferred format not found. Using first available format." << std::endl;
+    }
+    //surfaceFormat = formats[0];
     
     std::cout << "Surface created with format " << surfaceFormat.format << std::endl ;
 }

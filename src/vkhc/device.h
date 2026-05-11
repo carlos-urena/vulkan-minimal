@@ -49,6 +49,7 @@ class Device  // includes physical device, device and queue creation
     static constexpr uint32_t    required_extensions_count = 1 ; 
     static constexpr const char* required_extensions_names[ required_extensions_count ] = { 
         VK_KHR_SWAPCHAIN_EXTENSION_NAME, 
+        // "VK_KHR_wayland_surface"
         //"VK_EXT_extended_dynamic_state3" // no está soportada en macOs ?? (en Linux sí).
     };
 
