@@ -12,11 +12,12 @@ Can be compiled from the command line using `makefile` files in `build-linux` an
 
 Install the following packages:
 
-- **GLFW**: install package `libglfw3-dev`  
-- **Vulkan SDK**: install package `libvulkan-dev`
-- **Vulkan SDK** (_shader compiler_): install package `libshaderc-dev`
-- **IMGUI**: simply clone the IMGUI Github repository (https://github.com/ocornut/imgui), and set up the corresponding variable in the `makefile` to point to the repository folder
-- **STB**: clone the STB Github repository (https://github.com/nothings/stb), set the corresponding variable in the `makefile`
+- **GLM**: install package `libglm-dev`.
+- **GLFW**: interface with the window manage. Install package `libglfw3-dev` . 
+- **Vulkan SDK**: Vulkan libraries and headers. Install package `libvulkan-dev` (maybe it is installed with `libglfw3-dev`).
+- **Vulkan SDK** (_shader compiler_): install package `libshaderc-dev`.
+- **IMGUI**: simply clone the IMGUI Github repository (https://github.com/ocornut/imgui), and set up the corresponding variable in the `makefile` to point to the repository folder.
+- **STB**: clone the STB Github repository (https://github.com/nothings/stb), set the corresponding variable in the `makefile`.
 
 
 ### MacOS
