@@ -113,7 +113,6 @@ $(target): $(objs) makefile
 clean:
 	rm -f $(target) $(objs_dir)/*.o
 
-#$(target): $(sources_objs) $(imgui_objs_1) $(imgui_objs_2)
-#	$(compilador) $(opcs_comp) -o $@ $(sources_objs) $(imgui_objs_1) $(imgui_objs_2)   $(opcs_libs) 
+ 
 
 
