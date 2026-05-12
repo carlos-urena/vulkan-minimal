@@ -43,6 +43,7 @@
     ],
     "unwantedRecommendations": 
     [
+      "ms-vscode-remote.remote-containers",  // no queremos que se recomienden las extensiones de desarrollo remoto, porque no vamos a usar contenedores ni WSL
       "ms-vscode.makefile-tools",  // no queremos que VS code gestione makefiles 
       "ms-vscode.cmake-tools"      // tampoco los archivos 'CMakeFiles.txt'
     ]
