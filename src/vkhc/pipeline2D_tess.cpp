@@ -223,11 +223,11 @@ void Passthrough()
 
 // -----------------------------------------------------------------------------------------
 
-const float radio_discos = 0.012f ; // radio de los discos que se dibujan en los vértices
-const float grosor_lineas = 0.006f ; // grosor de las líneas
+const float radio_discos = 0.012f ; // radius of the discs drawn at the vertices
+const float grosor_lineas = 0.006f ; // line thickness
 
 // ----------------------------------------------------------------------------
-// Emite un vértice con la posición 'pos_wcc'
+// Emits a vertex at position 'pos'
 //
 void NewVertex( vec4 pos, vec4 color )
 {
@@ -237,12 +237,12 @@ void NewVertex( vec4 pos, vec4 color )
     EmitVertex() ;
 }
 // ----------------------------------------------------------------------------
-// Emite las primitivas (triángulos) que forman un disco de radio w/2 centrado en centro
+// Emits the primitives (triangles) that form a disc of radius w/2 centered at 'center'
 
 void EmitDisc( vec4 centro, vec4 color )
 {
-    // número de triángulos que forman el disco 
-    // nt = max_vertices/3 --> numero máximo de triángulos 
+    // number of triangles that form the disc
+    // nt = max_vertices/3 --> maximum number of triangles
     // nt-1
     const int   nt_ed = (max_vertices/3) -1 ; // max number of triangles for edges and discs 
     const int   nt_d  = nt_ed - 2*3 ;          // max number of triangles for discs (6 are for edges)
@@ -269,14 +269,14 @@ void EmitDisc( vec4 centro, vec4 color )
 }
 
 // ----------------------------------------------------------------------------
-// Emite la primitiva (una tira de dos triángulos) que forma un segmento de recta de grosor w/2
-// desde v0 hasta v1, con colores c0 en v0 y c1 en v1 
-// (los colores se interpolan linealmente en el interior de la primitiva) 
+// Emits the primitive (a strip of two triangles) that forms a line segment with thickness w/2
+// from v0 to v1, with color c0 at v0 and c1 at v1
+// (the colors are linearly interpolated inside the primitive)
 //
 void EmitSegment( vec4 v0, vec4 v1, vec4 c0, vec4 c1 )
 {
-    vec4 s  = normalize( v1 - v0 ); // vector director del segmento
-    vec4 n  = (grosor_lineas/2.0f)*vec4( -s.y, s.x, 0.0f, 0.0f ); // vector normal al segmento de long w/2
+    vec4 s  = normalize( v1 - v0 ); // segment direction vector (normalized)
+    vec4 n  = (grosor_lineas/2.0f)*vec4( -s.y, s.x, 0.0f, 0.0f ); // vector perpendicular to the segment, with length equal to half the thickness of the line
 
     NewVertex( v0-n, c0 ); NewVertex( v0+n, c0 );  
     NewVertex( v1-n, c1 ); NewVertex( v1+n, c1 );  
@@ -296,7 +296,7 @@ void SegmentsAndDiscs()
         c_seg = vec4( 1.0, 1.0, 1.0, 1.0 ) , //v1_color[0] ,
         c_dis = vec4( 1.0, 0.2, 0.2, 1.0 ) , //v1_color[2] ,
         //c1 = v1_color[1] ,
-        dz = vec4( 0.0f, 0.0f, +0.05f, 0.0f ) ; // desplazamiento en z para evitar z-fighting
+        dz = vec4( 0.0f, 0.0f, +0.05f, 0.0f ) ; // z offset to avoid z-fighting
     
     
     
@@ -401,9 +401,9 @@ Pipeline2DTess::Pipeline2DTess( VulkanContext & vulkan_context )
 
     // set attributes formats (must correspond with inputs to the vertex shaders the shaders sources)
     attributes_formats = 
-    {   VK_FORMAT_R32G32_SFLOAT,    // position (atrib 0) X,Y
-        VK_FORMAT_R32G32B32_SFLOAT, // color (atrib 1) R,G,B
-        VK_FORMAT_R32G32_SFLOAT     // texture coords (atrib 2) U,V
+    {   VK_FORMAT_R32G32_SFLOAT,    // position (attrib 0) X,Y
+        VK_FORMAT_R32G32B32_SFLOAT, // color (attrib 1) R,G,B
+        VK_FORMAT_R32G32_SFLOAT     // texture coords (attrib 2) U,V
     }; // color
 
     // set default (initial) primitive topology (can be changed dynamically in command buffers)
@@ -415,7 +415,7 @@ Pipeline2DTess::Pipeline2DTess( VulkanContext & vulkan_context )
     // initialize the vulkan pipeline  (in the context)
     initialize( ) ; 
 
-    cout << "Basic 2D pipeline created." << endl ;
+    cout << "Pipeline 2D with tessellation created." << endl ;
 }
 // ------------------------------------------------------------------------------
 
