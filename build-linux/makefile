@@ -8,4 +8,4 @@
 	make -f  app-2dtess.make
 
 clean:
-	rm -f *_exe objs/*.o
+	rm -f ./bin/*_exe objs/*/*.o
