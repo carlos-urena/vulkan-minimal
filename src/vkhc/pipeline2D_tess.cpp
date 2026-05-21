@@ -36,10 +36,12 @@ layout( set=0, binding=0 ) uniform ubo_block
 {
     mat4 view_mat; // view matrix (world to camera)
     mat4 proj_mat; // projection matrix (camera to clip)
-    float tsc_inner_level ;   // inner tessellation levels
+    float tsc_inner_level_0 ;   // inner tessellation levels (0)
+    float tsc_inner_level_1 ;   // inner tessellation levels (1, only for quads)
     float tsc_outer_level_0 ;   // outer tessellation levels
     float tsc_outer_level_1 ;   // outer tessellation levels
     float tsc_outer_level_2 ;   // outer tessellation levels
+    float tsc_outer_level_3 ;   // outer tessellation levels (only for quads)
 } ubo ;
 
 // Inputs: array of texture samplers 
@@ -82,10 +84,10 @@ void main()
 
 
 // --------------------------------------------------------------------------------
-// TESSELLATION CONTROL SHADER
+// TESSELLATION CONTROL SHADER (for triangle patches)
 // --------------------------------------------------------------------------------
 
-static const char* tescShaderSrc = R"glsl(
+static const char* tc_shader_triangles_src = R"glsl(
 #version 450
 
 // size 3 patches (triangles)
@@ -111,7 +113,7 @@ void main()
     out_color[gl_InvocationID] = in_color[gl_InvocationID] ;
     out_tex_coords[gl_InvocationID] = in_tex_coords[gl_InvocationID] ;
 
-    gl_TessLevelInner[0] = ubo.tsc_inner_level;
+    gl_TessLevelInner[0] = ubo.tsc_inner_level_0;
 
     gl_TessLevelOuter[0] = ubo.tsc_outer_level_0;
     gl_TessLevelOuter[1] = ubo.tsc_outer_level_1;
@@ -120,10 +122,52 @@ void main()
 )glsl";
 
 // --------------------------------------------------------------------------------
-// TESSELLATION EVALUATION SHADER
+// TESSELLATION CONTROL SHADER (for quad patches)
 // --------------------------------------------------------------------------------
 
-const char* teseShaderSrc = R"glsl(
+static const char* tc_shader_quads_src = R"glsl(
+#version 450
+
+// size 4 patches (quads)
+layout(vertices = 4) out;
+
+//#common_inputs_declarations
+
+
+// Inputs: per vertex attributes from previous stage
+
+layout (location=0) in vec3 in_color[];
+layout (location=1) in vec2 in_tex_coords[] ;
+
+// Outputs: per vertex attributes to next stage
+
+layout (location=0) out vec3 out_color[] ;
+layout (location=1) out vec2 out_tex_coords[] ;
+
+void main() 
+{
+    gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
+
+    out_color[gl_InvocationID] = in_color[gl_InvocationID] ;
+    out_tex_coords[gl_InvocationID] = in_tex_coords[gl_InvocationID] ;
+
+    gl_TessLevelInner[0] = ubo.tsc_inner_level_0;
+    gl_TessLevelInner[1] = ubo.tsc_inner_level_1;
+
+    gl_TessLevelOuter[0] = ubo.tsc_outer_level_0;
+    gl_TessLevelOuter[1] = ubo.tsc_outer_level_1;
+    gl_TessLevelOuter[2] = ubo.tsc_outer_level_2;    
+    gl_TessLevelOuter[3] = ubo.tsc_outer_level_3;    
+}
+)glsl";
+
+
+
+// --------------------------------------------------------------------------------
+// TESSELLATION EVALUATION SHADER (for triangle patches)
+// --------------------------------------------------------------------------------
+
+const char* tev_shader_triangles_src = R"glsl(
 #version 450
 layout( triangles, equal_spacing, ccw) in;
 
@@ -175,11 +219,71 @@ void main() {
 }
 )glsl";
 
+
+// --------------------------------------------------------------------------------
+// TESSELLATION EVALUATION SHADER (for quads patches)
+// --------------------------------------------------------------------------------
+
+const char* tev_shader_quads_src = R"glsl(
+#version 450
+layout( quads, equal_spacing, ccw) in;
+
+//#common_inputs_declarations
+
+
+// Inputs: per vertex attributes from previous stage
+
+layout (location=0) in vec3 in_color[];
+layout (location=1) in vec2 in_tex_coords[] ;
+
+// Outputs: per vertex attributes to next stage
+
+layout (location=0) out vec3 out_color ;
+layout (location=1) out vec2 out_tex_coords ;
+
+vec4 Mix4( vec2 uv, vec4 v00, vec4 v01, vec4 v10, vec4 v11  )
+{
+    float u = uv[0] ;
+    float v = uv[1] ;
+    return (1.0-u)*(1.0-v)*v00 + (1.0-u)*v*v01 + v*(1.0-v)*v10 + u*v*v11 ;
+}
+
+vec3 Mix3( vec2 uv, vec3 v00, vec3 v01, vec3 v10, vec3 v11  )
+{
+    float u = uv[0] ;
+    float v = uv[1] ;
+    return (1.0-u)*(1.0-v)*v00 + (1.0-u)*v*v01 + v*(1.0-v)*v10 + u*v*v11 ;
+}
+
+vec2 Mix2( vec2 uv, vec2 v00, vec2 v01, vec2 v10, vec2 v11  )
+{
+    float u = uv[0] ;
+    float v = uv[1] ;
+    return (1.0-u)*(1.0-v)*v00 + (1.0-u)*v*v01 + v*(1.0-v)*v10 + u*v*v11 ;
+}
+
+void main() {
+    vec2 uv = gl_TessCoord.xy;
+
+    vec4 p0 = gl_in[0].gl_Position;
+    vec4 p1 = gl_in[1].gl_Position;
+    vec4 p2 = gl_in[2].gl_Position;
+    vec4 p3 = gl_in[3].gl_Position;
+
+    gl_Position = Mix4( uv, p0, p1, p2, p3 ) ;
+
+    //pos.z += height(pos.xy);
+
+    out_color = Mix3( uv, in_color[0], in_color[1], in_color[2], in_color[3] ) ;
+    out_tex_coords = Mix2( uv, in_tex_coords[0], in_tex_coords[1], in_tex_coords[2], in_tex_coords[3] ) ;    
+}
+)glsl";
+
 /// ----------------------------------------------------------------------------------
 /// GEOMETRY SHADER
 /// ----------------------------------------------------------------------------------
 
-const char *geomShaderSrc = R"glsl(
+const char *geom_shader_src = R"glsl(
 #version 450
 layout( triangles ) in;
 layout( triangle_strip, max_vertices = 100 ) out;
@@ -363,17 +467,20 @@ static std::string processShaderSource( const std::string & shader_src )
 
 static std::string 
     vertShaderSrc_full = processShaderSource( vertShaderSrc ),
-    tescShaderSrc_full = processShaderSource( tescShaderSrc ),
-    teseShaderSrc_full = processShaderSource( teseShaderSrc ),
-    geomShaderSrc_full = processShaderSource( geomShaderSrc ),
+    tescShaderSrc_full = processShaderSource( tc_shader_triangles_src ),
+    teseShaderSrc_full = processShaderSource( tev_shader_triangles_src ),
+    geomShaderSrc_full = processShaderSource( geom_shader_src ),
     fragShaderSrc_full = processShaderSource( fragShaderSrc );
 
-Pipeline2DTess::Pipeline2DTess( VulkanContext & vulkan_context )
+Pipeline2DTess::Pipeline2DTess( VulkanContext & vulkan_context, const int p_num_vertexes_per_patch )
 
 :   BasicPipeline( vulkan_context ) 
 {
     using namespace std ; 
     cout << "Creating basic 2D pipeline..." << endl ;
+
+    num_vertexes_par_patch = p_num_vertexes_per_patch ;
+    Assert( num_vertexes_par_patch == 3, "num. of vertexes per patch must be 3 for triangles" ) ;
 
     // set metadata about  push constants 
     addPushConstant( "model_mat", sizeof(glm::mat4) ); // model matrix 
@@ -384,10 +491,13 @@ Pipeline2DTess::Pipeline2DTess( VulkanContext & vulkan_context )
     addUBOUniform( "view_mat", sizeof(glm::mat4) ); // view matrix
     addUBOUniform( "proj_mat", sizeof(glm::mat4) ); // projection matrix
     
-    addUBOUniform( "tsc_inner_level", sizeof(float) ); // outer tessellation levels
-    addUBOUniform( "tsc_outer_level_0", sizeof(float) ); // inner tessellation levels
-    addUBOUniform( "tsc_outer_level_1", sizeof(float) ); // inner tessellation levels
-    addUBOUniform( "tsc_outer_level_2", sizeof(float) ); // inner tessellation levels
+    addUBOUniform( "tsc_inner_level_0", sizeof(float) ); // inner tessellation levels
+    addUBOUniform( "tsc_inner_level_1", sizeof(float) ); // inner tessellation levels
+
+    addUBOUniform( "tsc_outer_level_0", sizeof(float) ); // outer tessellation levels
+    addUBOUniform( "tsc_outer_level_1", sizeof(float) ); // outer tessellation levels
+    addUBOUniform( "tsc_outer_level_2", sizeof(float) ); // outer tessellation levels
+    addUBOUniform( "tsc_outer_level_3", sizeof(float) ); // outer tessellation levels
 
 
     // set shaders sources 
@@ -409,7 +519,7 @@ Pipeline2DTess::Pipeline2DTess( VulkanContext & vulkan_context )
     // set default (initial) primitive topology (can be changed dynamically in command buffers)
     //default_primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST ;
     default_primitive_topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST ; // default for tessellation 
-    default_vertexes_per_patch = 3 ; // default for tessellation (triangles)
+    default_vertexes_per_patch = num_vertexes_par_patch ; // default for tessellation (triangles)
 
 
     // initialize the vulkan pipeline  (in the context)

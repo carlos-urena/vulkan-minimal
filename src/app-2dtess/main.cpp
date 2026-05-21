@@ -133,7 +133,7 @@ App2DTess::App2DTess( )
     
     triangle     = new Triangle( *context ) ;             assert( triangle != nullptr ) ;
     textures_set = new ExampleTexturesSet( context ) ;    assert( textures_set != nullptr ) ;
-    pipeline     = new vkhc::Pipeline2DTess( *context ) ; assert( pipeline != nullptr ) ;
+    pipeline     = new vkhc::Pipeline2DTess( *context, 3 ) ; assert( pipeline != nullptr ) ;
 
     textures_set->bindTo( *pipeline ) ; // bind the textures set to the pipeline, so that its textures can be used in the fragment shader.
 
@@ -212,7 +212,7 @@ void App2DTess::initFrame( const vkhc::seconds_f  time_elapsed )
     pipeline->setViewMatrix( view_mat ) ;
     pipeline->setProjectionMatrix( proj_mat ) ;
 
-    pipeline->setUBOUniform( "tsc_inner_level", &tsc_inner_level ) ;
+    pipeline->setUBOUniform( "tsc_inner_level_0", &tsc_inner_level ) ;
     pipeline->setUBOUniform( "tsc_outer_level_0", &tsc_outer_level[0] ) ;
     pipeline->setUBOUniform( "tsc_outer_level_1", &tsc_outer_level[1] ) ;
     pipeline->setUBOUniform( "tsc_outer_level_2", &tsc_outer_level[2] ) ;

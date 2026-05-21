@@ -17,13 +17,15 @@ namespace vkhc
 class Pipeline2DTess : public BasicPipeline
 {
     public:
-    Pipeline2DTess( VulkanContext & vulkan_context ) ; 
+    Pipeline2DTess( VulkanContext & vulkan_context, const int p_num_vertexes_per_patch ) ; 
 
     void setViewMatrix( const glm::mat4 & view_mat ) ;
     void setProjectionMatrix( const glm::mat4 & proj_mat ) ;
 
     void setTextureIndex( VkCommandBuffer & vk_cmd, int index ) ;
     void setModelMatrix( VkCommandBuffer & vk_cmd, const glm::mat4 & model_mat ) ;
+
+    int num_vertexes_par_patch ; // number of vertexes per patch (3 for triangles, 4 for quads)
 
 } ; // end class 'BasicPipeline2D' 
 
