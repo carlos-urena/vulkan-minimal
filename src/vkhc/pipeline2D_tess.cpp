@@ -58,7 +58,7 @@ layout( set=1, binding=0 ) uniform sampler2D textures[max_textures]; // array of
 /// VERTEX SHADER 
 /// ----------------------------------------------------------------------------------
 
-static const char* vertShaderSrc = R"glsl(
+static const char* vert_shader_src = R"glsl(
 #version 450
 
 //#common_inputs_declarations
@@ -245,37 +245,37 @@ vec4 Mix4( vec2 uv, vec4 v00, vec4 v01, vec4 v10, vec4 v11  )
 {
     float u = uv[0] ;
     float v = uv[1] ;
-    return (1.0-u)*(1.0-v)*v00 + (1.0-u)*v*v01 + v*(1.0-v)*v10 + u*v*v11 ;
+    return (1.0-u)*(1.0-v)*v00 + (1.0-u)*v*v01 + u*(1.0-v)*v10 + u*v*v11 ;
 }
 
 vec3 Mix3( vec2 uv, vec3 v00, vec3 v01, vec3 v10, vec3 v11  )
 {
     float u = uv[0] ;
     float v = uv[1] ;
-    return (1.0-u)*(1.0-v)*v00 + (1.0-u)*v*v01 + v*(1.0-v)*v10 + u*v*v11 ;
+    return (1.0-u)*(1.0-v)*v00 + (1.0-u)*v*v01 + u*(1.0-v)*v10 + u*v*v11 ;
 }
 
 vec2 Mix2( vec2 uv, vec2 v00, vec2 v01, vec2 v10, vec2 v11  )
 {
     float u = uv[0] ;
     float v = uv[1] ;
-    return (1.0-u)*(1.0-v)*v00 + (1.0-u)*v*v01 + v*(1.0-v)*v10 + u*v*v11 ;
+    return (1.0-u)*(1.0-v)*v00 + (1.0-u)*v*v01 + u*(1.0-v)*v10 + u*v*v11 ;
 }
 
 void main() {
     vec2 uv = gl_TessCoord.xy;
 
-    vec4 p0 = gl_in[0].gl_Position;
-    vec4 p1 = gl_in[1].gl_Position;
-    vec4 p2 = gl_in[2].gl_Position;
-    vec4 p3 = gl_in[3].gl_Position;
+    vec4 p00 = gl_in[0].gl_Position; // 0,0
+    vec4 p10 = gl_in[1].gl_Position; // 1,0
+    vec4 p11 = gl_in[2].gl_Position; // 1,1
+    vec4 p01 = gl_in[3].gl_Position; // 0,1
 
-    gl_Position = Mix4( uv, p0, p1, p2, p3 ) ;
+    gl_Position = Mix4( uv, p00, p01, p10, p11 ) ;
 
     //pos.z += height(pos.xy);
 
-    out_color = Mix3( uv, in_color[0], in_color[1], in_color[2], in_color[3] ) ;
-    out_tex_coords = Mix2( uv, in_tex_coords[0], in_tex_coords[1], in_tex_coords[2], in_tex_coords[3] ) ;    
+    out_color = Mix3( uv, in_color[0], in_color[3], in_color[1], in_color[2] ) ;
+    out_tex_coords = Mix2( uv, in_tex_coords[0], in_tex_coords[3], in_tex_coords[1], in_tex_coords[2] ) ;    
 }
 )glsl";
 
@@ -426,7 +426,7 @@ void main()
 /// FRAGMENT SHADER 
 /// ----------------------------------------------------------------------------------
 
-const char* fragShaderSrc = R"glsl(
+const char* frag_shader_src = R"glsl(
 #version 450
     
 //#common_inputs_declarations
@@ -466,11 +466,13 @@ static std::string processShaderSource( const std::string & shader_src )
 
 
 static std::string 
-    vertShaderSrc_full = processShaderSource( vertShaderSrc ),
-    tescShaderSrc_full = processShaderSource( tc_shader_triangles_src ),
-    teseShaderSrc_full = processShaderSource( tev_shader_triangles_src ),
-    geomShaderSrc_full = processShaderSource( geom_shader_src ),
-    fragShaderSrc_full = processShaderSource( fragShaderSrc );
+    vert_shader_src_full = processShaderSource( vert_shader_src ),
+    tc_shader_triangles_full = processShaderSource( tc_shader_triangles_src ),
+    tev_shader_triangles_full = processShaderSource( tev_shader_triangles_src ),
+    tc_shader_quads_full = processShaderSource( tc_shader_quads_src ),
+    tev_shader_quads_full = processShaderSource( tev_shader_quads_src ),
+    geom_shader_src_full = processShaderSource( geom_shader_src ),
+    frag_shader_src_full = processShaderSource( frag_shader_src );
 
 Pipeline2DTess::Pipeline2DTess( VulkanContext & vulkan_context, const int p_num_vertexes_per_patch )
 
@@ -479,8 +481,10 @@ Pipeline2DTess::Pipeline2DTess( VulkanContext & vulkan_context, const int p_num_
     using namespace std ; 
     cout << "Creating basic 2D pipeline..." << endl ;
 
+    cout << "num_vertexes_per_patch = " << p_num_vertexes_per_patch << endl ;
     num_vertexes_par_patch = p_num_vertexes_per_patch ;
-    Assert( num_vertexes_par_patch == 3, "num. of vertexes per patch must be 3 for triangles" ) ;
+    Assert( num_vertexes_par_patch == 3 || num_vertexes_par_patch == 4, 
+            "num. of vertexes per patch must be 3 for triangles or 4 for quads" ) ;
 
     // set metadata about  push constants 
     addPushConstant( "model_mat", sizeof(glm::mat4) ); // model matrix 
@@ -501,13 +505,28 @@ Pipeline2DTess::Pipeline2DTess( VulkanContext & vulkan_context, const int p_num_
 
 
     // set shaders sources 
-    shaders_sources = 
-    {   .vertex_shader_src       = & vertShaderSrc_full, 
-        .tess_control_shader_src = & tescShaderSrc_full,
-        .tess_eval_shader_src    = & teseShaderSrc_full,
-        .geometry_shader_src     = & geomShaderSrc_full,
-        .fragment_shader_src     = & fragShaderSrc_full
-    };
+    if ( p_num_vertexes_per_patch == 3 )
+    {
+        shaders_sources = 
+        {   .vertex_shader_src       = & vert_shader_src_full, 
+            .tess_control_shader_src = & tc_shader_triangles_full,
+            .tess_eval_shader_src    = & tev_shader_triangles_full,
+            .geometry_shader_src     = & geom_shader_src_full,
+            .fragment_shader_src     = & frag_shader_src_full
+        };
+    }
+    else // quads
+    {
+        shaders_sources = 
+        {   .vertex_shader_src       = & vert_shader_src_full, 
+            .tess_control_shader_src = & tc_shader_quads_full,
+            .tess_eval_shader_src    = & tev_shader_quads_full,
+            .geometry_shader_src     = & geom_shader_src_full,
+            .fragment_shader_src     = & frag_shader_src_full
+        };
+    }
+
+    
 
     // set attributes formats (must correspond with inputs to the vertex shaders the shaders sources)
     attributes_formats = 

@@ -70,6 +70,12 @@ void VertexArray::setIndexData( const std::span< const glm::uvec3 > data_span )
 }
 // -------------------------------------------------------------------------------
 
+void VertexArray::setIndexData( const std::span< const unsigned > data_span ) 
+{
+    setIndexBuffer( new VertexBuffer( vulkan_context.device, data_span ) );
+    index_owner = true ;
+}
+
 
 VertexArray::~VertexArray() 
 {

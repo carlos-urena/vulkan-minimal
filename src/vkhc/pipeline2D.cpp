@@ -19,7 +19,7 @@
 /// VERTEX SHADER 
 /// ----------------------------------------------------------------------------------
 
-static const char* vertShaderSrc = R"glsl(
+static const char* vert_shader_src = R"glsl(
 #version 450
 
     // Inputs: per vertex attributes:
@@ -65,7 +65,7 @@ static const char* vertShaderSrc = R"glsl(
 /// FRAGMENT SHADER 
 /// ----------------------------------------------------------------------------------
 
-static const char* fragShaderSrc = R"glsl(
+static const char* frag_shader_src = R"glsl(
 #version 450
     // Inputs: push constants block:
 
@@ -112,8 +112,8 @@ static const char* fragShaderSrc = R"glsl(
 namespace vkhc
 {
 static std::string 
-    vertShaderSrc_string = std::string { vertShaderSrc },
-    fragShaderSrc_string = std::string { fragShaderSrc };
+    vertShaderSrc_string = std::string { vert_shader_src },
+    fragShaderSrc_string = std::string { frag_shader_src };
 
 BasicPipeline2D::BasicPipeline2D( VulkanContext & vulkan_context )
 

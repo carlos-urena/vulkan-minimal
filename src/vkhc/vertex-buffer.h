@@ -44,6 +44,8 @@ class VertexBuffer
     
 
     VertexBuffer( Device * device, const std::span< const glm::uvec3 > data_span ) ;
+
+    VertexBuffer( Device * device, const std::span< const unsigned > data_span ) ;
     
 
     // adds this vertex buffer bind command to  a command buffer

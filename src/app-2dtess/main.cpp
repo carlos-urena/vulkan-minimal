@@ -20,7 +20,7 @@ class Triangle : public vkhc::VertexArray
     public: 
     
     inline Triangle( vkhc::VulkanContext & vulkan_context)
-    :   VertexArray( vulkan_context, VK_PRIMITIVE_TOPOLOGY_PATCH_LIST ) // VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST )
+    :   VertexArray( vulkan_context, VK_PRIMITIVE_TOPOLOGY_PATCH_LIST ) 
     {
         using namespace glm ;
         using namespace std ;
@@ -38,6 +38,31 @@ class Triangle : public vkhc::VertexArray
         addAttribData( vector<vec2>{ {0.0f,0.0f}, {0.5f,1.0f}, {1.0f,0.0f} });
         // indexes 
         setIndexData( vector<uvec3>{{ 0, 1, 2 }} ); 
+    }
+} ;
+//  ------------------------------------------------------------------------------
+
+class Quad : public vkhc::VertexArray 
+{
+    public: 
+    
+    inline Quad( vkhc::VulkanContext & vulkan_context)
+    :   VertexArray( vulkan_context, VK_PRIMITIVE_TOPOLOGY_PATCH_LIST ) 
+    {
+        using namespace glm ;
+        using namespace std ;
+        const float 
+            s  = 1.0f ; // triangle radius (distance from the center of the triangle to its vertices)
+            
+        // location 0: vertex positions
+        addAttribData( vector<vec2>{ {-s,-s}, {s,-s}, {s,s}, {-s,s} });
+
+        // location 1: vertex colors
+        addAttribData( vector<vec3>{ {1.0f,0.0f,0.0f}, {0.0f,1.0f,0.0f}, {0.0f,0.0f,1.0f}, {1.0f,1.0f,0.0f} });
+        // location 2: vertex texture coordinates 
+        addAttribData( vector<vec2>{ {0.0f,0.0f}, {1.0f,0.0f}, {1.0f,1.0f}, {0.0f,1.0f} });
+        // indexes 
+        setIndexData( vector<unsigned>{ 0, 1, 2, 3 } ); 
     }
 } ;
 
@@ -63,6 +88,9 @@ class App2DTess : public ilc::Application
 
     private:
 
+    // display a triangle (true) or a quad  (false)
+    bool display_triangle = false ;
+
     // parameters for the triangle model matrix and animation
     float curr_angle_rad = M_PI/2.0f ;  // current angle in radians
     float rotation_speed = 0.0f ; // angular speed in cycles per second 
@@ -72,17 +100,31 @@ class App2DTess : public ilc::Application
     const int max_tess_level = 20 ;
 
     // tessellation levels (int for the GUI, and float for the pipeline)
-    int tsc_inner_level_int = 4 ;
-    int tsc_outer_level_int[3] = { 
-        tsc_inner_level_int, 
-        tsc_inner_level_int, 
-        tsc_inner_level_int } ;
+    const int initial_tsc_level_int = 4 ;
 
-    float tsc_inner_level = float(tsc_inner_level_int) ;
-    float tsc_outer_level[3] = { 
+    // inner tessellation level 
+    // (1 value for triangles, 2 for quads)
+    int tsc_inner_level_int[2] = { 
+        initial_tsc_level_int, 
+        initial_tsc_level_int 
+    } ;
+    float tsc_inner_level[2] = { 
+        float(tsc_inner_level_int[0]), 
+        float(tsc_inner_level_int[1]) 
+    } ;
+    
+    // outer tessellation level (3 values used for triangles, 4 for quads) 
+    int tsc_outer_level_int[4] = { 
+        initial_tsc_level_int, 
+        initial_tsc_level_int, 
+        initial_tsc_level_int, 
+        initial_tsc_level_int 
+    } ;
+    float tsc_outer_level[4] = { 
         float(tsc_outer_level_int[0]), 
         float(tsc_outer_level_int[1]), 
-        float(tsc_outer_level_int[2]) 
+        float(tsc_outer_level_int[2]), 
+        float(tsc_outer_level_int[3]) 
     } ;
 
     // active texture index (-1 for none)
@@ -95,9 +137,11 @@ class App2DTess : public ilc::Application
 
     // triangle object which is visualized
     Triangle *  triangle = nullptr ; 
+    Quad *      quad     = nullptr ;
 
     // tessellation pipeline 
-    vkhc::Pipeline2DTess * pipeline = nullptr ; 
+    vkhc::Pipeline2DTess * pipeline_tris = nullptr ; 
+    vkhc::Pipeline2DTess * pipeline_quads = nullptr ;
 
     // textures set (used for testing textures).
     ExampleTexturesSet * textures_set = nullptr ; 
@@ -131,11 +175,14 @@ App2DTess::App2DTess( )
 
     Assert( context != nullptr, "Tess1App constructor: 'context' instance is null !!" );
     
-    triangle     = new Triangle( *context ) ;             assert( triangle != nullptr ) ;
-    textures_set = new ExampleTexturesSet( context ) ;    assert( textures_set != nullptr ) ;
-    pipeline     = new vkhc::Pipeline2DTess( *context, 3 ) ; assert( pipeline != nullptr ) ;
+    triangle       = new Triangle( *context ) ;             assert( triangle != nullptr ) ;
+    quad           = new Quad( *context ) ;                  assert( quad != nullptr ) ;
+    textures_set   = new ExampleTexturesSet( context ) ;    assert( textures_set != nullptr ) ;
+    pipeline_tris  = new vkhc::Pipeline2DTess( *context, 3 ) ; assert( pipeline_tris != nullptr ) ;
+    pipeline_quads = new vkhc::Pipeline2DTess( *context, 4 ) ; assert( pipeline_quads != nullptr ) ;
 
-    textures_set->bindTo( *pipeline ) ; // bind the textures set to the pipeline, so that its textures can be used in the fragment shader.
+    textures_set->bindTo( *pipeline_tris ) ; // bind the textures set to the pipeline, so that its textures can be used in the fragment shader.
+    textures_set->bindTo( *pipeline_quads ) ; // bind the textures set to the pipeline, so that its textures can be used in the fragment shader.
 
 } ;
 
@@ -145,7 +192,9 @@ App2DTess::~App2DTess()
 {
     //Assert( context != nullptr, "Tess1App destructor: 'context' instance is null !!" );
     delete triangle ; triangle = nullptr ;
-    delete pipeline ; pipeline = nullptr ;
+    delete quad ; quad = nullptr ;
+    delete pipeline_tris ; pipeline_tris = nullptr ;
+    delete pipeline_quads ; pipeline_quads = nullptr ;
     delete textures_set ; textures_set = nullptr ;
 
     std::cout << "Tess1App deleted" << std::endl ;
@@ -179,10 +228,13 @@ void App2DTess::drawIMGUIWidgets( VkCommandBuffer & cmd )
     {       
         SliderFloat("Speed", &rotation_speed, 0.0f, 3.0f);
         SliderFloat("Scale", &triangle_scale, 0.2f, 2.0f);
-        if ( SliderInt("Tess. inner level", &tsc_inner_level_int, 1, max_tess_level) )
-            tsc_inner_level = float(tsc_inner_level_int) ;
         
-        for ( int i = 0 ; i < 3 ; i++ )
+        if ( SliderInt("Tess. inner level 0 ", &tsc_inner_level_int[0], 1, max_tess_level) )
+            tsc_inner_level[0] = float(tsc_inner_level_int[0]) ;
+        if ( SliderInt("Tess. inner level 1 ", &tsc_inner_level_int[1], 1, max_tess_level) )
+            tsc_inner_level[1] = float(tsc_inner_level_int[1]) ;
+
+        for ( int i = 0 ; i < 4 ; i++ )
         {
             const std::string 
                 label = "Tess. outer level " + std::to_string(i),
@@ -190,7 +242,7 @@ void App2DTess::drawIMGUIWidgets( VkCommandBuffer & cmd )
 
             if ( SliderInt( label.c_str(), &tsc_outer_level_int[i], 1, max_tess_level) )
             {   tsc_outer_level[i] = float(tsc_outer_level_int[i]) ;
-                pipeline->setUBOUniform( ident.c_str(), &tsc_outer_level[i] ) ;
+                pipeline_tris->setUBOUniform( ident.c_str(), &tsc_outer_level[i] ) ;
             }
         }    
         int texture_combo_index = texture_index + 1 ; // map -1..3 to 0..4 for ImGui combo
@@ -204,18 +256,35 @@ void App2DTess::drawIMGUIWidgets( VkCommandBuffer & cmd )
 void App2DTess::initFrame( const vkhc::seconds_f  time_elapsed )
 {
     Assert( context != nullptr, "Tess1App::drawFrame: 'context' instance is null !!" );
-    Assert( pipeline != nullptr, "Tess1App::drawFrame: 'pipeline' instance is null !!" );
+    Assert( pipeline_tris != nullptr, "Tess1App::drawFrame: 'pipeline tris' instance is null !!" );
+    Assert( pipeline_quads != nullptr, "Tess1App::drawFrame: 'pipeline quads' instance is null !!" );
     Assert( triangle != nullptr, "Tess1App::drawFrame: 'triangle' instance is null !!" );
 
     // update UBO uniforms in the pipeline
     updateViewProjMats( *context, time_elapsed ) ; // updates 'view_mat' and 'proj_mat' 
-    pipeline->setViewMatrix( view_mat ) ;
-    pipeline->setProjectionMatrix( proj_mat ) ;
 
-    pipeline->setUBOUniform( "tsc_inner_level_0", &tsc_inner_level ) ;
-    pipeline->setUBOUniform( "tsc_outer_level_0", &tsc_outer_level[0] ) ;
-    pipeline->setUBOUniform( "tsc_outer_level_1", &tsc_outer_level[1] ) ;
-    pipeline->setUBOUniform( "tsc_outer_level_2", &tsc_outer_level[2] ) ;
+    if ( display_triangle)
+    {
+        pipeline_tris->setViewMatrix( view_mat ) ;
+        pipeline_tris->setProjectionMatrix( proj_mat ) ;
+
+        pipeline_tris->setUBOUniform( "tsc_inner_level_0", &tsc_inner_level[0] ) ;
+        pipeline_tris->setUBOUniform( "tsc_outer_level_0", &tsc_outer_level[0] ) ;
+        pipeline_tris->setUBOUniform( "tsc_outer_level_1", &tsc_outer_level[1] ) ;
+        pipeline_tris->setUBOUniform( "tsc_outer_level_2", &tsc_outer_level[2] ) ;
+    }
+    else 
+    {
+        pipeline_quads->setViewMatrix( view_mat ) ;
+        pipeline_quads->setProjectionMatrix( proj_mat ) ;
+
+        pipeline_quads->setUBOUniform( "tsc_inner_level_0", &tsc_inner_level[0] ) ;
+        pipeline_quads->setUBOUniform( "tsc_inner_level_1", &tsc_inner_level[1] ) ;
+        pipeline_quads->setUBOUniform( "tsc_outer_level_0", &tsc_outer_level[0] ) ;
+        pipeline_quads->setUBOUniform( "tsc_outer_level_1", &tsc_outer_level[1] ) ;
+        pipeline_quads->setUBOUniform( "tsc_outer_level_2", &tsc_outer_level[2] ) ;
+        pipeline_quads->setUBOUniform( "tsc_outer_level_3", &tsc_outer_level[3] ) ;
+    }
     
     
 }
@@ -224,19 +293,24 @@ void App2DTess::initFrame( const vkhc::seconds_f  time_elapsed )
 void App2DTess::drawFrame( VkCommandBuffer & cmd ) 
 {
     Assert( context != nullptr, "Tess1App::drawFrame: 'context' instance is null !!" );
-    Assert( pipeline != nullptr, "Tess1App::drawFrame: 'pipeline' instance is null !!" );
+    Assert( pipeline_tris != nullptr, "Tess1App::drawFrame: 'pipeline' instance is null !!" );
     Assert( triangle != nullptr, "Tess1App::drawFrame: 'triangle' instance is null !!" );
+    Assert( quad != nullptr, "Tess1App::drawFrame: 'quad' instance is null !!" );
    
-    // activate the pipeline and sets the viewport
-    pipeline->bind( cmd );
-    // context->setRenderAreaViewport( cmd ) ; /// THIS IS CALLED after 'initFrame' and before 'drawFrame' (does it works?)
-
-    // give initial values to the push constants at the begining of 'cmd'
-    pipeline->setModelMatrix( cmd, model_mat ) ;
-    pipeline->setTextureIndex( cmd, texture_index ) ;
-
-    // draw the triangle and the widgets 
-    triangle->draw( cmd );
+    if ( display_triangle )
+    {
+        pipeline_tris->bind( cmd );
+        pipeline_tris->setModelMatrix( cmd, model_mat ) ;
+        pipeline_tris->setTextureIndex( cmd, texture_index ) ;
+        triangle->draw( cmd );
+    }
+    else 
+    {
+        pipeline_quads->bind( cmd );
+        pipeline_quads->setModelMatrix( cmd, model_mat ) ;
+        pipeline_quads->setTextureIndex( cmd, texture_index ) ;
+        quad->draw( cmd );
+    }
 }
 
 

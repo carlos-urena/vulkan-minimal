@@ -80,6 +80,18 @@ VertexBuffer::VertexBuffer( Device * device, const std::span< const glm::uvec3 >
     std::cout << "Created index buffer with " << data_span.size() << " 'uvec3'" << std::endl;
 }
 
+VertexBuffer::VertexBuffer( Device * device, const std::span< const unsigned > data_span ) 
+{
+    assert( data_span.size() > 0 );
+    
+    initialize( device, data_span.size(), 1, sizeof(unsigned int), 
+        reinterpret_cast<const byte*>(data_span.data()),
+        VK_BUFFER_USAGE_INDEX_BUFFER_BIT
+    );
+
+    std::cout << "Created index buffer with " << data_span.size() << " 'unsigned int'" << std::endl;
+}
+
 // adds this vertex buffer bind command to  a command buffer
 void VertexBuffer::bind( VkCommandBuffer & vk_cmd_buffer, const uint32_t binding ) 
 {

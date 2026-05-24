@@ -50,7 +50,9 @@ class VertexArray
     void addAttribData( const std::span< const glm::vec3 > data_span ) ;
     
 
+    // sets the index data
     void setIndexData( const std::span< const glm::uvec3 > data_span ) ;
+    void setIndexData( const std::span< const unsigned > data_span ) ;
     
     // Destructor
     ~VertexArray() ;
