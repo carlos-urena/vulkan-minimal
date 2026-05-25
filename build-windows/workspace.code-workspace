@@ -1,0 +1,48 @@
+{
+  "folders":
+  [ { "name": "RAIZ",
+      "path": ".."
+    },
+    { "name": "BUILD-WINDOWS",
+      "path": "."
+    },
+    { "name": "SRC",
+      "path": "../src"
+    },
+    
+    
+  ],
+
+  "settings" :
+  {
+    "C_Cpp.default.cppStandard"   : "c++20",
+    "C_Cpp.default.includePath"   : [ 
+      "${workspaceFolder:SRC}/vkhc",
+      "${workspaceFolder:SRC}/ilc",
+      "${workspaceFolder:SRC}/app-2d", 
+      "${workspaceFolder:SRC}/app-2dtess", 
+      "~/git-ct/otros/imgui.git",             // IMGUI (user interface widgets)
+      "~/git-ct/otros/stb.git",               // STB (to load images)
+      "C:/VulkanSDK/1.4.350.0/Include",      // Vulkan SDK (includes GLM)
+      "C:/GLFW3/glfw-3.4.bin.WIN64/include",         // GLFW3
+      "${default}"
+    ],
+  },
+
+  // indicar extensiones recomendadas y extensiones que no se deben usar (y que no queremos que se recomienden)
+  "extensions": {
+    "recommendations": 
+    [ 
+      "ms-vscode.cpptools", 
+      "ms-vscode.cpptools-extension-pack", 
+      "ms-vscode.cpptools-themes", 
+      "slevesque.shader"    // soporte para archivos .glsl en GLSL
+    ],
+    "unwantedRecommendations": 
+    [
+      "ms-vscode-remote.remote-containers",  // no queremos que se recomienden las extensiones de desarrollo remoto, porque no vamos a usar contenedores ni WSL
+      "ms-vscode.makefile-tools",  // no queremos que VS code gestione makefiles 
+      "ms-vscode.cmake-tools"      // tampoco los archivos 'CMakeFiles.txt'
+    ]
+  },
+}
