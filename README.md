@@ -6,15 +6,15 @@ It can be built and run on macOS (with MoltenVK) and Linux.
 
 You can build from the command line using the makefiles in `build-linux` and `build-macos`.
 
-On Windows, build with CMake from `build-windows/CMakeLists.txt`.
+On Windows, build with CMake from `build-windows/CMakeLists.txt` (this is work in progress, still not working)
 
-### Windows (CMake)
+<!-- ### Windows (CMake)
 
 (work in progress)
 Current CMake configuration builds two executable targets:
 
 - `app-2d` (entry point in `src/app-2d/main.cpp`)
-- `app-2dtess` (entry point in `src/app-2dtess/main.cpp`)
+- `app-2dtess` (entry point in `src/app-2dtess/main.cpp`) -->
 
 <!-- From repository root, configure and build using:
 
@@ -62,7 +62,7 @@ Compiling in Windows is not possible yet (this is work in progress). Prerequisit
 
 - **Visual Studio**: install _Visual Studio 2026_ (version 18), Community edition. The required workload is _Desktop Development with C++_.
 - **IMGUI**: clone the IMGUI GitHub repository (https://github.com/ocornut/imgui) and set the corresponding variable in `CMakeLists.txt` to point to that folder. 
-- **Vulkan**: download and install the Vulkan SDK from LunarG. By default, it is installed in `C:/VulkanSDK/1.4.350` (May 2026). If you choose another location, update `CMakeLists.txt` accordingly (and the Vulkan include path in the `.workspace` file). This SDK includes GLM.
+- **Vulkan**: download and install the Vulkan SDK from LunarG. By default, it is installed in `C:/VulkanSDK/1.4.350` (May 2026). If you choose another location, update `CMakeLists.txt` accordingly. This SDK includes GLM.
 - **GLFW3**: download and install the Windows precompiled binaries from the official site. Version 3.4 is installed as of May 2026. (I placed it at `C:/GLFW3/glfw-3.4.bin.WIN64`)
 
 If you use the `.code-workspace` file, update the include paths there as well.
