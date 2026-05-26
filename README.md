@@ -64,6 +64,7 @@ Compiling in Windows is not possible yet (this is work in progress). Prerequisit
 - **IMGUI**: clone the IMGUI GitHub repository (https://github.com/ocornut/imgui) and set the corresponding variable in `CMakeLists.txt` to point to that folder. 
 - **Vulkan**: download and install the Vulkan SDK from LunarG. By default, it is installed in `C:/VulkanSDK/1.4.350` (May 2026). If you choose another location, update `CMakeLists.txt` accordingly. This SDK includes GLM.
 - **GLFW3**: download and install the Windows precompiled binaries from the official site. Version 3.4 is installed as of May 2026. (I placed it at `C:/GLFW3/glfw-3.4.bin.WIN64`)
+**STB** (clone the repo)
 
 If you use the `.code-workspace` file, update the include paths there as well.
 
