@@ -224,17 +224,30 @@ void App2DTess::drawIMGUIWidgets( VkCommandBuffer & cmd )
     using namespace ImGui ;
     
     if ( Button("Close window" ) ) close_requested = true ;
+    
     if (CollapsingHeader("Triangle controls", ImGuiTreeNodeFlags_DefaultOpen))
     {       
         SliderFloat("Speed", &rotation_speed, 0.0f, 3.0f);
         SliderFloat("Scale", &triangle_scale, 0.2f, 2.0f);
+
+        int primitive_type = display_triangle ? 0 : 1 ; // map 'display_triangle' bool to an int for the combo box (0 for triangle, 1 for quad)
+        if ( Combo("Primitive type", &primitive_type, "Triangle\0Quad\0") )
+            display_triangle = (primitive_type == 0) ;
+
+        SeparatorText("Inner tessellation levels") ;
         
         if ( SliderInt("Tess. inner level 0 ", &tsc_inner_level_int[0], 1, max_tess_level) )
             tsc_inner_level[0] = float(tsc_inner_level_int[0]) ;
-        if ( SliderInt("Tess. inner level 1 ", &tsc_inner_level_int[1], 1, max_tess_level) )
-            tsc_inner_level[1] = float(tsc_inner_level_int[1]) ;
 
-        for ( int i = 0 ; i < 4 ; i++ )
+        if ( !display_triangle ) // inner level 1 is only used for quads
+            if ( SliderInt("Tess. inner level 1 ", &tsc_inner_level_int[1], 1, max_tess_level) )
+                tsc_inner_level[1] = float(tsc_inner_level_int[1]) ;
+
+        
+        SeparatorText("Outer tessellation levels") ;
+        
+        const int num_outer_levels = display_triangle ? 3 : 4 ;
+        for ( int i = 0 ; i < num_outer_levels ; i++ )
         {
             const std::string 
                 label = "Tess. outer level " + std::to_string(i),
