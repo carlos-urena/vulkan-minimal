@@ -37,6 +37,8 @@ set( STB_DIR "${EXTERNAL_REPOS_ROOT}/stb.git" )
 
 # Vulkan SDK
 find_package(Vulkan REQUIRED)
+cmake_path(GET Vulkan_INCLUDE_DIR PARENT_PATH VULKAN_ROOT)
+
 set( SHADERC_INCLUDE_DIR "${VULKAN_ROOT}")
 
 
@@ -90,6 +92,16 @@ function(add_vulkan_app TARGET_NAME APP_MAIN)
         "${IMGUI_DIR}"  # so imgui includes are found
     )
 
+    target_link_libraries( ${TARGET_NAME} PRIVATE
+        imgui
+        ${GLFW_LINK_ITEM}
+        Vulkan::Vulkan
+        "${VULKAN_ROOT}/Lib/shaderc_combinedd.lib"
+        user32
+        gdi32
+        shell32
+    )
+
 
     set_target_properties(${TARGET_NAME} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/bin"
@@ -117,6 +129,7 @@ set(_file_defined_vars
     CMAKE_CXX_EXTENSIONS
     SRC_ROOT
     REPO_ROOT
+    VULKAN_ROOT
     APP_2D_MAIN
     APP_2DTESS_MAIN
     VKHC_SOURCES
