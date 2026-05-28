@@ -11,8 +11,8 @@ class Instance
 {
     public:
     
-    VkInstanceCreateInfo ci{ VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO } ;
-    VkApplicationInfo    appInfo{ VK_STRUCTURE_TYPE_APPLICATION_INFO };
+    VkInstanceCreateInfo ci{ } ;
+    VkApplicationInfo    appInfo{  };
     VkInstance           vk_instance ;
 
     Instance() ;

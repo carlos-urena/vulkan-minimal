@@ -11,7 +11,12 @@ Instance::Instance()
 {
     std::cout << "Creating Vulkan instance ..." << std::endl ;
     
-    appInfo.apiVersion = api_version_in_use ;
+    //appInfo.apiVersion = api_version_in_use ;
+
+    appInfo = { 
+        .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
+        .apiVersion = api_version_in_use 
+    } ;
 
     uint32_t count = 0 ;
     const char** ext = glfwGetRequiredInstanceExtensions( &count );
@@ -23,9 +28,17 @@ Instance::Instance()
     for ( uint32_t i = 0; i < count; ++i ) 
         std::cout << "  * " << ext[i] << std::endl;
 
-    ci.pApplicationInfo        = &appInfo;
-    ci.enabledExtensionCount   = count;
-    ci.ppEnabledExtensionNames = ext;
+    
+    //  ci.pApplicationInfo        = &appInfo;
+    // ci.enabledExtensionCount   = count;
+    // ci.ppEnabledExtensionNames = ext;
+
+    ci = {  
+        .sType                   = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+        .pApplicationInfo        = &appInfo,
+        .enabledExtensionCount   = count,
+        .ppEnabledExtensionNames = ext
+    } ;
 
     vkCreateInstance( &ci, nullptr, &vk_instance );
     std::cout << "Vulkan instance created." << std::endl ;
