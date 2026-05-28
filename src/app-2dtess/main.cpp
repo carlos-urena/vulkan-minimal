@@ -157,7 +157,7 @@ class App2DTess : public ilc::Application
     // override methods
     void initFrame( const vkhc::seconds_f  time_elapsed ) override ;
     void drawFrame( VkCommandBuffer & cmd ) override ;
-    void drawIMGUIWidgets( VkCommandBuffer & cmd ) override ;
+    void drawIMGUIWidgets(  ) override ;
     virtual ~App2DTess()  override ; 
 
     // specific methods for this application (not overrides)
@@ -169,7 +169,7 @@ class App2DTess : public ilc::Application
 
 App2DTess::App2DTess( ) 
 
-:   Application( 1024, 512, "Vulkan Tessellation demo" ) 
+:   Application( 0, 0, "Vulkan Tessellation demo" )  // let the library choose window size based on the screen size.
 {
     using namespace vkhc ; 
 
@@ -219,7 +219,7 @@ void App2DTess::updateViewProjMats( vkhc::VulkanContext & context,  vkhc::second
 }
 // ----------------------------------------------------------------------------------
 
-void App2DTess::drawIMGUIWidgets( VkCommandBuffer & cmd ) 
+void App2DTess::drawIMGUIWidgets(  ) 
 {
     using namespace ImGui ;
     

@@ -99,13 +99,21 @@ GLFWContext::GLFWContext( int width, int height, const std::string & title )
 
     int sizex, sizey, posx, posy ; // computed values 
     getWindowPositionAndSize( sizex, sizey, posx, posy ) ;
+
+    if ( width > 0 && height > 0 )
+    {   sizex = width ;
+        sizey = height ;
+    }
+
     glfwWindowHint( GLFW_RESIZABLE, GLFW_TRUE );
     glfwWindowHint( GLFW_MAXIMIZED, GLFW_FALSE );
     
     glfw_window = glfwCreateWindow( sizex, sizey, title.c_str(), nullptr, nullptr);
     assert( glfw_window != nullptr );
     
-    //glfwSetWindowPos( glfw_window, posx, posy ); // not available in wayland
+    #ifndef __linux__
+    glfwSetWindowPos( glfw_window, posx, posy ); // not available in wayland
+    #endif
     glfwSetFramebufferSizeCallback( glfw_window, framebufferResizeCallback );
 }
 

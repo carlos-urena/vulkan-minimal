@@ -2,6 +2,18 @@ cmake_minimum_required(VERSION 3.22)
 
 project(vulkan-minimal-windows LANGUAGES CXX)
 
+## --------------- external libraries folder variables 
+
+set( EXTERNAL_REPOS_ROOT "C:/Users/Carlo/git-ct/otros" )
+set( GLFW_ROOT "C:/GLFW3/glfw-3.4.bin.WIN64" )
+
+set( GLFW_INCLUDE_DIR "${GLFW_ROOT}/include/")
+set( GLFW_LINK_ITEM "${GLFW_ROOT}/lib-vc2022/glfw3.lib")
+set( IMGUI_DIR "${EXTERNAL_REPOS_ROOT}/imgui.git" )
+set( STB_DIR "${EXTERNAL_REPOS_ROOT}/stb.git" )
+
+## ---------------------------------
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -27,13 +39,7 @@ set(COMMON_APP_SOURCES
 # -----------------------------------------------------------------------------
 # External dependencies
 
-set( EXTERNAL_REPOS_ROOT "C:/Users/Carlo/git-ct/otros" )
-set( GLFW_ROOT "C:/GLFW3/glfw-3.4.bin.WIN64" )
 
-set( GLFW_INCLUDE_DIR "${GLFW_ROOT}/include/")
-set( GLFW_LINK_ITEM "${GLFW_ROOT}/lib-vc2022/glfw3.lib")
-set( IMGUI_DIR "${EXTERNAL_REPOS_ROOT}/imgui.git" )
-set( STB_DIR "${EXTERNAL_REPOS_ROOT}/stb.git" )
 
 # Vulkan SDK
 find_package(Vulkan REQUIRED)

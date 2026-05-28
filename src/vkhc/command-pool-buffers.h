@@ -25,7 +25,7 @@ class CommandPoolAndBuffers
     CommandPoolAndBuffers( Device * p_device, SwapChain * p_swap_chain ) ;
     
     // Recreate command buffers when the swap chain is recreated (e.g. when the window is resized)
-    void recreate( SwapChain * swap_chain ) ;
+    void recreate( /* SwapChain * swap_chain */ ) ;
     
     // Destructor
     ~CommandPoolAndBuffers() ;

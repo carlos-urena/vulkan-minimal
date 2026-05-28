@@ -49,8 +49,8 @@ VulkanContext::VulkanContext( int nx, int ny, const std::string & title )
 {            
     Assert( ctx_instance == nullptr, " VulkanContext::VulkanContext:'ctx_instance' instance already exists !!");
 
-    Assert( nx > 0, "VulkanContext constructor: 'nx' must be > 0" );
-    Assert( ny > 0, "VulkanContext constructor: 'ny' must be > 0" );
+    //Assert( nx > 0, "VulkanContext constructor: 'nx' must be > 0" );
+    //Assert( ny > 0, "VulkanContext constructor: 'ny' must be > 0" );
 
     // initialize all state objects 
     glfw_context = new GLFWContext{ nx, ny, title };                assert( glfw_context != nullptr );  
@@ -112,7 +112,7 @@ void VulkanContext::resizeWindow()
     vkDeviceWaitIdle( device->vk_device );
     surface->updateExtent( width, height );  // updates surface->vk_capabilities.currentExtent based on the new window size
     swap_chain->recreate(  ); // recreates the swap chain and its image views and framebuffers based on the new surface capabilities (extent)
-    cmd_buffers->recreate( swap_chain ); // recreates the command buffers based on the new number of images in the swap chain
+    cmd_buffers->recreate( /* swap_chain */ ); // recreates the command buffers based on the new number of images in the swap chain
     imgui_state->windowResized( swap_chain );
     
     std::cout << "Window resize processed ok." << std::endl;

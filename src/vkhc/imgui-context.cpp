@@ -28,20 +28,20 @@ void IMGUIContext::setStyle()
     ImGuiIO &     io    = GetIO(); (void)io;
     
     // Font size and spacing parameters
-    constexpr float f         = 0.9 ; // scale factor for all spacings
+    constexpr float f         = 0.9f ;  // scale factor for all spacings
     constexpr float font_size = 16.0f ; // font size
     constexpr float rounding  = 6.0f ;
 
     // Color settings
     constexpr float
         // r = 0.20, g = 0.20, b = 0.25 ,  // dark blue-grey
-        r = 0.20, g = 0.10, b = 0.20,      // pink-brown
-        k  = 0.7,
-        k2 = 1.8 ,
-        k3 = 3.0 ;
+        r = 0.20f, g = 0.10f, b = 0.20f,      // pink-brown
+        k  = 0.7f,
+        k2 = 1.8f ,
+        k3 = 3.0f ;
 
     const ImVec4
-        active             = { 3.0*r, g, b, 1.00f },
+        active             = { 3.0f*r, g, b, 1.00f },
         window_title       = { 2.0*r, 2.0*g, 2.0*b, 1.0 },
         window_background  = { r,g,b,1.0 } ,
         frame_background   = { k*r, k*g, k*b, 1.0 },

@@ -112,11 +112,11 @@ class App2D : public ilc::Application
     // override methods
     void initFrame( const vkhc::seconds_f  time_elapsed ) override ;
     void drawFrame( VkCommandBuffer & cmd ) override ;
-    void drawIMGUIWidgets( VkCommandBuffer & cmd ) override ;
+    void drawIMGUIWidgets(  ) override ;
     virtual ~App2D()  override ; 
 
     // specific methods for this application (not overrides)
-    void updateViewProjMats( vkhc::VulkanContext & context, vkhc::seconds_f frame_time_s ) ;
+    void updateViewProjMats( vkhc::seconds_f frame_time_s ) ;
 } ;
 
 // ----------------------------------------------------------------------------------
@@ -151,9 +151,10 @@ App2D::~App2D()
 // ----------------------------------------------------------------------------------
 
 
-void App2D::updateViewProjMats( vkhc::VulkanContext & context,  vkhc::seconds_f frame_time_s )
+void App2D::updateViewProjMats( vkhc::seconds_f frame_time_s )
 {
     using namespace glm ;
+    Assert( context != nullptr, "App2D::updateViewProjMats: 'context' instance is null !!" ) ;
 
     // sets the model matrix and update angle
     model_mat = scale( vec3( triangle_scale, triangle_scale, 1.0f))*
@@ -161,13 +162,13 @@ void App2D::updateViewProjMats( vkhc::VulkanContext & context,  vkhc::seconds_f 
     curr_angle_rad += rotation_speed * frame_time_s.count() * 2.0f * M_PI ; // increase angle
 
     // set the projection matrix (so that objects are not deformed whatever the aspect ratio is)
-    const uvec2 ra_ext = context.getRenderAreaExtent(); // render area extent (size of the render area left to GUI, in pixels)
+    const uvec2 ra_ext = context->getRenderAreaExtent(); // render area extent (size of the render area left to GUI, in pixels)
     const float ayx    = float(ra_ext.y) / float(ra_ext.x) ; // aspect ratio (height/width) of the render area
     proj_mat = scale( vec3( std::min(1.0f, ayx), std::min(1.0f, 1.0f/ayx), 1.0f ) ) ; 
 }
 // ----------------------------------------------------------------------------------
 
-void App2D::drawIMGUIWidgets( VkCommandBuffer & cmd ) 
+void App2D::drawIMGUIWidgets(  ) 
 {
     using namespace ImGui ;
     
@@ -205,7 +206,7 @@ void App2D::initFrame( const vkhc::seconds_f  time_elapsed )
     Assert( triangle != nullptr, "Tess1App::drawFrame: 'triangle' instance is null !!" );
 
     // update UBO uniforms in the pipeline
-    updateViewProjMats( *context, time_elapsed ) ; // updates 'view_mat' and 'proj_mat' 
+    updateViewProjMats( time_elapsed ) ; // updates 'view_mat' and 'proj_mat' 
     pipeline->setViewMatrix( view_mat ) ;
     pipeline->setProjectionMatrix( proj_mat ) ;
 

@@ -17,7 +17,7 @@ Application::Application( int nx, int ny, const std::string & title )
 }
 // --------------------------------------------------------------------------------
 
-void Application::drawIMGUIWidgets( VkCommandBuffer & vk_cmd ) 
+void Application::drawIMGUIWidgets(  ) 
 {
     // default implementation does nothing, derived classes can override it to draw IMGUI widgets in each frame
 }
@@ -57,7 +57,7 @@ void Application::run()
         
         // draw the widgets 
         context->beginIMGUIFrame( cmd ) ;
-        drawIMGUIWidgets( cmd ) ; // draw IMGUI widgets onto 'cmd'
+        drawIMGUIWidgets(  ) ; // draw IMGUI widgets 
         context->endIMGUIFrame( cmd ) ;
 
         context->endFrame( cmd, image_index ) ;  // submit 'cmd' and present the image

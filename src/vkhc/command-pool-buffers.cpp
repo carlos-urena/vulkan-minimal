@@ -38,8 +38,10 @@ CommandPoolAndBuffers::CommandPoolAndBuffers( Device * p_device, SwapChain * p_s
 // --------------------------------------------------------------------------------
 // recreate command buffers when the swap chain is recreated (e.g. when the window is resized)
 
-void CommandPoolAndBuffers::recreate( SwapChain * swap_chain ) 
+void CommandPoolAndBuffers::recreate( /* SwapChain * swap_chain */ ) 
 {
+    using namespace std ;
+
     assert( swap_chain != nullptr );
     assert( device != nullptr );
 

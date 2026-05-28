@@ -39,7 +39,7 @@ class Application
     // To be defined in derived classes (optionally) 
     // adds draw commands to 'vk_cmd' to draw IMGUI widgets in each frame (default implementation does nothing)
 
-    virtual void drawIMGUIWidgets( VkCommandBuffer & vk_cmd ) ; // to be defined in derived classes (optionally)
+    virtual void drawIMGUIWidgets(  ) ; // to be defined in derived classes (optionally)
     
 } ;
 

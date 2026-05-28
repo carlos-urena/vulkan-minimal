@@ -150,7 +150,7 @@ void BasicPipeline::setPushConstant( VkCommandBuffer & vk_cmd_buffer, const std:
         exit(1);
     }
 
-    const uint32_t index = std::distance( pc_names.begin(), it );
+    const uint32_t index = (uint32_t) std::distance( pc_names.begin(), it );
     const VkPushConstantRange & range = vk_pc_ranges[ index ];
 
     vkCmdPushConstants( vk_cmd_buffer, vk_pipeline_layout, range.stageFlags, range.offset, range.size, data_ptr );
@@ -192,7 +192,7 @@ void BasicPipeline::setUBOUniform( const std::string & name, const void * data_p
         exit(1);
     }
 
-    const uint32_t index = std::distance( ubou_names.begin(), it );
+    const uint32_t index = (uint32_t) std::distance( ubou_names.begin(), it );
     const uint32_t offset = ubou_offsets[ index ];
     const uint32_t size = ubou_sizes[ index ];
 
@@ -529,7 +529,7 @@ void BasicPipeline::createGraphicsPipeline()
 
     VkGraphicsPipelineCreateInfo  gpci{ VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
 
-    gpci.stageCount          = vk_shader_stages.size() ; 
+    gpci.stageCount          = (uint32_t) vk_shader_stages.size() ; 
     gpci.pStages             = vk_shader_stages.data();
     gpci.pVertexInputState   = &vi;
     gpci.pInputAssemblyState = &ia;

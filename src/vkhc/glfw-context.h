@@ -18,7 +18,9 @@ class GLFWContext
     GLFWwindow* glfw_window = nullptr;
     static void errorFunc( int error_code, const char* description);
     
-    GLFWContext( int width, int height, const std::string & title ) ;   
+    // Initializes GLFW and creates the window.
+    // When width and height are 0, this functions selects a size that fits the screen and places the window in the monitor with the largest area.
+    GLFWContext(int width, int height,const std::string & title ) ;   
     
     // return a vulkan surface created from the vulkan instance
     VkSurfaceKHR* createVkSurface( VkInstance *vk_instance ) ;
