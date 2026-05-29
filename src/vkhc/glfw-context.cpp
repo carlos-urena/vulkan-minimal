@@ -85,6 +85,8 @@ void GLFWContext::errorFunc( int error_code, const char* description)
 
 GLFWContext::GLFWContext( int width, int height, const std::string & title ) 
 {
+    using namespace std ;
+    
     if ( instance_count > 0 ) 
     {   std::cerr << "Warning: more than one instance of GLFWState created. Aborting." << std::endl ;
         std::exit(1) ;
@@ -97,22 +99,26 @@ GLFWContext::GLFWContext( int width, int height, const std::string & title )
     glfwInit();
     glfwWindowHint( GLFW_CLIENT_API, GLFW_NO_API );
 
-    int sizex, sizey, posx, posy ; // computed values 
-    getWindowPositionAndSize( sizex, sizey, posx, posy ) ;
-
-    if ( width > 0 && height > 0 )
-    {   sizex = width ;
-        sizey = height ;
-    }
+    int sizex, sizey ;  // requested window size.
+    
+    #ifdef __linux__
+    sizex = width > 0 ? width : 1500 ; // default width if width == 0
+    sizey = height > 0 ? height : 750 ; // default height if height
+    #else 
+    int posx, posy ; // requested window position  
+    getWindowPositionAndSize( sizex, sizey, posx, posy ) ; // does not reports correct values on wayland on linux
+    #endif
 
     glfwWindowHint( GLFW_RESIZABLE, GLFW_TRUE );
     glfwWindowHint( GLFW_MAXIMIZED, GLFW_FALSE );
+
+    cout << "About to create window with requested size " << sizex << " x " << sizey << " and title '" << title << "'." << endl ;
     
     glfw_window = glfwCreateWindow( sizex, sizey, title.c_str(), nullptr, nullptr);
     assert( glfw_window != nullptr );
     
     #ifndef __linux__
-    glfwSetWindowPos( glfw_window, posx, posy ); // not available in wayland
+    glfwSetWindowPos( glfw_window, posx, posy ); // not available in wayland on linux
     #endif
     glfwSetFramebufferSizeCallback( glfw_window, framebufferResizeCallback );
 }

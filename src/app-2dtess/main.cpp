@@ -169,7 +169,7 @@ class App2DTess : public ilc::Application
 
 App2DTess::App2DTess( ) 
 
-:   Application( 0, 0, "Vulkan Tessellation demo" )  // let the library choose window size based on the screen size.
+:   Application( 0, 0, "Vulkan Tessellation demo" )  
 {
     using namespace vkhc ; 
 

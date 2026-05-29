@@ -51,6 +51,7 @@ VulkanContext::VulkanContext( int nx, int ny, const std::string & title )
 
     //Assert( nx > 0, "VulkanContext constructor: 'nx' must be > 0" );
     //Assert( ny > 0, "VulkanContext constructor: 'ny' must be > 0" );
+    // (when nx == 0 or ny == 0, either 'glfw_context' or the window manager decides the size)
 
     // initialize all state objects 
     glfw_context = new GLFWContext{ nx, ny, title };                assert( glfw_context != nullptr );  

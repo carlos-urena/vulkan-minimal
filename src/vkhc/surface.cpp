@@ -41,14 +41,17 @@ Surface::Surface( Device * p_device, Instance * p_instance, GLFWContext * glfw_c
     {   
         cout << "Current surface extent from vk_capabilities is invalid (width: " << ce.width << ", height: " << ce.height << "). Getting window size from GLFW window." << endl ;
         int w,h ;
-        glfwGetWindowSize( glfw_context->glfw_window, &w, &h );
+
+        //glfwGetWindowSize( glfw_context->glfw_window, &w, &h );  // does not works on wayland 
+        glfwGetFramebufferSize( glfw_context->glfw_window, &w, &h ); // this is coherent with 'glfw-context.cpp' , line 143
+
         if ( w < 0 || h < 0 )
         {   std::cerr << "Error: window size (" << w << " x " << h << ") is invalid. Cannot create surface." << std::endl ;
             exit(1) ;
         }
         const uint32_t uw = uint32_t(w) ,
                        uh = uint32_t(h) ;
-        cout << "Window size: " << uw << " x " << uh << endl ;
+        cout << "Window size fro GLFW frembuffer: " << uw << " x " << uh << endl ;
         if ( uw < min_w || uw > max_w || uh < min_h || uh > max_h )
         {   std::cerr << "Error: window size is off-limits. Cannot create surface." << std::endl ;
             exit(1) ;

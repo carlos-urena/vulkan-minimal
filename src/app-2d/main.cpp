@@ -123,7 +123,8 @@ class App2D : public ilc::Application
 
 App2D::App2D( ) 
 
-:   Application( 1024, 512, "Vulkan Tessellation demo" ) 
+//:   Application( 1024, 512, "Vulkan simple demo" ) 
+:   Application( 0, 0, "Vulkan simple demo" ) 
 {
     using namespace vkhc ; 
 
