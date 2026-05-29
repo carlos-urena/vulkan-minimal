@@ -328,6 +328,8 @@ void BasicPipeline::initializeTextureSamplersDescriptor()
 
 void BasicPipeline::createPipelineLayout() 
 {
+    using namespace std ; 
+
     assert( ! initialized ); 
     assert( vk_ubo_set_layout != VK_NULL_HANDLE );
     assert( vk_textures_set_layout != VK_NULL_HANDLE );
@@ -361,25 +363,36 @@ void BasicPipeline::createPipelineLayout()
     }
     else 
         std::cout << "No push constants used in this pipeline." << std::endl ;
+
+    //cout << "About to call vkCreatePipelineLayout with " << plci.setLayoutCount << " descriptor set layouts and " << plci.pushConstantRangeCount << " push constant ranges ....." << endl ;
     
     // create the pipeline layout 
     if ( vkCreatePipelineLayout( device->vk_device, &plci, nullptr, &vk_pipeline_layout ) != VK_SUCCESS )
         ErrorExit("Failed to create pipeline layout");
+
+    cout << "Pipeline layout created successfully." << endl ;
 }
 // ------------------------------------------------------------------------------
 
 void BasicPipeline::initializeShaderStages() 
 {
+    using namespace std ;
+
+    cout << "Compiling shaders:" << endl ;
+
     assert( ! initialized ); 
     // Initialize shader modules (compile, link, etc..)
 
     const std::string * vs_src = shaders_sources.vertex_shader_src ;      assert( vs_src != nullptr );
     const std::string * fs_src = shaders_sources.fragment_shader_src ;    assert( fs_src != nullptr );
 
+    cout << " Vertex shader ..." << endl ;
     auto vertSPV = compileGLSL( *vs_src, shaderc_vertex_shader);
 
     //auto tescSPV = compileGLSL(tescShaderSrc, shaderc_tess_control_shader);
     //auto teseSPV = compileGLSL(teseShaderSrc, shaderc_tess_evaluation_shader);
+
+    cout << " Fragment shader ..." << endl ;
     auto fragSPV = compileGLSL( *fs_src, shaderc_fragment_shader);
 
     vk_vertex_shader_module       = createModule( vertSPV ) ; 
@@ -407,7 +420,9 @@ void BasicPipeline::initializeShaderStages()
 
         typedef std::vector<uint32_t> SPIRV_Code ;
         
+        cout << " Tessellation control shader ..." << endl ;
         SPIRV_Code tescSPV = compileGLSL( *tesc_src, shaderc_tess_control_shader);
+        cout << " Tessellation evaluation shader ..." << endl ;
         SPIRV_Code teseSPV = compileGLSL( *tese_src, shaderc_tess_evaluation_shader);
 
         vk_tess_control_shader_module = createModule( tescSPV ) ;
@@ -432,6 +447,8 @@ void BasicPipeline::initializeShaderStages()
     {
         Assert( device->likelyHasGeometryShader, "The device likely has no geometry shader capabilities" );
         const std::string * geom_src = shaders_sources.geometry_shader_src ;    assert( geom_src != nullptr );
+        
+        cout << " Geometry shader ..." << endl ;
         auto geomSPV = compileGLSL( *geom_src, shaderc_geometry_shader);
         vk_geometry_shader_module = createModule( geomSPV ) ;
         vk_shader_stages.push_back({ 
@@ -454,6 +471,8 @@ void BasicPipeline::initializeShaderStages()
         default_primitive_topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST ;
         std::cout << "Tessellation shaders detected, using VK_PRIMITIVE_TOPOLOGY_PATCH_LIST as default topology." << std::endl ;
     }
+
+    cout << "Shaders compiled successfully." << endl ;
 }
 // ------------------------------------------------------------------------------
 
