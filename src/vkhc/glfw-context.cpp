@@ -97,13 +97,26 @@ GLFWContext::GLFWContext( int width, int height, const std::string & title )
     std::cout << "GLFW version: " << vers << std::endl ;
     glfwSetErrorCallback( errorFunc );
     glfwInit();
-    glfwWindowHint( GLFW_CLIENT_API, GLFW_NO_API );
+
+
+    #if (GLFW_VERSION_MAJOR > 3) || (GLFW_VERSION_MAJOR == 3 && GLFW_VERSION_MINOR >= 4) 
+    const int platform = glfwGetPlatform();
+    cout << "GLFW platform in use: " ;
+    switch ( platform )
+    {
+        case GLFW_PLATFORM_WAYLAND : cout << "Wayland" << endl ; break ;
+        case GLFW_PLATFORM_X11     : cout << "X11" << endl ;     break ;
+        case GLFW_PLATFORM_COCOA   : cout << "Cocoa" << endl ;   break ;
+        case GLFW_PLATFORM_WIN32   : cout << "Windows" << endl ; break ;
+        default: cout << "unknown" << endl ; break ;
+    }
+    #endif
 
     int sizex, sizey ;  // requested window size.
     
     #ifdef __linux__
     sizex = width > 0 ? width : 1500 ; // default width if width == 0
-    sizey = height > 0 ? height : 750 ; // default height if height
+    sizey = height > 0 ? height : 750 ; // default height if height == 0
     #else 
     int posx, posy ; // requested window position  
     getWindowPositionAndSize( sizex, sizey, posx, posy ) ; // does not reports correct values on wayland on linux
@@ -111,6 +124,7 @@ GLFWContext::GLFWContext( int width, int height, const std::string & title )
 
     glfwWindowHint( GLFW_RESIZABLE, GLFW_TRUE );
     glfwWindowHint( GLFW_MAXIMIZED, GLFW_FALSE );
+    glfwWindowHint( GLFW_CLIENT_API, GLFW_NO_API );
 
     cout << "About to create window with requested size " << sizex << " x " << sizey << " and title '" << title << "'." << endl ;
     
