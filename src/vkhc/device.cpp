@@ -248,16 +248,17 @@ void Device::submitCommandBuffer( VkCommandBuffer & vk_cmd_buffer, SyncObjects *
 
     VkPipelineStageFlags waitStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
-    VkSubmitInfo submit{VK_STRUCTURE_TYPE_SUBMIT_INFO};
-    submit.waitSemaphoreCount = 1;
-    submit.pWaitSemaphores = &(sync_objects->imageAvailableSemaphore);
-    submit.pWaitDstStageMask = &waitStages;
-
-    submit.commandBufferCount = 1;
-    submit.pCommandBuffers = &vk_cmd_buffer;
-
-    submit.signalSemaphoreCount = 1;
-    submit.pSignalSemaphores = &(sync_objects->renderFinishedSemaphore);
+    VkSubmitInfo submit
+    { 
+        .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+        .waitSemaphoreCount   = 1,
+        .pWaitSemaphores      = &(sync_objects->imageAvailableSemaphore),
+        .pWaitDstStageMask    = &waitStages,
+        .commandBufferCount   = 1,
+        .pCommandBuffers      = &vk_cmd_buffer,
+        .signalSemaphoreCount = 1,
+        .pSignalSemaphores    = &(sync_objects->renderFinishedSemaphore),
+    };
 
     vkQueueSubmit( vk_queue, 1, &submit, sync_objects->inFlightFence);
 }
