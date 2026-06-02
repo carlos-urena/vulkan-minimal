@@ -1,4 +1,4 @@
-# Cleans all the cmake files and the compiled binaries
+# Cleans all the cmake files and the compiled binaries (debug version)
 
 ##Launch-VsDevShell.ps1 -SkipAutomaticLocation
 

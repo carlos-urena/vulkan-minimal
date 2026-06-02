@@ -46,6 +46,42 @@ find_package(Vulkan REQUIRED)
 cmake_path(GET Vulkan_INCLUDE_DIR PARENT_PATH VULKAN_ROOT)
 
 set( SHADERC_INCLUDE_DIR "${VULKAN_ROOT}")
+set( VULKAN_BIN_DIR "${VULKAN_ROOT}/Bin")
+file(GLOB VULKAN_BIN_PDB_FILES CONFIGURE_DEPENDS "${VULKAN_BIN_DIR}/*.pdb")
+
+# PDB names usually referenced by objects inside shaderc_combinedd.lib.
+set(_SHADERC_DEBUG_PDB_NAMES
+    "glslangd.pdb"
+    "SPIRV-Toolsd.pdb"
+    "SPIRV-Tools-optd.pdb"
+)
+
+set(HAS_REQUIRED_SHADERC_PDBS TRUE)
+foreach(_shaderc_pdb IN LISTS _SHADERC_DEBUG_PDB_NAMES)
+    if(NOT EXISTS "${VULKAN_BIN_DIR}/${_shaderc_pdb}")
+        set(HAS_REQUIRED_SHADERC_PDBS FALSE)
+    endif()
+endforeach()
+
+set(_COPY_VULKAN_PDBS_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/copy_vulkan_pdbs.cmake")
+file(WRITE "${_COPY_VULKAN_PDBS_SCRIPT}" [=[
+if(NOT DEFINED VCFG OR NOT VCFG STREQUAL "Debug")
+    return()
+endif()
+
+if(NOT DEFINED VULKAN_BIN_DIR OR NOT EXISTS "${VULKAN_BIN_DIR}")
+    return()
+endif()
+
+if(NOT DEFINED DEST_DIR OR DEST_DIR STREQUAL "")
+    return()
+endif()
+
+file(GLOB _vulkan_pdbs "${VULKAN_BIN_DIR}/*.pdb")
+if(_vulkan_pdbs)
+    file(COPY ${_vulkan_pdbs} DESTINATION "${DEST_DIR}")
+endif()
+]=])
 
 
 # Dear ImGui and stb are expected as external clone folders (same as existing makefiles)
@@ -82,30 +118,64 @@ target_link_libraries(imgui PUBLIC
     Vulkan::Vulkan
 )
 
+# Build shared app sources once and reuse in both executables.
+add_library(app-common STATIC ${COMMON_APP_SOURCES})
+target_include_directories(app-common PUBLIC
+    "${SRC_ROOT}/vkhc"
+    "${SRC_ROOT}/ilc"
+    "${STB_DIR}"
+    "${SHADERC_INCLUDE_DIR}"
+    "${GLFW_INCLUDE_DIR}"
+    "${Vulkan_INCLUDE_DIR}"
+    "${IMGUI_DIR}"
+)
+target_link_libraries(app-common PUBLIC
+    imgui
+    ${GLFW_LINK_ITEM}
+    Vulkan::Vulkan
+    debug "${VULKAN_ROOT}/Lib/shaderc_combinedd.lib"
+    optimized "${VULKAN_ROOT}/Lib/shaderc_combined.lib"
+    user32
+    gdi32
+    shell32
+)
+
+function(configure_debug_linker_warnings TARGET_NAME)
+    # Make SDK PDBs available in the target output folder before link.
+    if(VULKAN_BIN_PDB_FILES)
+        add_custom_command(TARGET ${TARGET_NAME} PRE_LINK
+            COMMAND ${CMAKE_COMMAND}
+                -DVCFG=$<CONFIG>
+                -DVULKAN_BIN_DIR=${VULKAN_BIN_DIR}
+                -DDEST_DIR=$<TARGET_FILE_DIR:${TARGET_NAME}>
+                -P "${_COPY_VULKAN_PDBS_SCRIPT}"
+            VERBATIM
+        )
+    endif()
+
+    # If required shaderc/SPIRV/glslang debug PDB names are absent in SDK Bin,
+    # suppress LNK4099 to keep Debug link output clean.
+    if(NOT HAS_REQUIRED_SHADERC_PDBS)
+        target_link_options(${TARGET_NAME} PRIVATE
+            $<$<CONFIG:Debug>:/IGNORE:4099>
+        )
+    endif()
+
+    # Avoid Debug/Release CRT conflicts coming from prebuilt third-party libraries.
+    target_link_options(${TARGET_NAME} PRIVATE
+        $<$<CONFIG:Debug>:/NODEFAULTLIB:MSVCRT>
+    )
+endfunction()
+
 function(add_vulkan_app TARGET_NAME APP_MAIN)
     add_executable(${TARGET_NAME}
         ${APP_MAIN}
-        ${COMMON_APP_SOURCES}
     )
 
-    target_include_directories(${TARGET_NAME} PRIVATE
-        "${SRC_ROOT}/vkhc"
-        "${SRC_ROOT}/ilc"
-        "${STB_DIR}"
-        "${SHADERC_INCLUDE_DIR}"
-        "${GLFW_INCLUDE_DIR}"
-        "${Vulkan_INCLUDE_DIR}"  ## para que encuentre los includes de GLM que están en als carpetas de Vulkan (suponiendo que ha encontrado vulkan)
-        "${IMGUI_DIR}"  # so imgui includes are found
-    )
+    configure_debug_linker_warnings(${TARGET_NAME})
 
     target_link_libraries( ${TARGET_NAME} PRIVATE
-        imgui
-        ${GLFW_LINK_ITEM}
-        Vulkan::Vulkan
-        "${VULKAN_ROOT}/Lib/shaderc_combinedd.lib"
-        user32
-        gdi32
-        shell32
+        app-common
     )
 
 
