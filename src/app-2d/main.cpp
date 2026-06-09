@@ -146,7 +146,7 @@ App2D::~App2D()
     delete pipeline ; pipeline = nullptr ;
     delete textures_set ; textures_set = nullptr ;
 
-    std::cout << "Tess1App deleted" << std::endl ;
+    std::cout << "Deleted App2D" << std::endl ;
 }
 
 // ----------------------------------------------------------------------------------
@@ -178,20 +178,7 @@ void App2D::drawIMGUIWidgets(  )
     {       
         SliderFloat("Speed", &rotation_speed, 0.0f, 3.0f);
         SliderFloat("Scale", &triangle_scale, 0.2f, 2.0f);
-        // if ( SliderInt("Tess. inner level", &tsc_inner_level_int, 1, max_tess_level) )
-        //     tsc_inner_level = float(tsc_inner_level_int) ;
-        
-        // for ( int i = 0 ; i < 3 ; i++ )
-        // {
-        //     const std::string 
-        //         label = "Tess. outer level " + std::to_string(i),
-        //         ident = "tsc_outer_level_" + std::to_string(i) ;
 
-        //     if ( SliderInt( label.c_str(), &tsc_outer_level_int[i], 1, max_tess_level) )
-        //     {   tsc_outer_level[i] = float(tsc_outer_level_int[i]) ;
-        //         pipeline->setUBOUniform( ident.c_str(), &tsc_outer_level[i] ) ;
-        //     }
-        // }    
         int texture_combo_index = texture_index + 1 ; // map -1..3 to 0..4 for ImGui combo
         if ( Combo("Texture", &texture_combo_index, "No texture (vert. colors)\0Wood 1\0Wood 2\0Wood 3\0Procedural texture\0") )
             texture_index = texture_combo_index - 1 ;
@@ -211,12 +198,6 @@ void App2D::initFrame( const vkhc::seconds_f  time_elapsed )
     pipeline->setViewMatrix( view_mat ) ;
     pipeline->setProjectionMatrix( proj_mat ) ;
 
-    // pipeline->setUBOUniform( "tsc_inner_level", &tsc_inner_level ) ;
-    // pipeline->setUBOUniform( "tsc_outer_level_0", &tsc_outer_level[0] ) ;
-    // pipeline->setUBOUniform( "tsc_outer_level_1", &tsc_outer_level[1] ) ;
-    // pipeline->setUBOUniform( "tsc_outer_level_2", &tsc_outer_level[2] ) ;
-    
-    
 }
 // ----------------------------------------------------------------------------------
 

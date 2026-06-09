@@ -197,7 +197,7 @@ App2DTess::~App2DTess()
     delete pipeline_quads ; pipeline_quads = nullptr ;
     delete textures_set ; textures_set = nullptr ;
 
-    std::cout << "Tess1App deleted" << std::endl ;
+    std::cout << "Deleted App2DTess" << std::endl ;
 }
 
 // ----------------------------------------------------------------------------------

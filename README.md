@@ -8,25 +8,7 @@ You can build from the command line using the makefiles in `build-linux` and `bu
 
 On Windows, build with CMake from `build-windows/CMakeLists.txt` (this is work in progress, still not working)
 
-<!-- ### Windows (CMake)
 
-(work in progress)
-Current CMake configuration builds two executable targets:
-
-- `app-2d` (entry point in `src/app-2d/main.cpp`)
-- `app-2dtess` (entry point in `src/app-2dtess/main.cpp`) -->
-
-<!-- From repository root, configure and build using:
-
-```powershell
-cmake -S build-windows -B build-windows/out `
-	-DIMGUI_DIR=C:/path/to/imgui `
-	-DSTB_DIR=C:/path/to/stb
-
-cmake --build build-windows/out --config Release
-```
-
-Generated executables are written to `build-windows/bin`. -->
 
 ## Requirements
 
@@ -58,7 +40,7 @@ If you plan to use Visual Studio Code, you can use the `.code-workspace` file, b
 
 ### Windows
 
-Compiling in Windows is not possible yet (this is work in progress). Prerequisites:
+Prerequisites:
 
 - **Visual Studio**: install _Visual Studio 2026_ (version 18), Community edition. The required workload is _Desktop Development with C++_.
 - **IMGUI**: clone the IMGUI GitHub repository (https://github.com/ocornut/imgui) and set the corresponding variable in `CMakeLists.txt` to point to that folder. 
@@ -68,14 +50,14 @@ Compiling in Windows is not possible yet (this is work in progress). Prerequisit
 
 If you use the `.code-workspace` file, update the include paths there as well.
 
-<!-- ### Windows
+## Compiling
 
-You will need:
+### Linux and macOS
 
-- **Vulkan SDK**: install from https://vulkan.lunarg.com/sdk/home (provides Vulkan headers and libraries).
-- **GLFW3**: install a package that exports CMake targets (for example through vcpkg), or provide a discoverable GLFW library.
-- **GLM**: install headers (for example through vcpkg).
-- **shaderc**: install library and headers (for example through vcpkg).
-- **IMGUI**: clone https://github.com/ocornut/imgui and pass its path with `-DIMGUI_DIR=...`.
-- **STB**: clone https://github.com/nothings/stb and pass its path with `-DSTB_DIR=...`. -->
+Use any terminal application. Just `cd` to either `build-linux` or `build-macos` according to your OS, and then type `make 2d` (for the simple 2D application) or `make 2dtess` for the 2D tessellation and geometry shaders app. Binaries are output to the `bin` subfolder and objects remain in `objs`subfolder. Use `make clean` to remove compilation files and binaries.
+
+
+### Window 
+
+Use _Visual Studio 2026 Developer Powershell v18_ to compile and link from the command line. 
 

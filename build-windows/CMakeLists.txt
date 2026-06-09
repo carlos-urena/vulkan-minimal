@@ -65,22 +65,22 @@ endforeach()
 
 set(_COPY_VULKAN_PDBS_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/copy_vulkan_pdbs.cmake")
 file(WRITE "${_COPY_VULKAN_PDBS_SCRIPT}" [=[
-if(NOT DEFINED VCFG OR NOT VCFG STREQUAL "Debug")
-    return()
-endif()
+    if(NOT DEFINED VCFG OR NOT VCFG STREQUAL "Debug")
+        return()
+    endif()
 
-if(NOT DEFINED VULKAN_BIN_DIR OR NOT EXISTS "${VULKAN_BIN_DIR}")
-    return()
-endif()
+    if(NOT DEFINED VULKAN_BIN_DIR OR NOT EXISTS "${VULKAN_BIN_DIR}")
+        return()
+    endif()
 
-if(NOT DEFINED DEST_DIR OR DEST_DIR STREQUAL "")
-    return()
-endif()
+    if(NOT DEFINED DEST_DIR OR DEST_DIR STREQUAL "")
+        return()
+    endif()
 
-file(GLOB _vulkan_pdbs "${VULKAN_BIN_DIR}/*.pdb")
-if(_vulkan_pdbs)
-    file(COPY ${_vulkan_pdbs} DESTINATION "${DEST_DIR}")
-endif()
+    file(GLOB _vulkan_pdbs "${VULKAN_BIN_DIR}/*.pdb")
+    if(_vulkan_pdbs)
+        file(COPY ${_vulkan_pdbs} DESTINATION "${DEST_DIR}")
+    endif()
 ]=])
 
 
@@ -135,9 +135,6 @@ target_link_libraries(app-common PUBLIC
     Vulkan::Vulkan
     debug "${VULKAN_ROOT}/Lib/shaderc_combinedd.lib"
     optimized "${VULKAN_ROOT}/Lib/shaderc_combined.lib"
-    user32
-    gdi32
-    shell32
 )
 
 function(configure_debug_linker_warnings TARGET_NAME)
