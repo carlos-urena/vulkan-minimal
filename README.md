@@ -2,11 +2,10 @@
 A minimal, portable Vulkan example that uses GLFW (windowing), STB (texture loading), and IMGUI (UI).
 It can be built and run on macOS (with MoltenVK) and Linux.
 
-## Compilation
+These sources are used to compile two applications:
 
-You can build from the command line using the makefiles in `build-linux` and `build-macos`.
-
-On Windows, build with CMake from `build-windows/CMakeLists.txt` (this is work in progress, still not working)
+- A simple 2D applicatioen depicting a triangle.
+- A 2D application which demonstrates geometry and tesselation shaders in Vulkan.
 
 
 
@@ -54,10 +53,21 @@ If you use the `.code-workspace` file, update the include paths there as well.
 
 ### Linux and macOS
 
-Use any terminal application. Just `cd` to either `build-linux` or `build-macos` according to your OS, and then type `make 2d` (for the simple 2D application) or `make 2dtess` for the 2D tessellation and geometry shaders app. Binaries are output to the `bin` subfolder and objects remain in `objs`subfolder. Use `make clean` to remove compilation files and binaries.
+Use any terminal application. Just `cd` to either `build-linux` or `build-macos` according to your OS, and then type `make 2d` (for the simple 2D application) or `make 2dtess` for the 2D tessellation and geometry shaders app. Binaries are output to the `bin` subfolder and objects remain in `objs` subfolder. Use `make clean` to remove compilation files and binaries.
 
 
 ### Window 
 
-Use _Visual Studio 2026 Developer Powershell v18_ to compile and link from the command line. 
+Use _Visual Studio 2026 Developer Powershell v18_ to compile and link from the command line. It is a powershell terminal app, but with the env vars necessary to compile from the command line. Just `cd` to the  `cmake` folder and type `cmake ..`, this will create all the necessary compilation files. In order to compile the debug version, in the `cmake` folder, type:
+
+`cmake --build .`
+
+This will create both applications and will output binaries to `bin\Debug` folder. If you want to compile the release version, use:
+
+`cmake --build . --config release`
+
+The binary will be stored in the `bin\Release` folder. You can use two script to ease compilation:
+
+- `clean-build.ps1` removes compilation files (in `cmake`), binaries (in `bin`) and object files (in `objs`)
+- `build-all.ps1` removes compilation files and compiles the debug version for both apps.
 
