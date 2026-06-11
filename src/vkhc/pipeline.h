@@ -121,6 +121,12 @@ class BasicPipeline
     // ------------------------------------------------------------------------------
     // Methods.
 
+    // searchs for a push constant with the given name, returns its index or -1 when not found
+    int findPushConstantIndex( const std::string & name ) ;
+
+    // Searchs for an UBO uniform with the given name, returns its index or -1 when not found
+    int findUBOUniformIndex( const std::string & name ) ;
+
     // Create a shader module from SPIR-V code (vector of uint32_t)
     VkShaderModule createModule( std::vector<uint32_t>& spirv_code ) ;
     

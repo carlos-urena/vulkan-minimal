@@ -225,7 +225,7 @@ void App2DTess::drawIMGUIWidgets(  )
     
     if ( Button("Close window" ) ) close_requested = true ;
     
-    if (CollapsingHeader("Triangle controls", ImGuiTreeNodeFlags_DefaultOpen))
+    if (CollapsingHeader("Tessellation controls", ImGuiTreeNodeFlags_DefaultOpen))
     {       
         SliderFloat("Speed", &rotation_speed, 0.0f, 3.0f);
         SliderFloat("Scale", &triangle_scale, 0.2f, 2.0f);

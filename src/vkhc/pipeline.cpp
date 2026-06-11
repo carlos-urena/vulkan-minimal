@@ -48,12 +48,13 @@ std::string insert_source( const std::string & src, const std::string & keyword,
 
 VkShaderModule BasicPipeline::createModule( std::vector<uint32_t>& spirv_code ) 
 {
-    VkShaderModuleCreateInfo smci{ VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
-    VkShaderModule           vk_module;
+    VkShaderModuleCreateInfo smci{ 
+        .sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO, 
+        .codeSize = spirv_code.size() * sizeof(uint32_t),
+        .pCode    = spirv_code.data(),
+    };
+    VkShaderModule vk_module;
 
-    smci.codeSize = spirv_code.size() * sizeof(uint32_t);
-    smci.pCode = spirv_code.data();
-    
     const VkResult res = vkCreateShaderModule( device->vk_device, &smci, nullptr, &vk_module);
     if ( res != VK_SUCCESS )
         ErrorExit("vkCreateShaderModule failed");
@@ -120,13 +121,13 @@ void BasicPipeline::addPushConstant( const std::string & name, uint32_t p_size )
     assert( p_size % 4 == 0 );
     assert( pc_total_size + p_size <= max_pc_total_size );
 
-    VkPushConstantRange vk_push_constant_range{};
+    VkPushConstantRange vk_pcr{
+        .stageFlags = allStagesFlags ,
+        .offset = pc_total_size ,
+        .size = p_size ,
+    };
     
-    vk_push_constant_range.offset = pc_total_size ;
-    vk_push_constant_range.size = p_size ;
-    vk_push_constant_range.stageFlags = allStagesFlags ; 
-
-    vk_pc_ranges.push_back( vk_push_constant_range );
+    vk_pc_ranges.push_back( vk_pcr );
     pc_names.push_back( name );
 
     std::cout << "Added push constant '" << name << "' with size " << p_size << " bytes, offset " << pc_total_size << std::endl ;
@@ -134,7 +135,16 @@ void BasicPipeline::addPushConstant( const std::string & name, uint32_t p_size )
     pc_total_size += p_size ;
 }
 
+// -----------------------------------------------------------------------------
+// searchs for a push constant with the given name, returns its index or -1 when not found 
 
+int BasicPipeline::findPushConstantIndex( const std::string & name ) 
+{
+    auto it = std::find( pc_names.begin(), pc_names.end(), name );
+    if ( it == pc_names.end() )
+        return -1 ;
+    return (int) std::distance( pc_names.begin(), it );
+}
 
 // -----------------------------------------------------------------------------
 // adds a push constant command to a command buffer, using the push constant name to find the corresponding range
@@ -142,17 +152,10 @@ void BasicPipeline::addPushConstant( const std::string & name, uint32_t p_size )
 void BasicPipeline::setPushConstant( VkCommandBuffer & vk_cmd_buffer, const std::string & name, const void * data_ptr ) 
 {
     assert( initialized ); 
-
-    auto it = std::find( pc_names.begin(), pc_names.end(), name );
-    if ( it == pc_names.end() )
-    {
-        std::cerr << "Error: push constant with name '" << name << "' not found in the pipeline" << std::endl ;
-        exit(1);
-    }
-
-    const uint32_t index = (uint32_t) std::distance( pc_names.begin(), it );
+    const int index = findPushConstantIndex( name );
+    Assert( index != -1, "Error: push constant with name '" + name + "' not found in the pipeline" ); 
+    
     const VkPushConstantRange & range = vk_pc_ranges[ index ];
-
     vkCmdPushConstants( vk_cmd_buffer, vk_pipeline_layout, range.stageFlags, range.offset, range.size, data_ptr );
 }
 
@@ -171,11 +174,20 @@ void BasicPipeline::addUBOUniform( const std::string & name, uint32_t size )
     ubou_names.push_back( name );
     ubou_offsets.push_back( ubou_total_size );
     ubou_sizes.push_back( size );
-
-    
     std::cout << "Added UBO uniform '" << name << "' with size " << size << " bytes, offset " << ubou_total_size << std::endl ;
 
     ubou_total_size += size ;
+}
+
+// -----------------------------------------------------------------------------
+// Searchs for an UBO uniform with the given name, returns its index or -1 when not found
+
+int BasicPipeline::findUBOUniformIndex( const std::string & name ) 
+{
+    auto it = std::find( ubou_names.begin(), ubou_names.end(), name );
+    if ( it == ubou_names.end() )
+        return -1 ;
+    return (int) std::distance( ubou_names.begin(), it );
 }
 
 // -----------------------------------------------------------------------------
@@ -185,14 +197,8 @@ void BasicPipeline::setUBOUniform( const std::string & name, const void * data_p
 {
     assert( initialized ); 
 
-    auto it = std::find( ubou_names.begin(), ubou_names.end(), name );
-    if ( it == ubou_names.end() )
-    {
-        std::cerr << "Error: UBO uniform with name '" << name << "' not found in the pipeline" << std::endl ;
-        exit(1);
-    }
-
-    const uint32_t index = (uint32_t) std::distance( ubou_names.begin(), it );
+    const int index = findUBOUniformIndex( name );
+    Assert( index != -1, "Error: UBO uniform with name '" + name + "' not found in the pipeline" ); 
     const uint32_t offset = ubou_offsets[ index ];
     const uint32_t size = ubou_sizes[ index ];
 
