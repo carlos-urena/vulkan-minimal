@@ -6,6 +6,10 @@
 #include <application.h>
 #include <common.h>
 
+#include <backends/imgui_impl_glfw.h>
+ImGuiKey ImGui_ImplGlfw_KeyToImGuiKey(int keycode, int scancode); // not in imgui_impl_glfw.h, but it is defined in imgui_impl_glfw.cpp, so we declare it here to be able to use it in Application::stKeyboardEventCB
+
+
 namespace ilc 
 {
 
@@ -22,6 +26,7 @@ Application * Application::app_singleton = nullptr ; // initialize the static me
 
 // Keyboard events
 
+
 void Application::stKeyboardEventCB( GLFWwindow* window, int key, int scancode, int action, int mods ) 
 {
     if ( app_singleton == nullptr ) 
@@ -29,7 +34,22 @@ void Application::stKeyboardEventCB( GLFWwindow* window, int key, int scancode, 
         return ;
     }
 
-    app_singleton->keyboardEventCB( key, scancode, action, mods ) ;
+    using namespace std ;
+    cout << "stKeyboardEventCB: key=" << key << " (name: '" << glfwGetKeyName(key, scancode) << "') "<< " scancode=" << scancode << " action = " << action << " mods=" << mods << endl ;   
+    return ; // as soon as a non-character key is pressed, IMGUI gets into a state where it captures all keyboard events, and the app never receives them, WHY ?
+
+    ImGuiKey imgui_key = ImGui_ImplGlfw_KeyToImGuiKey(key,0);
+    if ( imgui_key == ImGuiKey_None )
+    {
+
+        return ;
+    }
+
+    ImGuiIO& io = ImGui::GetIO();
+    io.AddKeyEvent( imgui_key, action == GLFW_PRESS); 
+
+    if ( !io.WantCaptureKeyboard )
+        app_singleton->keyboardEventCB( key, scancode, action, mods ) ;
 } ; 
 
 
@@ -107,7 +127,7 @@ void Application::keyboardEventCB( int key, int scancode, int action, int mods )
 {
     // default implementation does nothing, derived classes can override it to process keyboard events
     using namespace std ;
-    cout << "Keyboard event: key=" << key << " scancode=" << scancode << " action=" << action << " mods=" << mods << endl ;
+    cout << "Keyboard event: key=" << key << "(name: '" << glfwGetKeyName(key, 0) << "') "<< " scancode=" << scancode << " action=" << action << " mods=" << mods << endl ;
 }
 
 void Application::mouseButtonEventCB( int button, int action, int mods ) 

@@ -67,23 +67,7 @@ class App2D : public ilc::Application
     float rotation_speed = 0.0f ; // angular speed in cycles per second 
     float triangle_scale = 0.8f ;
 
-    // // max value for the tessellation levels (for the GUI sliders)
-    // const int max_tess_level = 20 ;
-
-    // // tessellation levels (int for the GUI, and float for the pipeline)
-    // int tsc_inner_level_int = 4 ;
-    // int tsc_outer_level_int[3] = { 
-    //     tsc_inner_level_int, 
-    //     tsc_inner_level_int, 
-    //     tsc_inner_level_int } ;
-
-    // float tsc_inner_level = float(tsc_inner_level_int) ;
-    // float tsc_outer_level[3] = { 
-    //     float(tsc_outer_level_int[0]), 
-    //     float(tsc_outer_level_int[1]), 
-    //     float(tsc_outer_level_int[2]) 
-    // } ;
-
+    
     // active texture index (-1 for none)
     int texture_index = -1 ;  
 
@@ -169,6 +153,9 @@ void App2D::updateViewProjMats( vkhc::seconds_f frame_time_s )
 }
 // ----------------------------------------------------------------------------------
 
+
+char buffer[256] = { 0 } ; // buffer for IMGUI input text widget
+
 void App2D::drawIMGUIWidgets(  ) 
 {
     using namespace ImGui ;
@@ -182,6 +169,12 @@ void App2D::drawIMGUIWidgets(  )
         int texture_combo_index = texture_index + 1 ; // map -1..3 to 0..4 for ImGui combo
         if ( Combo("Texture", &texture_combo_index, "No texture (vert. colors)\0Wood 1\0Wood 2\0Wood 3\0Procedural texture\0") )
             texture_index = texture_combo_index - 1 ;
+    }
+    if ( InputText("Input text", buffer, IM_ARRAYSIZE(buffer)) ) // debug
+    {
+        // do something with the input text in 'buffer'
+        using namespace std ;
+        cout << "Input text: " << buffer << endl ;
     }
     Text("FPS: %.1f (%.1f ms)", ImGui::GetIO().Framerate, 1000.0f / ImGui::GetIO().Framerate);
 }
