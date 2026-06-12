@@ -12,12 +12,18 @@ namespace ilc
 class Application
 {
     protected: 
+
+    // singleton instance of the application 
+    static Application * app_singleton ; 
     
     vkhc::VulkanContext * context = nullptr ;
     bool close_requested = false ;
     VkClearValue clear_color{ .color ={ .float32 ={ 0.0f, 0.0f, 0.0f, 1.0f }}};
 
     uint32_t image_index ; // index for image in use when drawing a frame(from the swap-chain)
+
+    // status of mouse buttons (up or down)
+    bool mouse_buttons[GLFW_MOUSE_BUTTON_LAST] = { false } ;
 
     public:
 
@@ -41,6 +47,18 @@ class Application
 
     virtual void drawIMGUIWidgets(  ) ; // to be defined in derived classes (optionally)
     
-} ;
+    // Event callback virtual methods (called by glfwPollEvents() or 
+    // glfwWaitEvents() when a keyboard event is raised)
+
+    virtual void keyboardEventCB( int key, int scancode, int action, int mods ) ;
+    virtual void mouseButtonEventCB( int button, int action, int mods ) ;
+    virtual void mousePositionEventCB( double xpos, double ypos ) ;
+
+    // static event callback functions
+    static void stKeyboardEventCB( GLFWwindow* window, int key, int scancode, int action, int mods ) ;
+    static void stMouseButtonEventCB( GLFWwindow* window, int button, int action, int mods ) ;
+    static void stMousePositionEventCB( GLFWwindow* window, double xpos, double ypos ) ;
+
+} ; // end of class Application
 
 } // end of namespace ilc
