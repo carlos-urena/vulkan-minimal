@@ -34,25 +34,15 @@ void Application::stKeyboardEventCB( GLFWwindow* window, int key, int scancode, 
         return ;
     }
 
-    using namespace std ;
-    cout << "stKeyboardEventCB: key=" << key << " (name: '" << glfwGetKeyName(key, scancode) << "') "<< " scancode=" << scancode << " action = " << action << " mods=" << mods << endl ;   
-    return ; // as soon as a non-character key is pressed, IMGUI gets into a state where it captures all keyboard events, and the app never receives them, WHY ?
-
-    ImGuiKey imgui_key = ImGui_ImplGlfw_KeyToImGuiKey(key,0);
-    if ( imgui_key == ImGuiKey_None )
-    {
-
-        return ;
-    }
-
+    const ImGuiKey imgui_key = ImGui_ImplGlfw_KeyToImGuiKey(key,0);
     ImGuiIO& io = ImGui::GetIO();
     io.AddKeyEvent( imgui_key, action == GLFW_PRESS); 
 
-    if ( !io.WantCaptureKeyboard )
+    if ( !io.WantCaptureKeyboard && !io.WantTextInput)
         app_singleton->keyboardEventCB( key, scancode, action, mods ) ;
 } ; 
 
-
+// --------------------------------------------------------------------------------
 // Mouse button events
 
 void Application::stMouseButtonEventCB( GLFWwindow* window, int button, int action, int mods ) 
@@ -77,6 +67,7 @@ void Application::stMouseButtonEventCB( GLFWwindow* window, int button, int acti
     
 }
 
+// --------------------------------------------------------------------------------
 // Mouse position events (they are forwarded to the app only when any mouse button is pressed) 
 
 void Application::stMousePositionEventCB( GLFWwindow* window, double xpos, double ypos ) 
@@ -102,7 +93,7 @@ void Application::stMousePositionEventCB( GLFWwindow* window, double xpos, doubl
 }
 
 // --------------------------------------------------------------------------------
-
+// Constructor of the base, Application class 
 
 Application::Application( int nx, int ny, const std::string & title ) 
 {
@@ -113,9 +104,31 @@ Application::Application( int nx, int ny, const std::string & title )
     Assert( context != nullptr, "Application constructor: failed to create VulkanContext instance !!" );
 
     // register GLFW event callbacks (static) methods.
-    glfwSetKeyCallback( context->glfw_context->glfw_window, stKeyboardEventCB ) ; // keyboard event callback
-    glfwSetMouseButtonCallback( context->glfw_context->glfw_window, stMouseButtonEventCB ) ; // mouse button event callback
-    glfwSetCursorPosCallback( context->glfw_context->glfw_window, stMousePositionEventCB ) ; // mouse position event callback
+    if ( captureKeyEvents())
+        glfwSetKeyCallback( context->glfw_context->glfw_window, stKeyboardEventCB ) ; // keyboard event callback
+    if ( captureMouseButtonEvents() )
+        glfwSetMouseButtonCallback( context->glfw_context->glfw_window, stMouseButtonEventCB ) ; // mouse button event callback
+    if ( captureMousePositionsEvents() )
+        glfwSetCursorPosCallback( context->glfw_context->glfw_window, stMousePositionEventCB ) ; // mouse position event callback
+}
+
+// --------------------------------------------------------------------------------
+// An application receives all events by default, unless the derived class overrides 
+// the capture*Events() methods to return false.  
+
+bool Application::captureKeyEvents( ) 
+{
+    return true ; 
+}
+    
+bool Application::captureMouseButtonEvents( ) 
+{
+    return true ;
+}
+
+bool Application::captureMousePositionsEvents( ) 
+{
+    return true ;
 }
 
 
@@ -127,7 +140,7 @@ void Application::keyboardEventCB( int key, int scancode, int action, int mods )
 {
     // default implementation does nothing, derived classes can override it to process keyboard events
     using namespace std ;
-    cout << "Keyboard event: key=" << key << "(name: '" << glfwGetKeyName(key, 0) << "') "<< " scancode=" << scancode << " action=" << action << " mods=" << mods << endl ;
+    cout << "Keyboard event: key=" << key << " scancode=" << scancode << " action=" << action << " mods=" << mods << endl ;
 }
 
 void Application::mouseButtonEventCB( int button, int action, int mods ) 

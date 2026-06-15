@@ -46,6 +46,12 @@ class Application
     // adds draw commands to 'vk_cmd' to draw IMGUI widgets in each frame (default implementation does nothing)
 
     virtual void drawIMGUIWidgets(  ) ; // to be defined in derived classes (optionally)
+
+    // to be defined in derived classes (returns allways true o allways false)
+    // (if any of them  is not redefined, it returns true, so that the application captures all events)
+    virtual bool captureKeyEvents( ) ; 
+    virtual bool captureMouseButtonEvents( ) ; 
+    virtual bool captureMousePositionsEvents( ) ; // only received when any mouse button is pressed.
     
     // Event callback virtual methods (called by glfwPollEvents() or 
     // glfwWaitEvents() when a keyboard event is raised)
