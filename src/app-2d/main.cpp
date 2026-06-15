@@ -97,6 +97,15 @@ class App2D : public ilc::Application
     void initFrame( const vkhc::seconds_f  time_elapsed ) override ;
     void drawFrame( VkCommandBuffer & cmd ) override ;
     void drawIMGUIWidgets(  ) override ;
+
+    // accept only key events
+    bool captureKeyEvents( ) override { return true ; } 
+    bool captureMouseButtonEvents( ) override { return false ; } 
+    bool captureMousePositionEvents( ) override { return false ; } 
+
+    // process key events 
+    void keyboardEventCB( int key, int scancode, int action, int mods ) override ;
+
     virtual ~App2D()  override ; 
 
     // specific methods for this application (not overrides)
@@ -131,6 +140,15 @@ App2D::~App2D()
     delete textures_set ; textures_set = nullptr ;
 
     std::cout << "Deleted App2D" << std::endl ;
+}
+
+// ----------------------------------------------------------------------------------
+// process key events 
+
+void App2D::keyboardEventCB( int key, int scancode, int action, int mods )
+{
+    if ( key == GLFW_KEY_ESCAPE && action == GLFW_PRESS )
+        close_requested = true ;
 }
 
 // ----------------------------------------------------------------------------------

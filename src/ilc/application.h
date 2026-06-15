@@ -51,7 +51,7 @@ class Application
     // (if any of them  is not redefined, it returns true, so that the application captures all events)
     virtual bool captureKeyEvents( ) ; 
     virtual bool captureMouseButtonEvents( ) ; 
-    virtual bool captureMousePositionsEvents( ) ; // only received when any mouse button is pressed.
+    virtual bool captureMousePositionEvents( ) ; // only received when any mouse button is pressed.
     
     // Event callback virtual methods (called by glfwPollEvents() or 
     // glfwWaitEvents() when a keyboard event is raised)

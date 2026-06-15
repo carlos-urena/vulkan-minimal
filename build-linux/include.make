@@ -13,7 +13,7 @@
 
 objs_dir:=         ./objs
 compiler:=         g++
-compile_options:=  -std=c++20 -g -Wall -Wextra -Wno-missing-field-initializers
+compile_options:=  -std=c++20 -g -Wall -Wextra -Wno-missing-field-initializers -Wno-unused-parameter
 link_options:= 
 bin_folder:=  ./bin
 

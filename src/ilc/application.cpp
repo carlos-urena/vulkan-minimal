@@ -108,7 +108,7 @@ Application::Application( int nx, int ny, const std::string & title )
         glfwSetKeyCallback( context->glfw_context->glfw_window, stKeyboardEventCB ) ; // keyboard event callback
     if ( captureMouseButtonEvents() )
         glfwSetMouseButtonCallback( context->glfw_context->glfw_window, stMouseButtonEventCB ) ; // mouse button event callback
-    if ( captureMousePositionsEvents() )
+    if ( captureMousePositionEvents() )
         glfwSetCursorPosCallback( context->glfw_context->glfw_window, stMousePositionEventCB ) ; // mouse position event callback
 }
 
@@ -126,7 +126,7 @@ bool Application::captureMouseButtonEvents( )
     return true ;
 }
 
-bool Application::captureMousePositionsEvents( ) 
+bool Application::captureMousePositionEvents( ) 
 {
     return true ;
 }
