@@ -176,11 +176,13 @@ void VulkanContext::endFrame( VkCommandBuffer vk_cmd, uint32_t imageIndex )
 }
 // --------------------------------------------------------------------------------
 
-bool VulkanContext::windowShouldClose()
-{
-    assert( glfw_context != nullptr );
-    return glfwWindowShouldClose( glfw_context->glfw_window );
-}
+// bool VulkanContext::windowShouldClose()
+// {
+//     assert( glfw_context != nullptr );
+//     bool result = glfwWindowShouldClose( glfw_context->glfw_window );
+//     glfwSetWindowShouldClose( glfw_context->glfw_window, false ); // reset the flag to false, so that the application can handle it in its own way
+//     return result ;
+// }
 // --------------------------------------------------------------------------------
 
 void VulkanContext::waitDeviceIdle() 

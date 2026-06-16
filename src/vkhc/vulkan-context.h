@@ -59,7 +59,7 @@ class VulkanContext
     void endFrame( VkCommandBuffer vk_cmd, uint32_t imageIndex ) ;
 
     // returns true when the user has clicked the close button of the window 
-    bool windowShouldClose() ;
+    //bool windowShouldClose() ;
 
     // wait for the device to be idle (used at the end of the program, and when the window is resized)
     void waitDeviceIdle() ;

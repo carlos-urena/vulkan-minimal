@@ -103,6 +103,9 @@ Application::Application( int nx, int ny, const std::string & title )
     context = new vkhc::VulkanContext{ nx, ny, title } ;
     Assert( context != nullptr, "Application constructor: failed to create VulkanContext instance !!" );
 
+    glfw_context = context->glfw_context ; // set the pointer to the GLFWContext instance
+    Assert( glfw_context != nullptr, "Application constructor: 'glfw_context' instance is null !!" );
+
     // register GLFW event callbacks (static) methods.
     if ( captureKeyEvents())
         glfwSetKeyCallback( context->glfw_context->glfw_window, stKeyboardEventCB ) ; // keyboard event callback
@@ -166,6 +169,42 @@ void Application::drawIMGUIWidgets(  )
 }
 
 // --------------------------------------------------------------------------------
+// Draw imgui modal window to confirm closing the application
+
+void Application::confirmClose()
+{
+    using namespace ImGui ;
+    ImGuiViewport* viewport = GetMainViewport();
+    SetNextWindowPos(viewport->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+    OpenPopup("Close application?");
+    if (BeginPopupModal("Close application?", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        Text("Are you sure you want to close the application?");
+        float yes_w = CalcTextSize("Yes").x + GetStyle().FramePadding.x * 2.0f;
+        float no_w = CalcTextSize("No").x + GetStyle().FramePadding.x * 2.0f;
+        float total_buttons_w = yes_w + GetStyle().ItemSpacing.x + no_w;
+        float start_x = (GetWindowSize().x - total_buttons_w) * 0.5f;
+        if (start_x > GetCursorPosX())
+            SetCursorPosX(start_x);
+
+        if (Button("Yes")) 
+        {   close_confirmed = true; 
+            CloseCurrentPopup(); 
+        }
+        SameLine();
+        if (Button("No")) 
+        {   close_requested = false; 
+            close_confirmed = false;
+            CloseCurrentPopup(); 
+        }
+        EndPopup(); 
+    }
+    
+}
+
+// --------------------------------------------------------------------------------
+// Runs the aplication event + render loop (main loop)
 
 void Application::run() 
 {
@@ -178,8 +217,12 @@ void Application::run()
     InitFrameStart();
 
     // enter the main loop
-    while ( ! context->windowShouldClose() && ! close_requested )  
+    while ( ! close_confirmed )  
     {
+        // raise 'close_requested' flag if the user has clicked the close button of the window
+        if ( glfw_context->windowShouldClose() )
+            close_requested = true ; 
+        
         // compute delay (in seconds) from previous frame start 
         frame_time_s = NextFrameStart() ; 
 
@@ -200,7 +243,10 @@ void Application::run()
         
         // draw the widgets 
         context->beginIMGUIFrame( cmd ) ;
-        drawIMGUIWidgets(  ) ; // draw IMGUI widgets 
+        if ( close_requested )
+            confirmClose() ;
+        if ( !close_confirmed )
+            drawIMGUIWidgets(  ) ; // draw IMGUI widgets 
         context->endIMGUIFrame( cmd ) ;
 
         context->endFrame( cmd, image_index ) ;  // submit 'cmd' and present the image
@@ -214,9 +260,10 @@ void Application::run()
 Application::~Application() 
 {
     Assert( context != nullptr, "Application destructor: 'context' instance is null !!" );
-    delete context ;
+    delete context ; // deletes everything inside the VulkanContext instance, including the GLFWContext instance
     context = nullptr ; 
-    std::cout << "Application deleted" << std::endl ;
+    glfw_context = nullptr ;
+    std::cout << "Deleted 'Application' instance." << std::endl ;
 }
 // --------------------------------------------------------------------------------
 

@@ -31,6 +31,9 @@ class GLFWContext
     // closes the window and terminates GLFW
     ~GLFWContext() ;
 
+    // returns true after the user clicks the close button of a window 
+    // return true only once after the click (the flag is reset on each call)
+    bool windowShouldClose() ;
 
     // computes window position and size based on the resolution and size of the
     // available monitors (places it inside the monitor with the largest area).

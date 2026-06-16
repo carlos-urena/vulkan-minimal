@@ -139,7 +139,7 @@ App2D::~App2D()
     delete pipeline ; pipeline = nullptr ;
     delete textures_set ; textures_set = nullptr ;
 
-    std::cout << "Deleted App2D" << std::endl ;
+    std::cout << "Deleted 'App2D' instance" << std::endl ;
 }
 
 // ----------------------------------------------------------------------------------
@@ -177,6 +177,11 @@ char buffer[256] = { 0 } ; // buffer for IMGUI input text widget
 void App2D::drawIMGUIWidgets(  ) 
 {
     using namespace ImGui ;
+
+    using namespace std ;
+    //cout << "App2D::drawIMGUIWidgets: drawing IMGUI widgets -- close_requested:" << close_requested << endl ;
+
+    
     
     if ( Button("Close window" ) ) close_requested = true ;
     if (CollapsingHeader("Triangle controls", ImGuiTreeNodeFlags_DefaultOpen))

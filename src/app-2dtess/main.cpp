@@ -162,6 +162,9 @@ class App2DTess : public ilc::Application
 
     // specific methods for this application (not overrides)
     void updateViewProjMats( vkhc::VulkanContext & context, vkhc::seconds_f frame_time_s ) ;
+
+    void keyboardEventCB( int key, int scancode, int action, int mods ) override ;
+
 } ;
 
 // ----------------------------------------------------------------------------------
@@ -202,6 +205,26 @@ App2DTess::~App2DTess()
 
 // ----------------------------------------------------------------------------------
 
+void App2DTess::keyboardEventCB( int key, int scancode, int action, int mods )
+{
+    if ( action == GLFW_PRESS )
+    {
+        switch ( key )
+        {
+            case GLFW_KEY_ESCAPE : 
+                close_requested = true ; 
+                break ;
+            case GLFW_KEY_T : 
+                display_triangle = ! display_triangle ; 
+                break ;
+            default:
+                break ;
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------------
+
 
 void App2DTess::updateViewProjMats( vkhc::VulkanContext & context,  vkhc::seconds_f frame_time_s )
 {
@@ -223,7 +246,8 @@ void App2DTess::drawIMGUIWidgets(  )
 {
     using namespace ImGui ;
     
-    if ( Button("Close window" ) ) close_requested = true ;
+    if ( Button("Close window" ) )    
+        close_requested = true ;
     
     if (CollapsingHeader("Tessellation controls", ImGuiTreeNodeFlags_DefaultOpen))
     {       

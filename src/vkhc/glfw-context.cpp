@@ -68,6 +68,8 @@ void GLFWContext::getWindowPositionAndSize( int & tamx, int & tamy, int & posx, 
 
 unsigned GLFWContext::instance_count = 0 ; // initialize static member variable
 
+
+
 // -----------------------------------------------------------------------------
 // Static GLFW error function 
 
@@ -135,6 +137,21 @@ GLFWContext::GLFWContext( int width, int height, const std::string & title )
     glfwSetWindowPos( glfw_window, posx, posy ); // not available in wayland on linux
     #endif
     glfwSetFramebufferSizeCallback( glfw_window, framebufferResizeCallback );
+}
+
+// -----------------------------------------------------------------------------
+// returns true after the user clicks the close button of a window 
+// return true only once after the click (the flag is reset when true)
+
+bool GLFWContext::windowShouldClose()
+{
+    Assert( glfw_window != nullptr, "GLFWContext::windowShouldClose: 'glfw_window' is null !!" );
+    // get the flag
+    bool result = glfwWindowShouldClose( glfw_window );
+    // reset the flag to false, so the request is reported only once
+    if ( result )
+        glfwSetWindowShouldClose( glfw_window, false ); 
+    return result ;
 }
 
 // -----------------------------------------------------------------------------
