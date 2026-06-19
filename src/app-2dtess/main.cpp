@@ -187,6 +187,7 @@ App2DTess::App2DTess( )
     textures_set->bindTo( *pipeline_tris ) ; // bind the textures set to the pipeline, so that its textures can be used in the fragment shader.
     textures_set->bindTo( *pipeline_quads ) ; // bind the textures set to the pipeline, so that its textures can be used in the fragment shader.
 
+    captureEvents( true, true, true ); 
 } ;
 
 // ----------------------------------------------------------------------------------

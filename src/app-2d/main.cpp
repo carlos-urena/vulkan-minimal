@@ -98,11 +98,6 @@ class App2D : public ilc::Application
     void drawFrame( VkCommandBuffer & cmd ) override ;
     void drawIMGUIWidgets(  ) override ;
 
-    // accept only key events
-    bool captureKeyEvents( ) override { return true ; } 
-    bool captureMouseButtonEvents( ) override { return false ; } 
-    bool captureMousePositionEvents( ) override { return false ; } 
-
     // process key events 
     void keyboardEventCB( int key, int scancode, int action, int mods ) override ;
 
@@ -112,14 +107,18 @@ class App2D : public ilc::Application
     void updateViewProjMats( vkhc::seconds_f frame_time_s ) ;
 } ;
 
-// ----------------------------------------------------------------------------------
+
 
 App2D::App2D( ) 
 
 //:   Application( 1024, 512, "Vulkan simple demo" ) 
 :   Application( 0, 0, "Vulkan simple demo" ) 
 {
+
+    using namespace std ;
     using namespace vkhc ; 
+
+    cout << "App2D::App2D -- starts" << endl ;
 
     Assert( context != nullptr, "Tess1App constructor: 'context' instance is null !!" );
     
@@ -128,6 +127,9 @@ App2D::App2D( )
     pipeline     = new vkhc::BasicPipeline2D( *context ) ; assert( pipeline != nullptr ) ;
 
     textures_set->bindTo( *pipeline ) ; // bind the textures set to the pipeline, so that its textures can be used in the fragment shader.
+
+    captureEvents( true, true, true );
+    cout << "App2D::App2D -- ends" << endl ;
 } ;
 
 // ----------------------------------------------------------------------------------
@@ -147,6 +149,8 @@ App2D::~App2D()
 
 void App2D::keyboardEventCB( int key, int scancode, int action, int mods )
 {
+    using namespace std ;
+    cout << "App2D::keyboardEventCB: key=" << key << ", scancode=" << scancode << ", action=" << action << ", mods=" << mods << endl ;
     if ( key == GLFW_KEY_ESCAPE && action == GLFW_PRESS )
         close_requested = true ;
 }

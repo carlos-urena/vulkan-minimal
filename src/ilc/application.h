@@ -54,6 +54,9 @@ class Application
     // Destructor of the base, Application class (deletes the VulkanContext instance)
     virtual ~Application() ;
 
+    // Called by derived classes constructors to set which callbacks are captured 
+    void captureEvents( bool key_events, bool mouse_button_events, bool mouse_position_events ) ;
+
     // Runs the aplication event + render loop (main loop)
     void run() ;
 
@@ -73,11 +76,11 @@ class Application
 
     virtual void drawIMGUIWidgets(  ) ; // to be defined in derived classes (optionally)
 
-    // to be defined in derived classes (returns allways true o allways false)
-    // (if any of them  is not redefined, it returns true, so that the application captures all events)
-    virtual bool captureKeyEvents( ) ; 
-    virtual bool captureMouseButtonEvents( ) ; 
-    virtual bool captureMousePositionEvents( ) ; // only received when any mouse button is pressed.
+    // // to be defined in derived classes (returns allways true o allways false)
+    // // (if any of them  is not redefined, it returns true, so that the application captures all events)
+    // virtual bool captureKeyEvents( ) = 0; 
+    // virtual bool captureMouseButtonEvents( ) = 0; 
+    // virtual bool captureMousePositionEvents( ) = 0; // only received when any mouse button is pressed.
     
     // Event callback virtual methods (called by glfwPollEvents() or 
     // glfwWaitEvents() when a keyboard event is raised)

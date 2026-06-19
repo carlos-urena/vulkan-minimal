@@ -29,6 +29,9 @@ Application * Application::app_singleton = nullptr ; // initialize the static me
 
 void Application::stKeyboardEventCB( GLFWwindow* window, int key, int scancode, int action, int mods ) 
 {
+    using namespace std ;
+    cout << "Application::stKeyboardEventCB: key=" << key << ", scancode=" << scancode << ", action=" << action << ", mods=" << mods << endl ;
+    
     if ( app_singleton == nullptr ) 
     {   std::cerr << "KeyboardEventCB: warning: 'app_singleton' is null !" << std::endl ;
         return ;
@@ -47,6 +50,9 @@ void Application::stKeyboardEventCB( GLFWwindow* window, int key, int scancode, 
 
 void Application::stMouseButtonEventCB( GLFWwindow* window, int button, int action, int mods ) 
 {
+    using namespace std ;
+    cout << "Application::stMouseButtonEventCB: button=" << button << ", action=" << action << ", mods=" << mods << endl ;
+
     if ( app_singleton == nullptr ) 
     {   std::cerr << "MouseButtonEventCB: warning: 'app_singleton' is null !" << std::endl ;
         return ;
@@ -72,6 +78,9 @@ void Application::stMouseButtonEventCB( GLFWwindow* window, int button, int acti
 
 void Application::stMousePositionEventCB( GLFWwindow* window, double xpos, double ypos ) 
 {
+    using namespace std ;
+    cout << "Application::stMousePositionEventCB: xpos=" << xpos << ", ypos=" << ypos << endl ;
+
     if ( app_singleton == nullptr ) 
     {   std::cerr << "MousePositionEventCB: warning: 'app_singleton' is null !" << std::endl ;
         return ;
@@ -97,43 +106,35 @@ void Application::stMousePositionEventCB( GLFWwindow* window, double xpos, doubl
 
 Application::Application( int nx, int ny, const std::string & title ) 
 {
+    using namespace std ;
+    cout << "Application::Application - starts" << endl ;
+
     Assert( app_singleton == nullptr, "Application constructor: an instance of 'Application' already exists !!" );
-    app_singleton = this ; // set the singleton instance pointer to this instance
     Assert( context == nullptr, "Application constructor: 'context' instance already exists !!" );
+
+    app_singleton = this ; // set the singleton instance pointer to this instance
     context = new vkhc::VulkanContext{ nx, ny, title } ;
     Assert( context != nullptr, "Application constructor: failed to create VulkanContext instance !!" );
 
     glfw_context = context->glfw_context ; // set the pointer to the GLFWContext instance
     Assert( glfw_context != nullptr, "Application constructor: 'glfw_context' instance is null !!" );
 
-    // register GLFW event callbacks (static) methods.
-    if ( captureKeyEvents())
-        glfwSetKeyCallback( context->glfw_context->glfw_window, stKeyboardEventCB ) ; // keyboard event callback
-    if ( captureMouseButtonEvents() )
-        glfwSetMouseButtonCallback( context->glfw_context->glfw_window, stMouseButtonEventCB ) ; // mouse button event callback
-    if ( captureMousePositionEvents() )
-        glfwSetCursorPosCallback( context->glfw_context->glfw_window, stMousePositionEventCB ) ; // mouse position event callback
+    cout << "Application::Application - ends" << endl ;
 }
 
-// --------------------------------------------------------------------------------
-// An application receives all events by default, unless the derived class overrides 
-// the capture*Events() methods to return false.  
-
-bool Application::captureKeyEvents( ) 
+// Called by derived classes constructors to set which callbacks are captured 
+void Application::captureEvents( bool key_events, bool mouse_button_events, bool mouse_position_events ) 
 {
-    return true ; 
-}
+    if ( key_events)
+        glfwSetKeyCallback( glfw_context->glfw_window, stKeyboardEventCB ) ; // keyboard event callback
     
-bool Application::captureMouseButtonEvents( ) 
-{
-    return true ;
+    if ( mouse_button_events )
+        glfwSetMouseButtonCallback( glfw_context->glfw_window, stMouseButtonEventCB ) ; // mouse button event callback
+    
+    if ( mouse_position_events )
+        glfwSetCursorPosCallback( glfw_context->glfw_window, stMousePositionEventCB ) ; // mouse position event callback
+    
 }
-
-bool Application::captureMousePositionEvents( ) 
-{
-    return true ;
-}
-
 
 // --------------------------------------------------------------------------------
 // Event callback virtual methods (called by glfwPollEvents() or 
@@ -143,21 +144,21 @@ void Application::keyboardEventCB( int key, int scancode, int action, int mods )
 {
     // default implementation does nothing, derived classes can override it to process keyboard events
     using namespace std ;
-    cout << "Keyboard event: key=" << key << " scancode=" << scancode << " action=" << action << " mods=" << mods << endl ;
+    cout << "Application::keyboardEventCB: key=" << key << " scancode=" << scancode << " action=" << action << " mods=" << mods << endl ;
 }
 
 void Application::mouseButtonEventCB( int button, int action, int mods ) 
 {
     // default implementation does nothing, derived classes can override it to process mouse button events
     using namespace std ;
-    cout << "Mouse button event: button=" << button << " action=" << action << " mods=" << mods << endl ;
+    cout << "Application::mouseButtonEventCB: button=" << button << " action=" << action << " mods=" << mods << endl ;
 }
 
 void Application::mousePositionEventCB( double xpos, double ypos ) 
 {
     // default implementation does nothing, derived classes can override it to process mouse position events
     using namespace std ;
-    cout << "Mouse position (with button down) event: xpos=" << xpos << " ypos=" << ypos << endl ;
+    cout << "Application::mousePositionEventCB: xpos=" << xpos << " ypos=" << ypos << endl ;
 }
 
 // --------------------------------------------------------------------------------
