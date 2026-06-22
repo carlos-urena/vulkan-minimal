@@ -42,7 +42,11 @@ class Application
     // draw modal popup window to confirm window close 
     void confirmClose() ;
 
-    
+    // true if the application wants to capture each event type: 
+
+    bool key_events = false ; // key down/up 
+    bool mouse_button_events = false ; // mouse button down/up
+    bool mouse_position_events = false ; // mouse movements (with a button pressed)
 
     // ---------------------------------------------------------------------------------
 

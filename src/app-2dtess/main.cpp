@@ -208,20 +208,8 @@ App2DTess::~App2DTess()
 
 void App2DTess::keyboardEventCB( int key, int scancode, int action, int mods )
 {
-    if ( action == GLFW_PRESS )
-    {
-        switch ( key )
-        {
-            case GLFW_KEY_ESCAPE : 
-                close_requested = true ; 
-                break ;
-            case GLFW_KEY_T : 
-                display_triangle = ! display_triangle ; 
-                break ;
-            default:
-                break ;
-        }
-    }
+    if ( action == GLFW_PRESS && key ==GLFW_KEY_T )
+        display_triangle = ! display_triangle ;      
 }
 
 // ----------------------------------------------------------------------------------

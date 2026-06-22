@@ -5,7 +5,7 @@
 // fragment shaders, but not tesselation or vertex shaders.
 
 
-#include <pipeline2D.h>
+#include <pipeline3D.h>
 #include <device.h>
 #include <render-pass.h>
 #include <vulkan-context.h>
@@ -115,7 +115,7 @@ static std::string
     vertShaderSrc_string = std::string { vert_shader_src },
     fragShaderSrc_string = std::string { frag_shader_src };
 
-BasicPipeline2D::BasicPipeline2D( VulkanContext & vulkan_context )
+Pipeline3D::Pipeline3D( VulkanContext & vulkan_context )
 
 :   BasicPipeline( vulkan_context ) 
 {
@@ -153,25 +153,25 @@ BasicPipeline2D::BasicPipeline2D( VulkanContext & vulkan_context )
 }
 // ------------------------------------------------------------------------------
 
-void BasicPipeline2D::setViewMatrix( const glm::mat4 & view_mat ) 
+void Pipeline3D::setViewMatrix( const glm::mat4 & view_mat ) 
 {
     setUBOUniform( "view_mat", value_ptr( view_mat ) );
 }
 // ------------------------------------------------------------------------------
 
-void BasicPipeline2D::setProjectionMatrix( const glm::mat4 & proj_mat ) 
+void Pipeline3D::setProjectionMatrix( const glm::mat4 & proj_mat ) 
 {
     setUBOUniform( "proj_mat", value_ptr( proj_mat ) );
 }
 // ------------------------------------------------------------------------------
 
-void BasicPipeline2D::setTextureIndex( VkCommandBuffer & vk_cmd, int index ) 
+void Pipeline3D::setTextureIndex( VkCommandBuffer & vk_cmd, int index ) 
 {
     setPushConstant( vk_cmd, "texture_index", &index ); 
 }
 // ------------------------------------------------------------------------------
 
-void BasicPipeline2D::setModelMatrix( VkCommandBuffer & vk_cmd, const glm::mat4 & model_mat ) 
+void Pipeline3D::setModelMatrix( VkCommandBuffer & vk_cmd, const glm::mat4 & model_mat ) 
 {
     setPushConstant( vk_cmd, "model_mat", value_ptr( model_mat ) ); 
 }

@@ -37,12 +37,25 @@ void Application::stKeyboardEventCB( GLFWwindow* window, int key, int scancode, 
         return ;
     }
 
-    const ImGuiKey imgui_key = ImGui_ImplGlfw_KeyToImGuiKey(key,0);
     ImGuiIO& io = ImGui::GetIO();
+    if ( app_singleton->close_requested )
+    {   if ( ( key == GLFW_KEY_ESCAPE || key == GLFW_KEY_N ) && action == GLFW_RELEASE )
+        {   app_singleton->close_confirmed = false ;
+            app_singleton->close_requested = false ;
+        }
+        else if ( ( key == GLFW_KEY_ENTER || key == GLFW_KEY_Y ) && action == GLFW_RELEASE )
+            app_singleton->close_confirmed = true ;
+    } 
+    const ImGuiKey imgui_key = ImGui_ImplGlfw_KeyToImGuiKey(key,0);
     io.AddKeyEvent( imgui_key, action == GLFW_PRESS); 
 
     if ( !io.WantCaptureKeyboard && !io.WantTextInput)
-        app_singleton->keyboardEventCB( key, scancode, action, mods ) ;
+    {
+        if ( key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE )
+            app_singleton->close_requested = true ;
+        else if ( app_singleton->key_events ) 
+            app_singleton->keyboardEventCB( key, scancode, action, mods ) ;   
+    }
 } ; 
 
 // --------------------------------------------------------------------------------
@@ -121,19 +134,24 @@ Application::Application( int nx, int ny, const std::string & title )
 
     cout << "Application::Application - ends" << endl ;
 }
+// --------------------------------------------------------------------------------
 
 // Called by derived classes constructors to set which callbacks are captured 
-void Application::captureEvents( bool key_events, bool mouse_button_events, bool mouse_position_events ) 
+void Application::captureEvents( bool p_key_events, bool p_mouse_button_events, bool p_mouse_position_events ) 
 {
-    if ( key_events)
-        glfwSetKeyCallback( glfw_context->glfw_window, stKeyboardEventCB ) ; // keyboard event callback
+    // keyboard event callback
+    key_events = p_key_events ; // when true, key events are passed to the application 
+    glfwSetKeyCallback( glfw_context->glfw_window, stKeyboardEventCB ) ; 
     
+    // mouse button event callback
+    mouse_button_events = p_mouse_button_events ;
     if ( mouse_button_events )
-        glfwSetMouseButtonCallback( glfw_context->glfw_window, stMouseButtonEventCB ) ; // mouse button event callback
+        glfwSetMouseButtonCallback( glfw_context->glfw_window, stMouseButtonEventCB ) ; 
     
+    // mouse position event callback
+    mouse_position_events = p_mouse_position_events ;
     if ( mouse_position_events )
-        glfwSetCursorPosCallback( glfw_context->glfw_window, stMousePositionEventCB ) ; // mouse position event callback
-    
+        glfwSetCursorPosCallback( glfw_context->glfw_window, stMousePositionEventCB ) ; 
 }
 
 // --------------------------------------------------------------------------------

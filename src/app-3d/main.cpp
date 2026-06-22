@@ -4,7 +4,7 @@
 #include <chrono>
 
 #include <vulkan-context.h>
-#include <pipeline2D.h>
+#include <pipeline3D.h>
 #include <vertex-array.h>
 #include <imgui-context.h>
 #include <textures.h>
@@ -57,7 +57,7 @@ class ExampleTexturesSet : public vkhc::TexturesSet
 // ----------------------------------------------------------------------------------
 
 
-class App2D : public ilc::Application
+class App3D : public ilc::Application
 {
 
     private:
@@ -80,7 +80,7 @@ class App2D : public ilc::Application
     Triangle *  triangle = nullptr ; 
 
     // basic 2D pipeline 
-    vkhc::BasicPipeline2D * pipeline = nullptr ; 
+    vkhc::Pipeline3D * pipeline = nullptr ; 
 
     // textures set (used for testing textures).
     ExampleTexturesSet * textures_set = nullptr ; 
@@ -91,22 +91,13 @@ class App2D : public ilc::Application
     
     public:
 
-    App2D( ) ;
+    App3D( ) ;
+    virtual ~App3D()  override ; 
 
     // override methods
     void initFrame( const vkhc::seconds_f  time_elapsed ) override ;
     void drawFrame( VkCommandBuffer & cmd ) override ;
     void drawIMGUIWidgets(  ) override ;
-
-    // accept only key events
-    bool captureKeyEvents( ) override { return true ; } 
-    bool captureMouseButtonEvents( ) override { return false ; } 
-    bool captureMousePositionEvents( ) override { return false ; } 
-
-    // process key events 
-    void keyboardEventCB( int key, int scancode, int action, int mods ) override ;
-
-    virtual ~App2D()  override ; 
 
     // specific methods for this application (not overrides)
     void updateViewProjMats( vkhc::seconds_f frame_time_s ) ;
@@ -114,47 +105,42 @@ class App2D : public ilc::Application
 
 // ----------------------------------------------------------------------------------
 
-App2D::App2D( ) 
+App3D::App3D( ) 
 
 //:   Application( 1024, 512, "Vulkan simple demo" ) 
-:   Application( 0, 0, "Vulkan simple demo" ) 
+:   Application( 0, 0, "Vulkan 3D Demo App" ) 
 {
+    using namespace std ;
     using namespace vkhc ; 
 
     Assert( context != nullptr, "Tess1App constructor: 'context' instance is null !!" );
     
     triangle     = new Triangle( *context ) ;              assert( triangle != nullptr ) ;
     textures_set = new ExampleTexturesSet( context ) ;     assert( textures_set != nullptr ) ;
-    pipeline     = new vkhc::BasicPipeline2D( *context ) ; assert( pipeline != nullptr ) ;
+    pipeline     = new vkhc::Pipeline3D( *context ) ; assert( pipeline != nullptr ) ;
 
     textures_set->bindTo( *pipeline ) ; // bind the textures set to the pipeline, so that its textures can be used in the fragment shader.
+    captureEvents( true, true, true );
+    cout  << "App3D::App3D -- ends" << endl ;
 } ;
 
 // ----------------------------------------------------------------------------------
+// destructor
 
-App2D::~App2D() 
+App3D::~App3D() 
 {
     //Assert( context != nullptr, "Tess1App destructor: 'context' instance is null !!" );
     delete triangle ; triangle = nullptr ;
     delete pipeline ; pipeline = nullptr ;
     delete textures_set ; textures_set = nullptr ;
 
-    std::cout << "Deleted 'App2D' instance" << std::endl ;
-}
-
-// ----------------------------------------------------------------------------------
-// process key events 
-
-void App2D::keyboardEventCB( int key, int scancode, int action, int mods )
-{
-    if ( key == GLFW_KEY_ESCAPE && action == GLFW_PRESS )
-        close_requested = true ;
+    std::cout << "Deleted 'App3D' instance" << std::endl ;
 }
 
 // ----------------------------------------------------------------------------------
 
 
-void App2D::updateViewProjMats( vkhc::seconds_f frame_time_s )
+void App3D::updateViewProjMats( vkhc::seconds_f frame_time_s )
 {
     using namespace glm ;
     Assert( context != nullptr, "App2D::updateViewProjMats: 'context' instance is null !!" ) ;
@@ -174,7 +160,7 @@ void App2D::updateViewProjMats( vkhc::seconds_f frame_time_s )
 
 char buffer[256] = { 0 } ; // buffer for IMGUI input text widget
 
-void App2D::drawIMGUIWidgets(  ) 
+void App3D::drawIMGUIWidgets(  ) 
 {
     using namespace ImGui ;
 
@@ -203,7 +189,7 @@ void App2D::drawIMGUIWidgets(  )
 }
 // ----------------------------------------------------------------------------------
 
-void App2D::initFrame( const vkhc::seconds_f  time_elapsed )
+void App3D::initFrame( const vkhc::seconds_f  time_elapsed )
 {
     Assert( context != nullptr, "Tess1App::drawFrame: 'context' instance is null !!" );
     Assert( pipeline != nullptr, "Tess1App::drawFrame: 'pipeline' instance is null !!" );
@@ -217,7 +203,7 @@ void App2D::initFrame( const vkhc::seconds_f  time_elapsed )
 }
 // ----------------------------------------------------------------------------------
 
-void App2D::drawFrame( VkCommandBuffer & cmd ) 
+void App3D::drawFrame( VkCommandBuffer & cmd ) 
 {
     Assert( context != nullptr, "Tess1App::drawFrame: 'context' instance is null !!" );
     Assert( pipeline != nullptr, "Tess1App::drawFrame: 'pipeline' instance is null !!" );
@@ -241,7 +227,7 @@ void App2D::drawFrame( VkCommandBuffer & cmd )
 
 int main() 
 {
-    App2D app{  } ;
+    App3D app{  } ;
     app.run() ;
     return 0 ;
 }
