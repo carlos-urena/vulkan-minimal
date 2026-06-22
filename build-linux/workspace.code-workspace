@@ -1,6 +1,6 @@
 {
   "folders":
-  [ { "name": "RAIZ",
+  [ { "name": "ROOT",
       "path": ".."
     },
     { "name": "BUILD-LINUX",
