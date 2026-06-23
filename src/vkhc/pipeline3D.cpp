@@ -120,7 +120,7 @@ Pipeline3D::Pipeline3D( VulkanContext & vulkan_context )
 :   BasicPipeline( vulkan_context ) 
 {
     using namespace std ; 
-    cout << "Creating basic 2D pipeline..." << endl ;
+    cout << "Creating 3D pipeline..." << endl ;
 
     // set metadata about  push constants 
     addPushConstant( "model_mat", sizeof(glm::mat4) ); // model matrix 
@@ -149,7 +149,7 @@ Pipeline3D::Pipeline3D( VulkanContext & vulkan_context )
     // initialize the vulkan pipeline  (in the context)
     initialize( ) ; 
 
-    cout << "Basic 2D pipeline created." << endl ;
+    cout << "3D pipeline created." << endl ;
 }
 // ------------------------------------------------------------------------------
 
