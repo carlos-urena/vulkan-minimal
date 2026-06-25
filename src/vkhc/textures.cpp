@@ -27,24 +27,26 @@ TexturesSet::TexturesSet( VulkanContext * p_context )
     // for all textures, but we could use different samplers for different textures 
     // if we wanted to.
 
-    VkSamplerCreateInfo sampler_ci{ VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
-    sampler_ci.magFilter = VK_FILTER_LINEAR;
-    sampler_ci.minFilter = VK_FILTER_LINEAR;
-    sampler_ci.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    sampler_ci.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    sampler_ci.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    sampler_ci.anisotropyEnable = VK_FALSE;
-    sampler_ci.maxAnisotropy = 1.0f;
-    sampler_ci.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-    sampler_ci.unnormalizedCoordinates = VK_FALSE;
-    sampler_ci.compareEnable = VK_FALSE;
-    sampler_ci.compareOp = VK_COMPARE_OP_ALWAYS;
-    sampler_ci.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-    sampler_ci.mipLodBias = 0.0f;
-    sampler_ci.minLod = 0.0f;
-    sampler_ci.maxLod = 0.0f;
+    VkSamplerCreateInfo sci{ 
+        .sType            = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO, 
+        .magFilter        = VK_FILTER_LINEAR,
+        .minFilter        = VK_FILTER_LINEAR,
+        .mipmapMode       = VK_SAMPLER_MIPMAP_MODE_LINEAR,
+        .addressModeU     = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+        .addressModeV     = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+        .addressModeW     = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+        .mipLodBias       = 0.0f,
+        .anisotropyEnable = VK_FALSE,
+        .maxAnisotropy    = 1.0f,
+        .compareEnable    = VK_FALSE,
+        .compareOp        = VK_COMPARE_OP_ALWAYS,
+        .minLod           = 0.0f,
+        .maxLod           = 0.0f,
+        .borderColor      = VK_BORDER_COLOR_INT_OPAQUE_BLACK,
+        .unnormalizedCoordinates = VK_FALSE,
+    };
 
-    if ( vkCreateSampler( context->device->vk_device, &sampler_ci, nullptr, &vk_sampler ) != VK_SUCCESS ) {
+    if ( vkCreateSampler( context->device->vk_device, &sci, nullptr, &vk_sampler ) != VK_SUCCESS ) {
         throw std::runtime_error( "Failed to create texture sampler" );
     }
 } ;
@@ -72,8 +74,10 @@ uint32_t TexturesSet::add( const std::string & file_path )
 
 void TexturesSet::bindTo( BasicPipeline & pipeline ) 
 {
-    // we bind the textures set to the pipeline by binding a descriptor set with an array of texture samplers, one for each texture in the set. 
-    // the 'texture_index' push constant is used to select the active texture in the fragment shader, by indexing into this array of samplers. 
+    // we bind the textures set to the pipeline by binding a descriptor set with an 
+    // array of texture samplers, one for each texture in the set. The 'texture_index' 
+    // push constant is used to select the active texture in the fragment shader, by 
+    // indexing into this array of samplers. 
 
     assert( context != nullptr );
     assert( context->device != nullptr );
@@ -85,22 +89,23 @@ void TexturesSet::bindTo( BasicPipeline & pipeline )
 
     std::vector<VkDescriptorImageInfo> image_infos ;
     for ( Texture * texture : textures ) 
-    {
-        VkDescriptorImageInfo image_info{};
-        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        image_info.imageView = texture->vk_image_view ;
-        image_info.sampler = vk_sampler ; // we use the same sampler for all textures, but we could use different samplers for different textures if we wanted to.
-        image_infos.push_back( image_info );
+    {   
+        assert( texture != nullptr );
+        image_infos.push_back( VkDescriptorImageInfo{
+            .sampler     = vk_sampler , // we use the same sampler for all textures (cold use different)
+            .imageView   = texture->vk_image_view ,
+            .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,  
+        });
     }
-
-    VkWriteDescriptorSet descriptor_write{};
-    descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    descriptor_write.dstSet = pipeline.vk_textures_descriptor_set;
-    descriptor_write.dstBinding = 0;
-    descriptor_write.dstArrayElement = 0;
-    descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    descriptor_write.descriptorCount = static_cast<uint32_t>( image_infos.size() );
-    descriptor_write.pImageInfo = image_infos.data();
+    VkWriteDescriptorSet descriptor_write{
+        .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .dstSet          = pipeline.vk_textures_descriptor_set,
+        .dstBinding      = 0,
+        .dstArrayElement = 0,
+        .descriptorCount = static_cast<uint32_t>( image_infos.size() ),
+        .descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+        .pImageInfo      = image_infos.data(),
+    };
 
     vkUpdateDescriptorSets( device->vk_device, 1, &descriptor_write, 0, nullptr );
 }

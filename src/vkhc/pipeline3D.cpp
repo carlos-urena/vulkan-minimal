@@ -33,20 +33,25 @@ static const char* vert_shader_src = R"glsl(
     layout( push_constant, std430 ) uniform push_constants_block {
         mat4 model_mat ; // model matrix (object to world)
         int  texture_index ; // active texture index, -1 if no texture is active.
+        int material_index ; // active material index
     } pc ;
 
     // Inputs: uniform buffer object (WIP):
 
+    const int max_materials = 64 ; // must be equal to 'MaterialsSet::max_materials'
+
     layout( set=0, binding=0 ) uniform ubo_block {
         mat4 view_mat; // view matrix (world to camera)
         mat4 proj_mat; // projection matrix (camera to clip)
+        vec4 material_params[max_materials]; // array of materials parameters, indexed by 'material_index' push constant
+        vec4 materials_colors[max_materials]; // array of materials colors, indexed by 'material_index' push constant
     } ubo ;
 
     // Inputs: array of texture samplers 
     // (we will use the 'texture_index' push constant to index into this array)
 
-    //const int max_textures = 64 ; // must be equal to 'TexturesSet::max_textures'
-    //layout( set=1, binding=0 ) uniform sampler2D textures[max_textures]; // array of texture samplers
+    const int max_textures = 64 ; // must be equal to 'TexturesSet::max_textures'
+    layout( set=1, binding=0 ) uniform sampler2D textures[max_textures]; // array of texture samplers
 
     // Outputs: to fragment shader (or..)
 
@@ -72,13 +77,18 @@ static const char* frag_shader_src = R"glsl(
     layout( push_constant, std430 ) uniform push_constants_block {
         mat4 model_mat ; // model matrix (object to world)
         int  texture_index ; // active texture index, -1 if no texture is active.
+        int  material_index ; // active material index
     } pc ;
 
     // Inputs: uniform buffer object:
 
+    const int max_materials = 64 ; // must be equal to 'MaterialsSet::max_materials'
+
     layout( set=0, binding=0 ) uniform ubo_block {
         mat4 view_mat; // view matrix (world to camera)
         mat4 proj_mat; // projection matrix (camera to clip)
+        vec4 material_params[max_materials]; // array of materials parameters, indexed by 'material_index' push constant
+        vec4 materials_colors[max_materials]; // array of materials colors, indexed by 'material_index' push constant
     } ubo ;
 
     // Inputs: an array of texture samplers (we will use the 'texture_index' push constant to index into this array and select the active texture, in the future when we implement texturing)
@@ -125,10 +135,15 @@ Pipeline3D::Pipeline3D( VulkanContext & vulkan_context )
     // set metadata about  push constants 
     addPushConstant( "model_mat", sizeof(glm::mat4) ); // model matrix 
     addPushConstant( "texture_index", sizeof(int) ); // active texture index, -1 if no texture is active.
+    addPushConstant( "material_index", sizeof(int) ); // active material index
+
+    const int max_materials = 64 ; // must be equal to 'MaterialsSet::max_materials' (move there when possible)
 
     // set metadata about UBO uniforms 
     addUBOUniform( "view_mat", sizeof(glm::mat4) ); // view matrix
     addUBOUniform( "proj_mat", sizeof(glm::mat4) ); // projection matrix
+    addUBOUniform( "material_params",  sizeof(glm::vec4)*max_materials ); // array of materials parameters
+    addUBOUniform( "materials_colors", sizeof(glm::vec4)*max_materials ); // array of materials colors
     
     // set shaders sources 
     shaders_sources = 
