@@ -11,4 +11,4 @@
 	make -f  app-3d.make
 
 clean:
-	rm -f ./bin/*_exe objs/*/*.o
+	rm -f ./bin/*_exe ./objs/*/*.o

@@ -3,10 +3,9 @@
 .SUFFIXES: 
 .PHONY: x clean 
 
-
-
 compiler:=         g++
 cpp_opts:=         -g -Wall
+bin_folder:=       ./bin
 
 stb_git:=          ~/git-ct/otros/stb.git## folder with STB sources
 vkhc_folder:=      ../src/vkhc## folder with sources for the VKHC classes (Vulkan Helper Classes)
@@ -15,7 +14,10 @@ vulkan_sdk_base:=  ~/VulkanSDK/1.4.341.1/macOS## vulkan SDK base folder
 homebrew_base:=    /opt/homebrew## homebrew base folder 
 ilc_folder:=       ../src/ilc## folder with sources for the ILC classes (Intermediate Level Classes)
 
+## -------------------------------------
+## target binary executable  (in)
 
+target:= $(bin_folder)/$(target_base)_exe
 
 ## Global, non-configurable options
 
@@ -28,21 +30,21 @@ link_options:=
 
 # App-specific objects
 app_sources:=  $(wildcard $(app_src_folder)/*.cpp)
-app_objs:=     $(addprefix $(objs_dir)/, $(notdir $(app_sources:.cpp=.o)))
+app_objs:=     $(addprefix $(objs_dir)/$(target_base)/, $(notdir $(app_sources:.cpp=.o)))
 app_include:=  -I $(app_src_folder)
 
 ## VKHC objects 
 
 vkhc_sources:= $(wildcard $(vkhc_folder)/*.cpp)
 vkhc_headers:= $(wildcard $(vkhc_folder)/*.h)
-vkhc_objs:=    $(addprefix $(objs_dir)/, $(notdir $(vkhc_sources:.cpp=.o)))
+vkhc_objs:=    $(addprefix $(objs_dir)/vkhc/, $(notdir $(vkhc_sources:.cpp=.o)))
 vkhc_include:= -I $(vkhc_folder)
 
-## ILC objects 
+## ILC objects variables
 
 ilc_sources:= $(wildcard $(ilc_folder)/*.cpp)
 ilc_headers:= $(wildcard $(ilc_folder)/*.h)
-ilc_objs:=    $(addprefix $(objs_dir)/, $(notdir $(ilc_sources:.cpp=.o)))
+ilc_objs:=    $(addprefix $(objs_dir)/ilc/, $(notdir $(ilc_sources:.cpp=.o)))
 ilc_include:= -I $(ilc_folder)
 
 ## IMGUI definitions 
@@ -51,8 +53,10 @@ ilc_include:= -I $(ilc_folder)
 imgui_incl:=        -I $(imgui_git)  -I $(imgui_git)/backends
 imgui_src_names_1:= imgui.cpp imgui_draw.cpp imgui_widgets.cpp imgui_tables.cpp 
 imgui_src_names_2:= imgui_impl_glfw.cpp imgui_impl_vulkan.cpp
-imgui_objs_1:=      $(addprefix $(objs_dir)/, $(notdir $(imgui_src_names_1:.cpp=.o)))
-imgui_objs_2:=      $(addprefix $(objs_dir)/, $(notdir $(imgui_src_names_2:.cpp=.o)))
+imgui_src_1:=       $(addprefix $(imgui_git), $(imgui_src_names_1))
+imgui_src_2:=       $(addprefix $(imgui_git), $(imgui_src_names_2))
+imgui_objs_1:=      $(addprefix $(objs_dir)/imgui/, $(notdir $(imgui_src_names_1:.cpp=.o)))
+imgui_objs_2:=      $(addprefix $(objs_dir)/imguibe/, $(notdir $(imgui_src_names_2:.cpp=.o)))
 imgui_objs:=        $(imgui_objs_1) $(imgui_objs_2)
 
 ## Vulkan SDK (and GLM) definitions
@@ -94,34 +98,34 @@ link_flags:=    $(link_options) $(vulkan_link_flags) $(homebrew_link_flags)
 x: $(target)
 	./$<
 
-## compile an unit from the IMGUI folder
-$(objs_dir)/%.o: $(imgui_git)/%.cpp makefile 
+## compile an unit from the IMGUI folder onto 'objs/imgui' folder
+$(objs_dir)/imgui/%.o: $(imgui_git)/%.cpp makefile 
 	$(compiler) $(compile_flags) -c $< -o $@
 
-## compile an unit from the IMGUI backends folder 
-$(objs_dir)/%.o: $(imgui_git)/backends/%.cpp makefile 
+## compile an unit from the IMGUI backends folder 'objs/imguibe' 
+$(objs_dir)/imguibe/%.o: $(imgui_git)/backends/%.cpp makefile 
 	$(compiler) $(compile_flags) -c $< -o $@
 
-## compile an unit from the VKHC folder
-$(objs_dir)/%.o: $(vkhc_folder)/%.cpp $(vkhc_headers) makefile 
+## compile an unit from the VKHC folder onto 'vkhc/objs'
+$(objs_dir)/vkhc/%.o: $(vkhc_folder)/%.cpp $(vkhc_headers) makefile 
 	$(compiler) $(compile_flags) -c $< -o $@
 
-## compile an unit from the ILC folder
-$(objs_dir)/%.o: $(ilc_folder)/%.cpp $(ilc_headers) $(vkhc_headers) makefile 
+## compile an unit from the ILC folder folder onto 'objs/ilc' folder
+$(objs_dir)/ilc/%.o: $(ilc_folder)/%.cpp $(ilc_headers) $(vkhc_headers) makefile 
 	$(compiler) $(compile_flags) -c $< -o $@
 
 ## compile an unit from the APP folder
-$(objs_dir)/%.o: $(app_src_folder)/%.cpp makefile 
+$(objs_dir)/$(target_base)/%.o: $(app_src_folder)/%.cpp makefile 
 	$(compiler) $(compile_flags) -c $< -o $@
 
 ## link app
 $(target): $(objs) makefile 
+	echo "building target: `" $(target) "`"
 	$(compiler) $(link_flags) -o $@ $(objs) $(libs) 
 
 ## clean all compilation files
 clean:
-	rm -f objs/*.o
-	rm -f $(target)
+	rm -f $(bin_folder)/*_exe $(objs_dir)/*/*.o
 
 ## ---------------------------------------------------------------------------------
 

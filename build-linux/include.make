@@ -9,8 +9,6 @@
 ## ------------------------------------------------------------------
 ## Configurable options
 
-
-
 objs_dir:=         ./objs
 compiler:=         g++
 compile_options:=  -std=c++20 -g -Wall -Wextra -Wno-missing-field-initializers -Wno-unused-parameter
@@ -25,7 +23,7 @@ ilc_folder  := ../src/ilc## folder with sources for the ILC classes (Intermediat
 ## -------------------------------------
 ## target binary executable  (in)
 
-target:= $(bin_folder)/$(target_base)_exe
+target:=$(bin_folder)/$(target_base)_exe# ppe
 
 ## --------------------------------------------------------------------------------
 ## folder for library sources and link files 
@@ -114,9 +112,8 @@ $(objs_dir)/$(target_base)/%.o: $(app_src_folder)/%.cpp makefile
 $(target): $(objs) makefile 
 	$(compiler) $(link_flags) -o $@ $(objs) $(libs) 
 
-
 clean:
-	rm -f *_exe $(objs_dir)/*/*.o
+	rm -f $(bin_folder)/*_exe $(objs_dir)/*/*.o
 
  
 
