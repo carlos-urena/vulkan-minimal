@@ -7,5 +7,8 @@
 2dtess: 
 	make -f  app-2dtess.make
 
+3d: 
+	make -f  app-3d.make
+
 clean:
 	rm -f *_exe objs/*.o
