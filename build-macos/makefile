@@ -1,4 +1,4 @@
-.PHONY: 2d 2dtess clean
+.PHONY: 2d 2dtess
 
 
 2d:
@@ -10,5 +10,3 @@
 3d: 
 	make -f  app-3d.make
 
-clean:
-	rm -f ./bin/*_exe ./objs/*/*.o

@@ -53,8 +53,6 @@ ilc_include:= -I $(ilc_folder)
 imgui_incl:=        -I $(imgui_git)  -I $(imgui_git)/backends
 imgui_src_names_1:= imgui.cpp imgui_draw.cpp imgui_widgets.cpp imgui_tables.cpp 
 imgui_src_names_2:= imgui_impl_glfw.cpp imgui_impl_vulkan.cpp
-imgui_src_1:=       $(addprefix $(imgui_git), $(imgui_src_names_1))
-imgui_src_2:=       $(addprefix $(imgui_git), $(imgui_src_names_2))
 imgui_objs_1:=      $(addprefix $(objs_dir)/imgui/, $(notdir $(imgui_src_names_1:.cpp=.o)))
 imgui_objs_2:=      $(addprefix $(objs_dir)/imguibe/, $(notdir $(imgui_src_names_2:.cpp=.o)))
 imgui_objs:=        $(imgui_objs_1) $(imgui_objs_2)
