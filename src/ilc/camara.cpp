@@ -31,14 +31,106 @@
 
 #include <cmath>     // std::cos, std::sin
 #include <algorithm> // std::min, std::max
-#include "utilidades.h" 
-#include "camara.h"
 
-// *********************************************************************
-// clase: Viewport
+#include <camara.h>
+
+#include <glm/glm.hpp>
+#include <glm/gtx/norm.hpp>
+#include <glm/geometric.hpp> // cross 
+
+namespace ilc
+{
+
+constexpr int X = 0, Y = 1, Z = 2 ; // names for each axe index.
 
 // ---------------------------------------------------------------------
-// crea viewport de 512 x 512 con origen en (0,0)
+// matriz del viewport  (deja las Z igual: entre -1 y 1)
+
+glm::mat4 MAT_Viewport( int org_x, int org_y, int ancho, int alto )
+{
+   using namespace glm ;
+   return translate( vec3{ float(org_x), float(org_y), 0.0 } )*
+          scale( vec3( float(ancho), float(alto), 1.0 ) )*
+          scale( vec3( 0.5, 0.5, 1.0 ))*
+          translate( vec3{ 1.0, 1.0, 1.0 }) ;
+}
+// ---------------------------------------------------------------------
+// matriz inversa de la matriz del viewport
+
+glm::mat4 MAT_Viewport_inv( int org_x, int org_y, int ancho, int alto )
+{
+   using namespace glm ;
+   return translate( vec3{ -1.0, -1.0, -1.0 } ) *
+          scale( vec3( 2.0, 2.0, 1.0 ))*
+          scale( vec3( 1.0/float(ancho), 1.0/float(alto), 1.0 ))*
+          translate( vec3{ -float(org_x), -float(org_y), 0.0 } ) ;
+}
+
+
+// ---------------------------------------------------------------------
+// matriz de vista y su inversa
+
+glm::mat4 MAT_Vista( const glm::vec3 eje[3], const glm::vec3 & origen )
+{
+   using namespace glm ;
+   auto rot = mat4(1.0);
+   
+   for( unsigned i = 0 ; i < 3 ; i++ )
+   for( unsigned j = 0 ; j < 3 ; j++ )
+      //rot[i][j] = eje[i][j] ;    // CUA: mal en glm
+      rot[i][j] = eje[j][i] ;      // CUA: ok en glm, pq rot[i][j] es la columna 'i', fila 'j' de 'rot'
+
+   return rot * translate( -origen );
+}
+
+glm::mat4 MAT_Vista_inv( const glm::vec3 eje[3], const glm::vec3 & origen )
+{
+   using namespace glm ;
+   auto rot_inv = mat4(1.0);
+   
+   for( unsigned i = 0 ; i < 3 ; i++ )
+   for( unsigned j = 0 ; j < 3 ; j++ )
+      //rot_inv[i][j] = eje[j][i] ;    // inversa == traspuesta, pero esto mal en glm
+      rot_inv[i][j] = eje[i][j] ;    // inversa == traspuesta (lo hacemos al revés que en MAT_Vista)
+
+   return translate( origen ) * rot_inv ; 
+}
+
+// ----------------------------------------------------------------------------
+// convierte unas coordenadas esfericas (a,b,r) a cartesianas (x,y,z)
+// ('a' es el ángulo de rotacion en radianes respecto del eje Z, en el plano Y=0)
+
+glm::vec3 Cartesianas( const glm::vec3 & esfericas )
+{
+   const float
+      sa = std::sin(esfericas[0]), ca = std::cos(esfericas[0]),
+      sb = std::sin(esfericas[1]), cb = std::cos(esfericas[1]),
+      r  = esfericas[2] ;
+
+   return glm::vec3( r*sa*cb, r*sb, r*ca*cb ) ;
+}
+
+// ----------------------------------------------------------------------------
+// convierte unas coordenadas cartesianas (x,y,z) a esféricas (a,b,r)
+
+glm::vec3 Esfericas( const glm::vec3 & cartesianas )
+{
+   const float
+      x  = cartesianas[0],
+      y  = cartesianas[1],
+      z  = cartesianas[2],
+      r  = std::sqrt( x*x + y*y + z*z ), // longitud del vector  (radio)
+      rh = std::sqrt( x*x + z*z );  // longitud de la proyección horizontal
+
+   return glm::vec3 { atan2f(x,z), atan2f(y,rh), r } ;
+}
+// --------------------------------------------------------------------- 
+
+// *********************************************************************
+// clase: Viewport ¿sirve para algo ?
+
+// ---------------------------------------------------------------------
+//crea viewport de 512 x 512 con origen en (0,0)
 
 Viewport::Viewport() 
 {
@@ -73,16 +165,16 @@ Viewport::Viewport( int p_org_x, int p_org_y, int p_ancho, int p_alto )
 // -------------------------------------------------------------------------------
 // fija las matrices model-view y projection en el cauce
 
-void Camara::activar( Cauce3D & cauce )
-{
-   using namespace std ;
-   //cout << endl ;
-   //cout << __FUNCTION__ << ": inicio " << descripcion() << "'" << endl ;
-   actualizarMatrices();
-   cauce.fijarMatrizVista( matriz_vista );
-   cauce.fijarMatrizProyeccion( matriz_proye );
-   //cout << __FUNCTION__ << ": final " << descripcion() << "'" << endl ;
-}
+// void Camara::activar( Cauce3D & cauce )
+// {
+//    using namespace std ;
+//    //cout << endl ;
+//    //cout << __FUNCTION__ << ": inicio " << descripcion() << "'" << endl ;
+//    actualizarMatrices();
+//    cauce.fijarMatrizVista( matriz_vista );
+//    cauce.fijarMatrizProyeccion( matriz_proye );
+//    //cout << __FUNCTION__ << ": final " << descripcion() << "'" << endl ;
+// }
 
 // -------------------------------------------------------------------------------
 // cambio el valor de 'ratio_vp' (alto/ancho del viewport)
@@ -215,34 +307,7 @@ static const std::string nombre_modo[3] =
      "primera persona con desplazamientos"
    };
 
-// ----------------------------------------------------------------------------
-// convierte unas coordenadas esfericas (a,b,r) a cartesianas (x,y,z)
-// ('a' es el ángulo de rotacion en radianes respecto del eje Z, en el plano Y=0)
 
-glm::vec3 Cartesianas( const glm::vec3 & esfericas )
-{
-   const float
-      sa = std::sin(esfericas[0]), ca = std::cos(esfericas[0]),
-      sb = std::sin(esfericas[1]), cb = std::cos(esfericas[1]),
-      r  = esfericas[2] ;
-
-   return glm::vec3( r*sa*cb, r*sb, r*ca*cb ) ;
-}
-
-// ----------------------------------------------------------------------------
-// convierte unas coordenadas cartesianas (x,y,z) a esféricas (a,b,r)
-
-glm::vec3 Esfericas( const glm::vec3 & cartesianas )
-{
-   const float
-      x  = cartesianas[0],
-      y  = cartesianas[1],
-      z  = cartesianas[2],
-      r  = std::sqrt( x*x + y*y + z*z ), // longitud del vector  (radio)
-      rh = std::sqrt( x*x + z*z );  // longitud de la proyección horizontal
-
-   return glm::vec3 { atan2f(x,z), atan2f(y,rh), r } ;
-}
 
 // ----------------------------------------------------------------------------
 // comprueba que las conversiones entre cartesianas y esféricas son correctas
@@ -263,7 +328,7 @@ void TestCartesianasPolares()
          pol   = Esfericas( cart ),
          cart2 = Cartesianas( pol );
       const float
-         lsq = length2(cart2-cart); 
+         lsq = glm::length2(cart2-cart); 
       if ( lsq > max )
          max = lsq ;
    }
@@ -504,3 +569,5 @@ std::string Camara3Modos::descripcion()
           (perspectiva ? "perspectiva" : "ortográfica") +
           ", modo actual: " + nombre_modo[int(modo_actual)] + ")";
 }
+
+} ; // end ilc namespace 

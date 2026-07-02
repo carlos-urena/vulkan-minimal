@@ -104,14 +104,12 @@ void Application::stMousePositionEventCB( GLFWwindow* window, double xpos, doubl
     io.AddMousePosEvent( (float)xpos, (float)ypos ); 
 
     if ( !io.WantCaptureMouse )
-    {
-        const bool left_or_right_down = app_singleton->mouse_buttons[0] || app_singleton->mouse_buttons[1] ;
-
-        using namespace std ;
-        if ( left_or_right_down )
-            app_singleton->mousePositionEventCB( xpos, ypos ) ;
-           
-    }
+        if ( app_singleton->mouse_buttons[0] || app_singleton->mouse_buttons[1] )
+        {
+            const int button = app_singleton->mouse_buttons[0] ? 0 : 1 ; 
+            app_singleton->mousePositionEventCB( xpos, ypos, button ) ;
+        }
+    
 }
 
 // --------------------------------------------------------------------------------
@@ -172,11 +170,11 @@ void Application::mouseButtonEventCB( int button, int action, int mods )
     cout << "Application::mouseButtonEventCB: button=" << button << " action=" << action << " mods=" << mods << endl ;
 }
 
-void Application::mousePositionEventCB( double xpos, double ypos ) 
+void Application::mousePositionEventCB( double xpos, double ypos, int button ) 
 {
     // default implementation does nothing, derived classes can override it to process mouse position events
     using namespace std ;
-    cout << "Application::mousePositionEventCB: xpos=" << xpos << " ypos=" << ypos << endl ;
+    cout << "Application::mousePositionEventCB: xpos=" << xpos << " ypos=" << ypos << " button=" << button << endl ;
 }
 
 // --------------------------------------------------------------------------------

@@ -10,6 +10,7 @@
 #include <textures.h>
 
 #include <application.h>
+#include <axes-object.h>
 
 // -------------------------------------------------------------------------------  
 // class 'Triangle' (a 'vertex-array' like object )
@@ -76,6 +77,9 @@ class App3D : public ilc::Application
     glm::mat4 view_mat = glm::mat4(1.0f); // view matrix passed via UBO
     glm::mat4 proj_mat = glm::mat4(1.0f) ; // projection matrix passed via UBO
 
+    // drawable 3D object (triangle) with the axes.
+    CylinderZ01 * axes3D = nullptr ;
+
     // triangle object which is visualized
     Triangle *  triangle = nullptr ; 
 
@@ -101,6 +105,8 @@ class App3D : public ilc::Application
 
     // specific methods for this application (not overrides)
     void updateViewProjMats( vkhc::seconds_f frame_time_s ) ;
+
+    // mouse position event CB 
 } ;
 
 // ----------------------------------------------------------------------------------
@@ -115,9 +121,10 @@ App3D::App3D( )
 
     Assert( context != nullptr, "Tess1App constructor: 'context' instance is null !!" );
     
-    triangle     = new Triangle( *context ) ;              assert( triangle != nullptr ) ;
-    textures_set = new ExampleTexturesSet( context ) ;     assert( textures_set != nullptr ) ;
-    pipeline     = new vkhc::Pipeline3D( *context ) ; assert( pipeline != nullptr ) ;
+    axes3D       = new CylinderZ01( "cilindro", 16 ) ;               assert( axes3D != nullptr ) ;
+    triangle     = new Triangle( *context ) ;          assert( triangle != nullptr ) ;
+    textures_set = new ExampleTexturesSet( context ) ; assert( textures_set != nullptr ) ;
+    pipeline     = new vkhc::Pipeline3D( *context ) ;  assert( pipeline != nullptr ) ;
 
     textures_set->bindTo( *pipeline ) ; // bind the textures set to the pipeline, so that its textures can be used in the fragment shader.
     captureEvents( true, true, true );
@@ -208,6 +215,7 @@ void App3D::drawFrame( VkCommandBuffer & cmd )
     Assert( context != nullptr, "Tess1App::drawFrame: 'context' instance is null !!" );
     Assert( pipeline != nullptr, "Tess1App::drawFrame: 'pipeline' instance is null !!" );
     Assert( triangle != nullptr, "Tess1App::drawFrame: 'triangle' instance is null !!" );
+    Assert( axes3D != nullptr, "Tess1App::drawFrame: 'axes3D' instance is null !!" );
    
     // activate the pipeline and sets the viewport
     pipeline->bind( cmd );
@@ -216,6 +224,10 @@ void App3D::drawFrame( VkCommandBuffer & cmd )
     // give initial values to the push constants at the begining of 'cmd'
     pipeline->setModelMatrix( cmd, model_mat ) ;
     pipeline->setTextureIndex( cmd, texture_index ) ;
+
+    // draw the axes 
+    axes3D->drawVK( *context, cmd ) ;
+
 
     // draw the triangle and the widgets 
     triangle->draw( cmd );

@@ -89,14 +89,20 @@ class Application
     // Event callback virtual methods (called by glfwPollEvents() or 
     // glfwWaitEvents() when a keyboard event is raised)
 
+    // Called when a key is pressed or released
     virtual void keyboardEventCB( int key, int scancode, int action, int mods ) ;
+
+    // Called when any mouse button is pressed or released 
     virtual void mouseButtonEventCB( int button, int action, int mods ) ;
-    virtual void mousePositionEventCB( double xpos, double ypos ) ;
+    
+    // Called when mouse moved with any mouse button is pressed
+    // button is 0 for the right button and 1 for the left button...
+    virtual void mousePositionEventCB( double xpos, double ypos, int button ) ; 
 
     // static event callback functions
     static void stKeyboardEventCB( GLFWwindow* window, int key, int scancode, int action, int mods ) ;
     static void stMouseButtonEventCB( GLFWwindow* window, int button, int action, int mods ) ;
-    static void stMousePositionEventCB( GLFWwindow* window, double xpos, double ypos ) ;
+    static void stMousePositionEventCB( GLFWwindow* window, double xpos, double ypos ) ; 
 
 } ; // end of class Application
 

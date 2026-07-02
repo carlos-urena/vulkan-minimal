@@ -1,39 +1,30 @@
-// *********************************************************************
-// **
-// ** Asignatura: PCG (Programación del cauce gráfico).
-// ** 
-// ** Gestión de cámaras (declaraciones)
-// ** Copyright (C) 2016-2023 Carlos Ureña
-// **
-// ** Declaraciones de las clases 'Viewport', 'Camara' y derivadas de 'Camara'
-// **
-// **   Camara: clase base
-// **      + CamaraInteractiva: cámaras editables
-// **          + CamaraOrbitalSimple: cámara orbital usada en las 
-// **            prácticas (implementada al 100%)
-// **          + Camara3Modos: cámara con tres modos de funcionamiento (práctica 5)
-// **
-// ** This program is free software: you can redistribute it and/or modify
-// ** it under the terms of the GNU General Public License as published by
-// ** the Free Software Foundation, either version 3 of the License, or
-// ** (at your option) any later version.
-// **
-// ** This program is distributed in the hope that it will be useful,
-// ** but WITHOUT ANY WARRANTY; without even the implied warranty of
-// ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// ** GNU General Public License for more details.
-// **
-// ** You should have received a copy of the GNU General Public License
-// ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
-// **
-// *********************************************************************
+
+
+// declaration of class 'Camera' 
+//
+// Encapsulates all state data for a single window Vulkan App.
 
 #pragma once
 
-#include "cauce-3d.h"
+#include <vulkan-context.h>
+
+namespace ilc 
+{
+
+// // Aux functions 
+
+// // ---------------------------------------------------------------------
+// /// @brief matriz del viewport  (deja las Z igual: entre -1 y 1) y su inversa
+// glm::mat4 MAT_Viewport( int org_x, int org_y, int ancho, int alto );
+// glm::mat4 MAT_Viewport_inv( int org_x, int org_y, int ancho, int alto );
+
+// // ---------------------------------------------------------------------
+// /// @brief matriz de vista:
+// glm::mat4 MAT_Vista( const glm::vec3 eje[3], const glm::vec3 & origen );
+// glm::mat4 MAT_Vista_Inv( const glm::vec3 eje[3], const glm::vec3 & origen );
 
 // *********************************************************************
-// clase: Viewport
+
 
 class Viewport
 {
@@ -54,9 +45,6 @@ class Viewport
 class Camara
 {
    public: // ----------------------------
-
-   // fija las matrices model-view y projection en el cauce
-   void activar( Cauce3D & cauce )  ;
 
    // cambio el valor de 'ratio_vp' (alto/ancho del viewport)
    void fijarRatioViewport( const float nuevo_ratio ) ;
@@ -93,7 +81,7 @@ class CamaraInteractiva : public Camara
    // hacer que apunte hacía el punto de atención 'paten' y
    // cambiar de modo a modo examinar
    // por defecto imprime mensaje de advertencia de que la cámra no ofrece esta funcionalidad
-   virtual void mirarHacia( const glm::vec3 & paten )  ;
+   virtual void mirarHacia( const glm::vec3 & paten ) ;
 
    // cambiar el modo de la camara al siguiente modo o al primero
    // por defecto imprime mensaje de advertencia de que la cámra no ofrece esta funcionalidad
@@ -223,3 +211,4 @@ private:
 
 } ;
 
+} // end ilc namespace
