@@ -77,12 +77,15 @@ void Application::stMouseButtonEventCB( GLFWwindow* window, int button, int acti
     ImGuiIO& io = ImGui::GetIO();
     io.AddMouseButtonEvent( button, action == GLFW_PRESS); 
 
+    double mpx, mpy ;
+    glfwGetCursorPos( window, &mpx, &mpy ); // get mouse position
+
     Assert( button < GLFW_MOUSE_BUTTON_LAST, "Mouse button event: button index out of range !!" );
     // update the status of the mouse button (up or down)
     app_singleton->mouse_buttons[button] = (action == GLFW_PRESS) ;
 
     if ( !io.WantCaptureMouse )
-        app_singleton->mouseButtonEventCB( button, action, mods ) ;
+        app_singleton->mouseButtonEventCB( mpx, mpy, button, action, mods ) ;
     
 }
 
@@ -163,11 +166,11 @@ void Application::keyboardEventCB( int key, int scancode, int action, int mods )
     cout << "Application::keyboardEventCB: key=" << key << " scancode=" << scancode << " action=" << action << " mods=" << mods << endl ;
 }
 
-void Application::mouseButtonEventCB( int button, int action, int mods ) 
+void Application::mouseButtonEventCB( double xpos, double ypos, int button, int action, int mods ) 
 {
     // default implementation does nothing, derived classes can override it to process mouse button events
     using namespace std ;
-    cout << "Application::mouseButtonEventCB: button=" << button << " action=" << action << " mods=" << mods << endl ;
+    cout << "Application::mouseButtonEventCB: xpos=" << xpos << " ypos=" << ypos << " button=" << button << " action=" << action << " mods=" << mods << endl ;
 }
 
 void Application::mousePositionEventCB( double xpos, double ypos, int button ) 

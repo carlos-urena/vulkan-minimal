@@ -29,7 +29,7 @@ CylinderZ01::CylinderZ01( const std::string & name, int num_slices )
 :   IndexedMesh( )
 {
     using namespace std ;
-    constexpr unsigned int nz = 5, ns = 16 ;  // number of slices and sectors 
+    constexpr unsigned int nz = 20, ns = 32 ;  // number of slices and sectors 
     
     setName( name ) ;
     CreateCilindricalTopologyTriangles( triangles, nz, ns );  

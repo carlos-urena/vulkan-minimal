@@ -11,21 +11,6 @@
 namespace ilc 
 {
 
-// // Aux functions 
-
-// // ---------------------------------------------------------------------
-// /// @brief matriz del viewport  (deja las Z igual: entre -1 y 1) y su inversa
-// glm::mat4 MAT_Viewport( int org_x, int org_y, int ancho, int alto );
-// glm::mat4 MAT_Viewport_inv( int org_x, int org_y, int ancho, int alto );
-
-// // ---------------------------------------------------------------------
-// /// @brief matriz de vista:
-// glm::mat4 MAT_Vista( const glm::vec3 eje[3], const glm::vec3 & origen );
-// glm::mat4 MAT_Vista_Inv( const glm::vec3 eje[3], const glm::vec3 & origen );
-
-// *********************************************************************
-
-
 class Viewport
 {
   public:
@@ -52,6 +37,11 @@ class Camara
    // lee la descripción de la cámara (y probablemente su estado)
    virtual std::string descripcion() ;
 
+   inline glm::mat4 & viewMatrix() { actualizarMatrices() ; return matriz_vista ; };
+   inline glm::mat4 & projectionMatrix() { actualizarMatrices() ; return matriz_proye ; };
+
+   
+
    protected: // ------------------------------
 
    bool      matrices_actualizadas = false ;        // true si matrices actualizadas
@@ -62,6 +52,8 @@ class Camara
    // actualiza 'matriz_vista' y 'matriz_proye' a partir de los parámetros
    // específicos de cada tipo de cámara
    virtual void actualizarMatrices() ;
+
+   
 } ;
 
 // ******************************************************************

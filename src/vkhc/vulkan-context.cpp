@@ -107,8 +107,8 @@ void VulkanContext::resizeWindow()
     int width = 0;
     int height = 0;
     glfw_context->getCurrentWindowSize( width, height );  // waits for the size to be > 0 and returns width and height
-
-    std::cout << "Resizing window ..." << std::endl;
+    std::cout << "New window size: " << width << "x" << height << std::endl;
+    std::cout << "Resizing window for these dimensions..." << std::endl;
 
     vkDeviceWaitIdle( device->vk_device );
     surface->updateExtent( width, height );  // updates surface->vk_capabilities.currentExtent based on the new window size

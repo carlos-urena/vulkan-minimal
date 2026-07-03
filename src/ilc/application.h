@@ -93,7 +93,7 @@ class Application
     virtual void keyboardEventCB( int key, int scancode, int action, int mods ) ;
 
     // Called when any mouse button is pressed or released 
-    virtual void mouseButtonEventCB( int button, int action, int mods ) ;
+    virtual void mouseButtonEventCB( double xpos, double ypos, int button, int action, int mods ) ;
     
     // Called when mouse moved with any mouse button is pressed
     // button is 0 for the right button and 1 for the left button...

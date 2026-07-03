@@ -10,6 +10,7 @@
 #include <textures.h>
 
 #include <application.h>
+#include <camara.h>
 #include <axes-object.h>
 
 // -------------------------------------------------------------------------------  
@@ -86,8 +87,16 @@ class App3D : public ilc::Application
     // basic 2D pipeline 
     vkhc::Pipeline3D * pipeline = nullptr ; 
 
+
     // textures set (used for testing textures).
     ExampleTexturesSet * textures_set = nullptr ; 
+
+    // pointer to the current camera 
+    ilc::CamaraInteractiva * camera = nullptr ; 
+
+    // mouse position when draggin started 
+    double prev_posx = 0.0 ;
+    double prev_posy = 0.0 ;
 
 
     // -----------------------------------------------------------------------------
@@ -106,6 +115,14 @@ class App3D : public ilc::Application
     // specific methods for this application (not overrides)
     void updateViewProjMats( vkhc::seconds_f frame_time_s ) ;
 
+    // Called when any mouse button is pressed or released 
+    virtual void mouseButtonEventCB( double xpos, double ypos, int button, int action, int mods ) override ;
+
+    // Called when mouse moved with any mouse button is pressed
+    // button is 0 for the right button and 1 for the left button...
+    virtual void mousePositionEventCB( double xpos, double ypos, int button ) override ; 
+
+
     // mouse position event CB 
 } ;
 
@@ -121,10 +138,11 @@ App3D::App3D( )
 
     Assert( context != nullptr, "Tess1App constructor: 'context' instance is null !!" );
     
-    axes3D       = new CylinderZ01( "cilindro", 16 ) ;               assert( axes3D != nullptr ) ;
+    axes3D       = new CylinderZ01( "cilindro", 16 );  assert( axes3D != nullptr ) ;
     triangle     = new Triangle( *context ) ;          assert( triangle != nullptr ) ;
-    textures_set = new ExampleTexturesSet( context ) ; assert( textures_set != nullptr ) ;
-    pipeline     = new vkhc::Pipeline3D( *context ) ;  assert( pipeline != nullptr ) ;
+    textures_set = new ExampleTexturesSet( context );  assert( textures_set != nullptr ) ;
+    pipeline     = new vkhc::Pipeline3D( *context );   assert( pipeline != nullptr ) ;
+    camera       = new ilc::CamaraOrbitalSimple();      assert( camera != nullptr ) ;
 
     textures_set->bindTo( *pipeline ) ; // bind the textures set to the pipeline, so that its textures can be used in the fragment shader.
     captureEvents( true, true, true );
@@ -143,6 +161,36 @@ App3D::~App3D()
 
     std::cout << "Deleted 'App3D' instance" << std::endl ;
 }
+// ----------------------------------------------------------------------------------
+
+// Called when any mouse button is pressed or released 
+void App3D::mouseButtonEventCB( double xpos, double ypos, int button, int action, int mods )
+{
+    using namespace std ;
+    cout << "App3D::mouseButtonEventCB: xpos=" << xpos << " ypos=" << ypos << " button=" << button << " action=" << action << " mods=" << mods << endl ;
+    if ( button == 1 && action == GLFW_PRESS )
+    {
+        prev_posx = xpos ;
+        prev_posy = ypos ;
+        cout << "App3D::mouseButtonEventCB: DRAG STARTxpos=" << xpos << " ypos=" << ypos << " button=" << button << " action=" << action << " mods=" << mods << endl ;
+    }
+}
+
+void App3D::mousePositionEventCB( double xpos, double ypos, int button ) 
+{
+    using namespace std ;
+    if ( button != 1 ) // left button
+        return ;
+
+    cout << "App3D::mousePositionEventCB: xpos=" << xpos << " ypos=" << ypos << " button=" << button << endl ;
+    assert( camera != nullptr ) ;
+    const float dx = float(xpos - prev_posx) ;
+    const float dy = float(ypos - prev_posy) ;
+    camera->desplRotarXY( -0.6f*dx, -0.6f*dy ) ;
+    prev_posx = xpos ;
+    prev_posy = ypos ;
+    
+}
 
 // ----------------------------------------------------------------------------------
 
@@ -151,16 +199,27 @@ void App3D::updateViewProjMats( vkhc::seconds_f frame_time_s )
 {
     using namespace glm ;
     Assert( context != nullptr, "App2D::updateViewProjMats: 'context' instance is null !!" ) ;
+    Assert( context->glfw_context != nullptr, "App2D::updateViewProjMats: 'glfw_context' instance is null !!" ) ;
+    Assert( camera != nullptr, "App2D::updateViewProjMats: 'camera' instance is null !!" ) ;
 
-    // sets the model matrix and update angle
+    
+    // // sets the model matrix and update angle
     model_mat = scale( vec3( triangle_scale, triangle_scale, 1.0f))*
                 rotate( curr_angle_rad, vec3( 0.0f, 0.0f, 1.0f ) );
     curr_angle_rad += rotation_speed * frame_time_s.count() * 2.0f * M_PI ; // increase angle
 
-    // set the projection matrix (so that objects are not deformed whatever the aspect ratio is)
-    const uvec2 ra_ext = context->getRenderAreaExtent(); // render area extent (size of the render area left to GUI, in pixels)
-    const float ayx    = float(ra_ext.y) / float(ra_ext.x) ; // aspect ratio (height/width) of the render area
-    proj_mat = scale( vec3( std::min(1.0f, ayx), std::min(1.0f, 1.0f/ayx), 1.0f ) ) ; 
+    // // set the projection matrix (so that objects are not deformed whatever the aspect ratio is)
+    // const uvec2 ra_ext = context->getRenderAreaExtent(); // render area extent (size of the render area left to GUI, in pixels)
+    // const float ayx    = float(ra_ext.y) / float(ra_ext.x) ; // aspect ratio (height/width) of the render area
+    // proj_mat = scale( vec3( std::min(1.0f, ayx), std::min(1.0f, 1.0f/ayx), 1.0f ) ) ; 
+
+    
+    int w,h ;
+    context->glfw_context->getCurrentWindowSize( w, h ) ;
+    camera->fijarRatioViewport( float(h)/float(w) ) ; // set the camera aspect ratio to the current window aspect ratio
+    view_mat = camera->viewMatrix() ;
+    proj_mat = camera->projectionMatrix() ;
+
 }
 // ----------------------------------------------------------------------------------
 

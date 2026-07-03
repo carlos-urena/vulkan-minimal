@@ -179,7 +179,6 @@ void GLFWContext::getCurrentWindowSize( int & width, int & height )
         glfwWaitEvents();
         glfwGetFramebufferSize( glfw_window, &width, &height);
     }
-    std::cout << "New window size: " << width << "x" << height << std::endl;
 }
 
 // -----------------------------------------------------------------------------
