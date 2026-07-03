@@ -166,10 +166,7 @@ void IndexedMesh::drawVK( vkhc::VulkanContext & context, VkCommandBuffer & cmdb_
 
    }
    dvao->draw( cmdb_vk );
-
 }
-
-
 
 
 // ****************************************************************************

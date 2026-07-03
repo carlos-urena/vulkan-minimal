@@ -294,10 +294,12 @@ uint32_t Device::findMemoryTypeIndex( VkMemoryRequirements & mem_req, VkMemoryPr
 void Device::createBufferAndCopyData( VkDeviceSize vk_total_size_bytes, const void* src_data, VkBufferUsageFlags usage_flags,
                                       VkBuffer & vk_buffer, VkDeviceMemory & vk_memory )
 {
-    VkBufferCreateInfo bci{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
-    bci.size = vk_total_size_bytes;
-    bci.usage = usage_flags;
-    bci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    VkBufferCreateInfo bci{ 
+        .sType      = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO ,
+        .size       = vk_total_size_bytes,
+        .usage      = usage_flags,
+    .   sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+    } ;
     vkCreateBuffer( vk_device, &bci, nullptr, &vk_buffer );
 
     VkMemoryRequirements mem_req;
@@ -316,8 +318,6 @@ void Device::createBufferAndCopyData( VkDeviceSize vk_total_size_bytes, const vo
     std::memcpy( dst_data, src_data, static_cast<size_t>(vk_total_size_bytes) );
     vkUnmapMemory( vk_device, vk_memory );
 }
-
-
 
 // ---------------------------------------------------------------------------
 // Destructor 

@@ -24,7 +24,7 @@ static const char* vert_shader_src = R"glsl(
 
     // Inputs: per vertex attributes:
 
-    layout (location=0) in vec2 in_position;
+    layout (location=0) in vec3 in_position;
     layout (location=1) in vec3 in_color;
     layout (location=2) in vec2 in_tex_coords ;
 
@@ -33,7 +33,7 @@ static const char* vert_shader_src = R"glsl(
     layout( push_constant, std430 ) uniform push_constants_block {
         mat4 model_mat ; // model matrix (object to world)
         int  texture_index ; // active texture index, -1 if no texture is active.
-        int material_index ; // active material index
+        int  material_index ; // active material index
     } pc ;
 
     // Inputs: uniform buffer object (WIP):
@@ -60,7 +60,7 @@ static const char* vert_shader_src = R"glsl(
 
     void main() 
     {
-        gl_Position =  ubo.proj_mat * ubo.view_mat * pc.model_mat * vec4( in_position, 0.0, 1.0);
+        gl_Position = ubo.proj_mat * ubo.view_mat * pc.model_mat * vec4( in_position, 1.0 );
         color = in_color ;
         tex_coords = in_tex_coords ;
     }
@@ -153,7 +153,7 @@ Pipeline3D::Pipeline3D( VulkanContext & vulkan_context )
 
     // set attributes formats (must correspond with inputs to the vertex shaders the shaders sources)
     attributes_formats = 
-    {   VK_FORMAT_R32G32_SFLOAT,    // position (atrib 0) X,Y
+    {   VK_FORMAT_R32G32B32_SFLOAT, // position (atrib 0) X,Y,Z
         VK_FORMAT_R32G32B32_SFLOAT, // color (atrib 1) R,G,B
         VK_FORMAT_R32G32_SFLOAT     // texture coords (atrib 2) U,V
     }; // color

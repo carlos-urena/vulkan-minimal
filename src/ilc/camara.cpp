@@ -263,8 +263,11 @@ void CamaraOrbitalSimple::moverZ( const float dz )
 }
 
 // ----------------------------------------------------------------------------
+
 void CamaraOrbitalSimple::actualizarMatrices()
 {
+   using namespace std ;
+   cout << "CamaraOrbitalSimple::actualizarMatrices() : inicio: a == " << a << ", b == " << b << ", d == " << d << endl ;
    using namespace glm ;
    matriz_vista = translate( vec3( 0.0, 0.0, -d) ) *          // MAT_Traslacion( { 0.0, 0.0, -d } ) *
                   rotate( radians(b),  vec3( 1.0,0.0,0.0 )) * // MAT_Rotacion( b,  { 1.0,0.0,0.0} ) *
@@ -278,6 +281,7 @@ void CamaraOrbitalSimple::actualizarMatrices()
    //MAT_Perspectiva( fovy_grad, ratio_vp, near, far ); // CUA: ratio_vp es y/x, pero esta función esperael 'aspect', que parece ser x/y
     
    matriz_proye = perspective( radians(fovy_grad), 1.0f/ratio_vp, near, far ); // CUA
+   //matriz_proye = scale( vec3{ 1.0f,1.0f/ratio_vp, 1.0f })  ;
    
    matrices_actualizadas = true ;
 }

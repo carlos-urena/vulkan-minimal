@@ -45,6 +45,7 @@ void VertexBuffer::initialize
                                      vk_buffer, vk_memory );
 
 } 
+// -------------------------------------------------------------------------------------------
 
 VertexBuffer::VertexBuffer( Device * device, const std::span< const glm::vec2 > data_span ) 
 {
@@ -56,6 +57,9 @@ VertexBuffer::VertexBuffer( Device * device, const std::span< const glm::vec2 > 
 
     std::cout << "Created vertex buffer with " << data_span.size() << " 'vec2'" << std::endl;
 }
+// -------------------------------------------------------------------------------------------
+
+
 
 VertexBuffer::VertexBuffer( Device * device, const std::span< const glm::vec3 > data_span ) 
 {
@@ -67,6 +71,8 @@ VertexBuffer::VertexBuffer( Device * device, const std::span< const glm::vec3 > 
 
     std::cout << "Created vertex buffer with " << data_span.size() << " 'vec3'" << std::endl;
 }
+// -------------------------------------------------------------------------------------------
+
 
 VertexBuffer::VertexBuffer( Device * device, const std::span< const glm::uvec3 > data_span ) 
 {

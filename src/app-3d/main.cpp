@@ -30,9 +30,13 @@ class Triangle : public vkhc::VertexArray
             a0 = M_PI , // initial angle of the first vertex (in radians), the other vertices will be at angles a0 + 2*pi/3 and a0 + 4*pi/3, so that the triangle is equilateral and one vertex is pointing upwards.
             a  = M_PI*2.0f/3.0f ;  // angle between vertices (in radians), for an equilateral triangle this is 2*pi/3
 
-        // location 0: vertex positions
-        addAttribData( vector<vec2>{ {r*cos(a0),r*sin(a0)}, {r*cos(a0+a),r*sin(a0+a)}, 
-                                     {r*cos(a0+2.0f*a),r*sin(a0+2.0f*a)}  });
+       addAttribData( vector<vec3>{ 
+            vec3{ r*cos(a0),        r*sin(a0),         0.0f },
+            vec3{ r*cos(a0+a),      r*sin(a0+a),       0.0f },
+            vec3{ r*cos(a0+2.0f*a), r*sin(a0+2.0f*a),  0.0f }  
+        });
+        
+
         // location 1: vertex colors
         addAttribData( vector<vec3>{ {1.0f,0.0f,0.0f}, {0.0f,1.0f,0.0f}, {0.0f,0.0f,1.0f} });
         // location 2: vertex texture coordinates 
@@ -58,7 +62,6 @@ class ExampleTexturesSet : public vkhc::TexturesSet
 
 // ----------------------------------------------------------------------------------
 
-
 class App3D : public ilc::Application
 {
 
@@ -82,7 +85,7 @@ class App3D : public ilc::Application
     CylinderZ01 * axes3D = nullptr ;
 
     // triangle object which is visualized
-    Triangle *  triangle = nullptr ; 
+    Triangle * triangle = nullptr ; 
 
     // basic 2D pipeline 
     vkhc::Pipeline3D * pipeline = nullptr ; 
@@ -214,9 +217,9 @@ void App3D::updateViewProjMats( vkhc::seconds_f frame_time_s )
     // proj_mat = scale( vec3( std::min(1.0f, ayx), std::min(1.0f, 1.0f/ayx), 1.0f ) ) ; 
 
     
-    int w,h ;
-    context->glfw_context->getCurrentWindowSize( w, h ) ;
-    camera->fijarRatioViewport( float(h)/float(w) ) ; // set the camera aspect ratio to the current window aspect ratio
+    const uvec2 ra_ext = context->getRenderAreaExtent(); // render area extent (size of the render area left to GUI, in pixels)
+    const float ayx    = float(ra_ext.y) / float(ra_ext.x) ; // aspect ratio (height/width) of the render area
+    camera->fijarRatioViewport( ayx ) ; // set the camera aspect ratio to the current window aspect ratio
     view_mat = camera->viewMatrix() ;
     proj_mat = camera->projectionMatrix() ;
 
