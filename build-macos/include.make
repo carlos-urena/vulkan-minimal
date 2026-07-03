@@ -121,9 +121,7 @@ $(target): $(objs) makefile
 	echo "building target: `" $(target) "`"
 	$(compiler) $(link_flags) -o $@ $(objs) $(libs) 
 
-## clean all compilation files
-clean:
-	rm -f $(bin_folder)/*_exe $(objs_dir)/*/*.o
+
 
 ## ---------------------------------------------------------------------------------
 

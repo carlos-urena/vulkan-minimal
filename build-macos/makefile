@@ -10,3 +10,6 @@
 3d: 
 	make -f  app-3d.make
 
+clean:
+	rm -f ./objs/*/*.o ./bin/*_exe
+
