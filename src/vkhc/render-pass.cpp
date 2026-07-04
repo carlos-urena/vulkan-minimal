@@ -26,15 +26,31 @@ RenderPass::RenderPass( Device * p_device, Surface * p_surface )
     {   .attachment   = 0, 
         .layout       = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
     } ;
+    VkAttachmentDescription depth_attachment
+    {   .format        = VK_FORMAT_D32_SFLOAT,
+        .samples       = VK_SAMPLE_COUNT_1_BIT,
+        .loadOp        = VK_ATTACHMENT_LOAD_OP_CLEAR,
+        .storeOp       = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+        .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+        .stencilStoreOp= VK_ATTACHMENT_STORE_OP_DONT_CARE,
+        .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+        .finalLayout   = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+    } ;
+    VkAttachmentReference depth_ref
+    {   .attachment   = 1,
+        .layout       = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+    } ;
+    VkAttachmentDescription attachments[] = { color_attachment, depth_attachment } ;
     VkSubpassDescription sub_pass
     {   .pipelineBindPoint    = VK_PIPELINE_BIND_POINT_GRAPHICS,
         .colorAttachmentCount = 1,
-        .pColorAttachments    = &color_ref
+        .pColorAttachments    = &color_ref,
+        .pDepthStencilAttachment = &depth_ref
     } ;
     VkRenderPassCreateInfo rpci
     {   .sType           = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
-        .attachmentCount = 1,
-        .pAttachments    = &color_attachment,
+        .attachmentCount = 2,
+        .pAttachments    = attachments,
         .subpassCount    = 1,
         .pSubpasses      = &sub_pass
     } ;
@@ -50,6 +66,12 @@ void RenderPass::begin( VkCommandBuffer & vk_cmd_buffer,  const VkFramebuffer & 
 {
     Assert( surface != nullptr, "RenderPass::begin 'surface' is null" );
 
+    VkClearValue clear_values[]
+    {
+        clear_color,
+        { .depthStencil = { 1.0f, 0 } }
+    } ;
+
     VkRect2D render_area
     {   .offset = { 0, 0 },
         .extent = surface->vk_capabilities.currentExtent
@@ -59,8 +81,8 @@ void RenderPass::begin( VkCommandBuffer & vk_cmd_buffer,  const VkFramebuffer & 
         .renderPass        = vk_render_pass ,
         .framebuffer       = vk_framebuffer ,
         .renderArea        = render_area,
-        .clearValueCount   = 1,
-        .pClearValues      = &clear_color
+        .clearValueCount   = 2,
+        .pClearValues      = clear_values
     } ;
     vkCmdBeginRenderPass( vk_cmd_buffer, &rpbi, VK_SUBPASS_CONTENTS_INLINE);
 }

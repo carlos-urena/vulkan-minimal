@@ -526,6 +526,13 @@ void BasicPipeline::createGraphicsPipeline()
     cb.attachmentCount = 1;
     cb.pAttachments = &blend;
 
+    VkPipelineDepthStencilStateCreateInfo ds{ VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
+    ds.depthTestEnable = depth_test_enabled ? VK_TRUE : VK_FALSE;
+    ds.depthWriteEnable = depth_write_enabled ? VK_TRUE : VK_FALSE;
+    ds.depthCompareOp = depth_compare_op;
+    ds.depthBoundsTestEnable = VK_FALSE;
+    ds.stencilTestEnable = VK_FALSE;
+
     VkPipelineViewportStateCreateInfo vp{ VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
     vp.viewportCount = 1;
     vp.scissorCount = 1;
@@ -562,6 +569,7 @@ void BasicPipeline::createGraphicsPipeline()
     gpci.pMultisampleState   = &ms;
     gpci.pRasterizationState = &rs;
     gpci.pColorBlendState    = &cb;
+    gpci.pDepthStencilState  = &ds;
     gpci.pViewportState      = &vp;
     gpci.pDynamicState       = &dyn;
     gpci.layout              = vk_pipeline_layout ;

@@ -102,6 +102,11 @@ class BasicPipeline
     // (4) vector with formats for the vertex attributes (determines the number of atributes)
     std::vector<VkFormat> attributes_formats ; 
 
+    // (5) depth testing configuration for graphics pipeline creation
+    bool        depth_test_enabled  = true ;
+    bool        depth_write_enabled = true ;
+    VkCompareOp depth_compare_op    = VK_COMPARE_OP_LESS ;
+
     // --- end of configurable variables 
 
 

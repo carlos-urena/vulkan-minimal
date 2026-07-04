@@ -474,7 +474,11 @@ static std::string
     geom_shader_src_full = processShaderSource( geom_shader_src ),
     frag_shader_src_full = processShaderSource( frag_shader_src );
 
-Pipeline2DTess::Pipeline2DTess( VulkanContext & vulkan_context, const int p_num_vertexes_per_patch )
+Pipeline2DTess::Pipeline2DTess( VulkanContext & vulkan_context,
+                                const int p_num_vertexes_per_patch,
+                                bool p_depth_test_enabled,
+                                bool p_depth_write_enabled,
+                                VkCompareOp p_depth_compare_op )
 
 :   BasicPipeline( vulkan_context ) 
 {
@@ -539,6 +543,11 @@ Pipeline2DTess::Pipeline2DTess( VulkanContext & vulkan_context, const int p_num_
     //default_primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST ;
     default_primitive_topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST ; // default for tessellation 
     default_vertexes_per_patch = num_vertexes_par_patch ; // default for tessellation (triangles)
+
+    // Depth behavior is caller-configurable through constructor params.
+    depth_test_enabled = p_depth_test_enabled;
+    depth_write_enabled = p_depth_write_enabled;
+    depth_compare_op = p_depth_compare_op;
 
 
     // initialize the vulkan pipeline  (in the context)

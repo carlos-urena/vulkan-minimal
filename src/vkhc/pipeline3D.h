@@ -19,7 +19,10 @@ namespace vkhc
 class Pipeline3D : public BasicPipeline
 {
     public:
-    Pipeline3D( VulkanContext & vulkan_context ) ; 
+    Pipeline3D( VulkanContext & vulkan_context,
+                bool p_depth_test_enabled = true,
+                bool p_depth_write_enabled = true,
+                VkCompareOp p_depth_compare_op = VK_COMPARE_OP_LESS ) ; 
 
     // state which can be changed before sending commands
     void setViewMatrix( const glm::mat4 & view_mat ) ;

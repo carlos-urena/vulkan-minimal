@@ -47,15 +47,93 @@ void SwapChain::createImageViews()
 
 // -----------------------------------------------------------------------------
 
-void SwapChain::createFramebuffer( VkImageView & vk_image_view, VkFramebuffer & vk_framebuffer )
+void SwapChain::createDepthResource( VkImage & depth_image, VkDeviceMemory & depth_memory, VkImageView & depth_image_view )
+{
+    Assert( device != nullptr, "SwapChain::createDepthResource 'device' is null" );
+    Assert( surface != nullptr, "SwapChain::createDepthResource 'surface' is null" );
+
+    VkExtent2D extent = surface->vk_capabilities.currentExtent;
+
+    VkImageCreateInfo image_info
+    {
+        .sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+        .imageType     = VK_IMAGE_TYPE_2D,
+        .format        = depth_format,
+        .extent        = { extent.width, extent.height, 1 },
+        .mipLevels     = 1,
+        .arrayLayers   = 1,
+        .samples       = VK_SAMPLE_COUNT_1_BIT,
+        .tiling        = VK_IMAGE_TILING_OPTIMAL,
+        .usage         = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+        .sharingMode   = VK_SHARING_MODE_EXCLUSIVE,
+        .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+    };
+
+    if ( vkCreateImage( device->vk_device, &image_info, nullptr, &depth_image ) != VK_SUCCESS )
+        ErrorExit("SwapChain::createDepthResource failed to create depth image");
+
+    VkMemoryRequirements mem_req;
+    vkGetImageMemoryRequirements( device->vk_device, depth_image, &mem_req );
+
+    VkMemoryAllocateInfo alloc_info
+    {
+        .sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+        .allocationSize  = mem_req.size,
+        .memoryTypeIndex = device->findMemoryTypeIndex( mem_req, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT ),
+    };
+
+    if ( vkAllocateMemory( device->vk_device, &alloc_info, nullptr, &depth_memory ) != VK_SUCCESS )
+        ErrorExit("SwapChain::createDepthResource failed to allocate depth memory");
+
+    if ( vkBindImageMemory( device->vk_device, depth_image, depth_memory, 0 ) != VK_SUCCESS )
+        ErrorExit("SwapChain::createDepthResource failed to bind depth image memory");
+
+    VkImageViewCreateInfo view_info
+    {
+        .sType    = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+        .image    = depth_image,
+        .viewType = VK_IMAGE_VIEW_TYPE_2D,
+        .format   = depth_format,
+        .subresourceRange = {
+            .aspectMask     = VK_IMAGE_ASPECT_DEPTH_BIT,
+            .baseMipLevel   = 0,
+            .levelCount     = 1,
+            .baseArrayLayer = 0,
+            .layerCount     = 1,
+        }
+    };
+
+    if ( vkCreateImageView( device->vk_device, &view_info, nullptr, &depth_image_view ) != VK_SUCCESS )
+        ErrorExit("SwapChain::createDepthResource failed to create depth image view");
+}
+
+// -----------------------------------------------------------------------------
+
+void SwapChain::createDepthResources()
+{
+    Assert( imageCount > 0, "SwapChain::createDepthResources 'imageCount' is 0" );
+
+    depth_images.resize( imageCount );
+    depth_memories.resize( imageCount );
+    depth_image_views.resize( imageCount );
+
+    for ( uint32_t i = 0; i < imageCount; ++i )
+        createDepthResource( depth_images[i], depth_memories[i], depth_image_views[i] );
+}
+
+// -----------------------------------------------------------------------------
+
+void SwapChain::createFramebuffer( VkImageView & vk_image_view, VkImageView & depth_image_view, VkFramebuffer & vk_framebuffer )
 {
     Assert( surface != nullptr, "SwapChain::createFramebuffer 'surface' is null" );
     Assert( render_pass != nullptr, "SwapChain::createFramebuffer 'render_pass' is null" );
 
+    std::array<VkImageView,2> attachments = { vk_image_view, depth_image_view };
+
     VkFramebufferCreateInfo fbci{  .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
         .renderPass      = render_pass->vk_render_pass ,
-        .attachmentCount = 1,
-        .pAttachments    = &vk_image_view,
+        .attachmentCount = static_cast<uint32_t>( attachments.size() ),
+        .pAttachments    = attachments.data(),
         .width           = surface->vk_capabilities.currentExtent.width,
         .height          = surface->vk_capabilities.currentExtent.height,
         .layers          = 1,
@@ -68,10 +146,11 @@ void SwapChain::createFramebuffer( VkImageView & vk_image_view, VkFramebuffer & 
 void SwapChain::createFramebuffers()
 {
     Assert( imageCount > 0, "SwapChain::createFramebuffers 'imageCount' is 0" );
+    Assert( depth_image_views.size() == imageCount, "SwapChain::createFramebuffers depth/image count mismatch" );
     framebuffers.resize( imageCount );
 
     for ( uint32_t i = 0; i < imageCount; i++) {
-        createFramebuffer( vk_image_views[i], framebuffers[i] );
+        createFramebuffer( vk_image_views[i], depth_image_views[i], framebuffers[i] );
     }
 }
 // -----------------------------------------------------------------------------
@@ -129,6 +208,7 @@ void SwapChain::initialize()
     createSwapChain();
     createImages();
     createImageViews();
+    createDepthResources();
     createFramebuffers();
 }
 // -----------------------------------------------------------------------------
@@ -150,7 +230,6 @@ void SwapChain::destroy()
     using namespace std ;
     
     Assert( device != nullptr, "SwapChain::destroy: 'device' is null" );
-    Assert( framebuffers.size() == vk_image_views.size(), "SwapChain::destroy: 'framebuffers' and 'vk_image_views' sizes do not match" );
     Assert( device->vk_device != VK_NULL_HANDLE, "SwapChain::destroy: 'device->vk_device' is null" );
     Assert( vk_swap_chain != VK_NULL_HANDLE, "SwapChain::destroy: 'vk_swap_chain' is null" );
 
@@ -158,6 +237,18 @@ void SwapChain::destroy()
     for (auto framebuffer : framebuffers)
         vkDestroyFramebuffer( device->vk_device, framebuffer, nullptr);
     framebuffers.clear();
+
+    for ( auto depth_view : depth_image_views )
+        vkDestroyImageView( device->vk_device, depth_view, nullptr );
+    depth_image_views.clear();
+
+    for ( size_t i = 0; i < depth_images.size(); ++i )
+    {
+        vkDestroyImage( device->vk_device, depth_images[i], nullptr );
+        vkFreeMemory( device->vk_device, depth_memories[i], nullptr );
+    }
+    depth_images.clear();
+    depth_memories.clear();
 
     for ( auto imageView : vk_image_views )
         vkDestroyImageView( device->vk_device, imageView, nullptr);

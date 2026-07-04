@@ -125,7 +125,10 @@ static std::string
     vertShaderSrc_string = std::string { vert_shader_src },
     fragShaderSrc_string = std::string { frag_shader_src };
 
-Pipeline3D::Pipeline3D( VulkanContext & vulkan_context )
+Pipeline3D::Pipeline3D( VulkanContext & vulkan_context,
+                        bool p_depth_test_enabled,
+                        bool p_depth_write_enabled,
+                        VkCompareOp p_depth_compare_op )
 
 :   BasicPipeline( vulkan_context ) 
 {
@@ -160,6 +163,11 @@ Pipeline3D::Pipeline3D( VulkanContext & vulkan_context )
 
     // set default (initial) primitive topology (can be changed dynamically in command buffers)
     default_primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST ;
+
+    // Depth behavior is caller-configurable through constructor params.
+    depth_test_enabled = p_depth_test_enabled;
+    depth_write_enabled = p_depth_write_enabled;
+    depth_compare_op = p_depth_compare_op;
 
     // initialize the vulkan pipeline  (in the context)
     initialize( ) ; 

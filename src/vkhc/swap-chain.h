@@ -21,8 +21,12 @@ class SwapChain
 
     std::vector<VkImage>         swapchainImages ;
     std::vector<VkImageView>     vk_image_views ;
+    std::vector<VkImage>         depth_images ;
+    std::vector<VkDeviceMemory>  depth_memories ;
+    std::vector<VkImageView>     depth_image_views ;
     std::vector<VkFramebuffer>   framebuffers ;
     int min_image_count = 0 ;
+    static constexpr VkFormat    depth_format = VK_FORMAT_D32_SFLOAT ;
 
     Device * device = nullptr ;
     Surface * surface = nullptr ;
@@ -31,10 +35,12 @@ class SwapChain
     // Methods:
 
     void createImageView( VkImage & vk_image, VkImageView & vk_image_view ) ;
+    void createDepthResource( VkImage & depth_image, VkDeviceMemory & depth_memory, VkImageView & depth_image_view ) ;
     
     // initializes vk_image_views from the vk_images
     void createImageViews() ;
-    void createFramebuffer( VkImageView & vk_image_view, VkFramebuffer & vk_framebuffer ) ;
+    void createDepthResources() ;
+    void createFramebuffer( VkImageView & vk_image_view, VkImageView & depth_image_view, VkFramebuffer & vk_framebuffer ) ;
     void createFramebuffers() ;
     void createImages() ;
     void createSwapChain() ;
