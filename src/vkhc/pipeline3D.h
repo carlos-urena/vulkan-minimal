@@ -18,6 +18,13 @@ namespace vkhc
 
 class Pipeline3D : public BasicPipeline
 {
+    private:
+
+    // model matrix stack 
+    std::vector<glm::mat4> model_matrix_stack ;
+    // current model matrix 
+    glm::mat4 current_model_matrix = glm::mat4(1.0f) ; 
+
     public:
     Pipeline3D( VulkanContext & vulkan_context,
                 bool p_depth_test_enabled = true,
@@ -31,6 +38,23 @@ class Pipeline3D : public BasicPipeline
     // dynamic state (can be changed dynamically in command buffers, without re-creating the pipeline)
     void setModelMatrix( VkCommandBuffer & vk_cmd, const glm::mat4 & model_mat ) ;
     void setTextureIndex( VkCommandBuffer & vk_cmd, int index ) ;
+
+    // saves the current model matrix on the stack, 
+    // composes the current and new matrix and sets a new current model matrix in this pipeline
+    // adds a command to set it as the current model matrix in the shaders
+    void pushModelMatrix( VkCommandBuffer & vk_cmd, const glm::mat4 & compose_model_mat ) ;
+
+    // pops the previous model matrix from the stack,
+    // sets it as the current model matrix in this pipeline
+    // adds a command to set it as the current model matrix in the shaders
+    // requires that the stack is not empty, otherwise aborts the program
+    void popModelMatrix( VkCommandBuffer & vk_cmd ) ;
+
+    // empties the model matrix stack, 
+    // set the current model matrix to identity, 
+    // adds a command to set it the model matrix as the identity in the shaders
+    // if the stack was not empty, prints a warning message to the console.
+    void resetModelMatrix( VkCommandBuffer & vk_cmd ) ;
     
 } ; // end class 'Pipeline3D' 
 

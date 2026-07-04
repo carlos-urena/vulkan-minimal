@@ -107,14 +107,15 @@ class BasicPipeline
     bool        depth_write_enabled = true ;
     VkCompareOp depth_compare_op    = VK_COMPARE_OP_LESS ;
 
-    // --- end of configurable variables 
+    
 
-
-    // default type of primitives, can be changed dynamically in a command buffer with 
+    // (6) default type of primitives, can be changed dynamically in a command buffer with 
     // vkCmdSetPrimitiveTopology in Vulkan 1.3, or with 
     // vkCmdSetPrimitiveTopologyEXT if the extension VK_EXT_extended_dynamic_state3 is supported (and enabled)
     VkPrimitiveTopology default_primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST ; 
-    uint32_t default_vertexes_per_patch = 3 ; // only used if tessellation shaders are present, ignored otherwise (Vulkan spec guarantees at least 3 vertexes per patch)
+
+    // only used if tessellation shaders are present, ignored otherwise (Vulkan spec guarantees at least 3 vertexes per patch)
+    uint32_t default_vertexes_per_patch = 3 ; 
 
     // shader modules and stages
     std::vector<VkPipelineShaderStageCreateInfo> vk_shader_stages ;
@@ -122,7 +123,7 @@ class BasicPipeline
     // true if the 'initialize()' method has been completed once, false otherwise 
     // (used to avoid calling it twice, or to use the pipeline without proper initialization)
     bool initialized = false ;
-    
+
     // ------------------------------------------------------------------------------
     // Methods.
 
