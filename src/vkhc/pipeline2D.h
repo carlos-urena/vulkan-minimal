@@ -19,10 +19,10 @@ namespace vkhc
 class BasicPipeline2D : public BasicPipeline
 {
     public:
-    BasicPipeline2D( VulkanContext & vulkan_context,
-                     bool p_depth_test_enabled = false,
-                     bool p_depth_write_enabled = false,
-                     VkCompareOp p_depth_compare_op = VK_COMPARE_OP_LESS ) ; 
+    BasicPipeline2D( VulkanContext & vulkan_context, 
+            bool p_depth_test_enabled = false,
+            bool p_depth_write_enabled = false,
+            VkCompareOp p_depth_compare_op = VK_COMPARE_OP_LESS ) ; 
 
     // state which can be changed before sending commands
     void setViewMatrix( const glm::mat4 & view_mat ) ;
