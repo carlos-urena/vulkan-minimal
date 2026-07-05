@@ -125,12 +125,9 @@ static std::string
     vertShaderSrc_string = std::string { vert_shader_src },
     fragShaderSrc_string = std::string { frag_shader_src };
 
-Pipeline3D::Pipeline3D( VulkanContext & vulkan_context,
-                        bool p_depth_test_enabled,
-                        bool p_depth_write_enabled,
-                        VkCompareOp p_depth_compare_op )
+Pipeline3D::Pipeline3D( VulkanContext & vulkan_context, const bool p_z_buffer_enabled )
 
-:   BasicPipeline( vulkan_context ) 
+:   BasicPipeline( vulkan_context, p_z_buffer_enabled ) 
 {
     using namespace std ; 
     cout << "Creating 3D pipeline..." << endl ;
@@ -164,11 +161,6 @@ Pipeline3D::Pipeline3D( VulkanContext & vulkan_context,
     // set default (initial) primitive topology (can be changed dynamically in command buffers)
     default_primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST ;
 
-    // Depth behavior is caller-configurable through constructor params.
-    depth_test_enabled = p_depth_test_enabled;
-    depth_write_enabled = p_depth_write_enabled;
-    depth_compare_op = p_depth_compare_op;
-
     // initialize the vulkan pipeline  (in the context)
     initialize( ) ; 
 
@@ -176,29 +168,74 @@ Pipeline3D::Pipeline3D( VulkanContext & vulkan_context,
 }
 // ------------------------------------------------------------------------------
 
-void Pipeline3D::setViewMatrix( const glm::mat4 & view_mat ) 
+void Pipeline3D::setViewMatrix( const glm::mat4 & new_view_matrix ) 
 {
-    setUBOUniform( "view_mat", value_ptr( view_mat ) );
+    current_view_matrix = new_view_matrix ;
+    setUBOUniform( "view_mat", value_ptr( current_view_matrix ) );
 }
 // ------------------------------------------------------------------------------
 
-void Pipeline3D::setProjectionMatrix( const glm::mat4 & proj_mat ) 
+void Pipeline3D::setProjectionMatrix( const glm::mat4 & new_projection_matrix ) 
 {
-    setUBOUniform( "proj_mat", value_ptr( proj_mat ) );
+    current_projection_matrix = new_projection_matrix ;
+    setUBOUniform( "proj_mat", value_ptr( current_projection_matrix ) );
 }
 // ------------------------------------------------------------------------------
 
 void Pipeline3D::setTextureIndex( VkCommandBuffer & vk_cmd, int index ) 
 {
+    current_texture_index = index ;
     setPushConstant( vk_cmd, "texture_index", &index ); 
 }
 // ------------------------------------------------------------------------------
 
 void Pipeline3D::setModelMatrix( VkCommandBuffer & vk_cmd, const glm::mat4 & model_mat ) 
 {
+    current_model_matrix = model_mat ;
     setPushConstant( vk_cmd, "model_mat", value_ptr( model_mat ) ); 
 }
 // ------------------------------------------------------------------------------
+// saves the current model matrix on the stack, 
+// composes the current and new matrix and sets a new current model matrix in this pipeline and in the shaders
+// adds a command to set it as the current model matrix in the shaders
+
+void Pipeline3D::pushModelMatrix( VkCommandBuffer & vk_cmd, const glm::mat4 & compose_model_mat ) 
+{
+    using namespace glm ;
+    model_matrix_stack.push_back( current_model_matrix ) ;
+    const mat4 new_model_mat = current_model_matrix * compose_model_mat ;
+    setModelMatrix( vk_cmd, new_model_mat ) ;
+}
+
+// ------------------------------------------------------------------------------
+
+// pops the previous model matrix from the stack,
+// sets it as the current model matrix in this pipeline
+// adds a command to set it as the current model matrix in the shaders
+// requires that the stack is not empty, otherwise aborts the program
+
+void Pipeline3D::popModelMatrix( VkCommandBuffer & vk_cmd ) 
+{
+    Assert( ! model_matrix_stack.empty(), "Pipeline3D::popModelMatrix: model matrix stack is empty, cannot pop." ) ;
+    const glm::mat4 previous_model_mat = model_matrix_stack.back() ;
+    model_matrix_stack.pop_back() ;
+    setModelMatrix( vk_cmd, previous_model_mat ) ;
+}
+
+// ------------------------------------------------------------------------------
+
+// empties the model matrix stack, 
+// set the current model matrix to identity, 
+// adds a command to set it the model matrix as the identity in the shaders
+// if the stack was not empty, prints a warning message to the console.
+
+void Pipeline3D::resetModelMatrix( VkCommandBuffer & vk_cmd ) 
+{
+    if ( ! model_matrix_stack.empty() )
+        std::cout << "Pipeline3D::resetModelMatrix: WARNING: model matrix stack was not empty, it has been cleared." << std::endl ;
+    model_matrix_stack.clear() ;
+    setModelMatrix( vk_cmd, glm::mat4(1.0f) );
+}
 
 
 } // end namespace 'vkhc' 

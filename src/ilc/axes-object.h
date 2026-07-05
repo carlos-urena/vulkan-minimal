@@ -6,11 +6,16 @@
 
 // a class for a solid cilinder in 01
 
-class CylinderZ01 : public IndexedMesh
-{
+class CylinderZ01 ;
 
+class AxesObject : public DrawableObject
+{
+    private:
+    CylinderZ01 * axes_cylinder = nullptr ;  // a solid cilinder in 01, used to visualize the axes of the 3D space.
     
-  public:
-    CylinderZ01( const std::string & name, int num_slices ) ;
-   ~CylinderZ01() ;
+    public:
+    AxesObject( ) ;
+    ~AxesObject() ;
+    virtual void drawVK( vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk ) override ;
+
 } ;

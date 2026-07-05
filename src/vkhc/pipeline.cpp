@@ -20,6 +20,8 @@
 namespace vkhc
 {
 
+BasicPipeline * BasicPipeline::current_binded_pipeline = nullptr ; 
+
 // --------------------------------------------------------------------------------
 // Replaces a line starting with //#keyword with substituion text, returns new text 
 
@@ -507,46 +509,52 @@ void BasicPipeline::createGraphicsPipeline()
 
     // other structures used for pipeline creation
 
-    VkPipelineInputAssemblyStateCreateInfo ia{ VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO};
-    ia.topology = default_primitive_topology ;
-
-    VkPipelineMultisampleStateCreateInfo ms{ VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
-    ms.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-
-    VkPipelineRasterizationStateCreateInfo rs{ VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
-    //rs.polygonMode = VK_POLYGON_MODE_LINE;  
-    rs.polygonMode  = VK_POLYGON_MODE_FILL;
-    rs.cullMode     = VK_CULL_MODE_NONE;
-    rs.lineWidth    = 1.0f;
-
-    VkPipelineColorBlendAttachmentState blend{};
-    blend.colorWriteMask = 0xF;
-
-    VkPipelineColorBlendStateCreateInfo cb{ VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
-    cb.attachmentCount = 1;
-    cb.pAttachments = &blend;
-
-    VkPipelineDepthStencilStateCreateInfo ds{ VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
-    ds.depthTestEnable = depth_test_enabled ? VK_TRUE : VK_FALSE;
-    ds.depthWriteEnable = depth_write_enabled ? VK_TRUE : VK_FALSE;
-    ds.depthCompareOp = depth_compare_op;
-    ds.depthBoundsTestEnable = VK_FALSE;
-    ds.stencilTestEnable = VK_FALSE;
-
-    VkPipelineViewportStateCreateInfo vp{ VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
-    vp.viewportCount = 1;
-    vp.scissorCount = 1;
-
+    VkPipelineInputAssemblyStateCreateInfo ia{ 
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
+        .topology = default_primitive_topology, 
+    };
+    VkPipelineMultisampleStateCreateInfo ms{ 
+        .sType                = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
+        .rasterizationSamples = VK_SAMPLE_COUNT_1_BIT, 
+    };
+    VkPipelineRasterizationStateCreateInfo rs{ 
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO ,
+        //.polygonMode = VK_POLYGON_MODE_LINE,  //// AQUI AQUI MODO LÍNEAS   
+        .polygonMode  = VK_POLYGON_MODE_FILL,
+        .cullMode     = VK_CULL_MODE_NONE,
+        .lineWidth    = 1.0f,
+    };
+    VkPipelineColorBlendAttachmentState blend{
+        .colorWriteMask = 0xF,
+    };
+    VkPipelineColorBlendStateCreateInfo cb{ 
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO ,
+        .attachmentCount = 1,
+        .pAttachments = &blend,
+    } ;
+    VkPipelineDepthStencilStateCreateInfo ds{ 
+        .sType                 = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
+        .depthTestEnable       = z_buffer_enabled ? VK_TRUE : VK_FALSE,
+        .depthWriteEnable      = z_buffer_enabled ? VK_TRUE : VK_FALSE,
+        .depthCompareOp        = VK_COMPARE_OP_LESS ,
+        .depthBoundsTestEnable = VK_FALSE,
+        .stencilTestEnable     = VK_FALSE,
+    } ;
+    VkPipelineViewportStateCreateInfo vp{ 
+        .sType         = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+        .viewportCount = 1,
+        .scissorCount  = 1
+    } ;
     std::array<VkDynamicState, 3> dynStates = {
         VK_DYNAMIC_STATE_VIEWPORT,
         VK_DYNAMIC_STATE_SCISSOR,
         VK_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY
     };
-    VkPipelineDynamicStateCreateInfo dyn{};
-
-    dyn.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-    dyn.dynamicStateCount = device->hasDynamicPrimitiveTopology ? 3u : 2u ;
-    dyn.pDynamicStates = dynStates.data();
+    VkPipelineDynamicStateCreateInfo dyn{
+        .sType             = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+        .dynamicStateCount = device->hasDynamicPrimitiveTopology ? 3u : 2u ,
+        .pDynamicStates    = dynStates.data(),
+    };
 
     // make 'vk_tess_info_ptr' point to 'vk_tess_info' if tessellation shaders are used, or leave it as nullptr otherwise (it will be ignored in this case, since the topology is not patch list)
 
@@ -633,10 +641,11 @@ void BasicPipeline::initialize(  ) // Device * p_device, RenderPass * p_render_p
 // ------------------------------------------------------------------------------
 // constructor, does nothing, 'initialize' must be called after this. 
 
-BasicPipeline::BasicPipeline( VulkanContext & p_vulkan_context ) 
+BasicPipeline::BasicPipeline( VulkanContext & p_vulkan_context, const bool p_z_buffer_enabled ) 
 {
-    device = p_vulkan_context.device;
-    render_pass = p_vulkan_context.render_pass;
+    device           = p_vulkan_context.device;
+    render_pass      = p_vulkan_context.render_pass;
+    z_buffer_enabled = p_z_buffer_enabled ;
 
     assert( device != nullptr );
     assert( render_pass != nullptr );
@@ -652,6 +661,10 @@ void BasicPipeline::bind( VkCommandBuffer & vk_cmd_buffer )
     VkDescriptorSet sets[] = { vk_ubo_descriptor_set, vk_textures_descriptor_set };
     vkCmdBindDescriptorSets( vk_cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_pipeline_layout,
                                 0, 2, sets, 0, nullptr );
+
+    current_binded_pipeline = this ;  //tricky, think twice and update this.
+    using namespace std ;
+    cout << "Binded pipeline '" << name  << "'" << endl ;
 }
 
 // ---------------------------------------------------------------------------------

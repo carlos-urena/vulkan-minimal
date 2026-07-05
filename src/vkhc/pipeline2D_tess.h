@@ -19,9 +19,7 @@ class Pipeline2DTess : public BasicPipeline
     public:
     Pipeline2DTess( VulkanContext & vulkan_context,
                     const int p_num_vertexes_per_patch,
-                    bool p_depth_test_enabled = true,
-                    bool p_depth_write_enabled = true,
-                    VkCompareOp p_depth_compare_op = VK_COMPARE_OP_LESS ) ; 
+                    const bool p_z_buffer_enabled  );  
 
     void setViewMatrix( const glm::mat4 & view_mat ) ;
     void setProjectionMatrix( const glm::mat4 & proj_mat ) ;

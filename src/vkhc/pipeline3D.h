@@ -24,16 +24,19 @@ class Pipeline3D : public BasicPipeline
     std::vector<glm::mat4> model_matrix_stack ;
     // current model matrix 
     glm::mat4 current_model_matrix = glm::mat4(1.0f) ; 
+    // current texture index 
+    int current_texture_index = -1 ; // -1 means no texture is active
+
+    // current view and projection matrices
+    glm::mat4 current_view_matrix = glm::mat4(1.0f) ;
+    glm::mat4 current_projection_matrix = glm::mat4(1.0f) ;
 
     public:
-    Pipeline3D( VulkanContext & vulkan_context,
-                bool p_depth_test_enabled = true,
-                bool p_depth_write_enabled = true,
-                VkCompareOp p_depth_compare_op = VK_COMPARE_OP_LESS ) ; 
+    Pipeline3D( VulkanContext & vulkan_context, const bool p_z_buffer_enabled );  
 
     // state which can be changed before sending commands
-    void setViewMatrix( const glm::mat4 & view_mat ) ;
-    void setProjectionMatrix( const glm::mat4 & proj_mat ) ;
+    void setViewMatrix( const glm::mat4 & new_view_matrix ) ;
+    void setProjectionMatrix( const glm::mat4 & new_projection_matrix ) ;
 
     // dynamic state (can be changed dynamically in command buffers, without re-creating the pipeline)
     void setModelMatrix( VkCommandBuffer & vk_cmd, const glm::mat4 & model_mat ) ;

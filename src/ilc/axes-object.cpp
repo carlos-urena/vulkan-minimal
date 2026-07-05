@@ -1,4 +1,5 @@
 #include <axes-object.h>
+#include <pipeline3D.h>
 
 // ---------------------------------------------------------------------------
 // crea una tabla de índices para una rejilla con topología cilindrica
@@ -27,8 +28,8 @@ void CreateGridTopologyTriangles( std::vector<glm::uvec3> & indices,
 {
    indices.clear();
 
-   for( unsigned i = 0 ; i < na ; i++ )
-   for( unsigned j = 0 ; j < nb ; j++ )
+   for( unsigned i = 0 ; i < na-1 ; i++ )
+   for( unsigned j = 0 ; j < nb-1 ; j++ )
    {        
       const unsigned int
          i00 = (i  )*nb + j,
@@ -40,37 +41,74 @@ void CreateGridTopologyTriangles( std::vector<glm::uvec3> & indices,
       indices.push_back({ i00, i11, i10 });
    }
 }
+// ---------------------------------------------------------------------------------------
+
+class CylinderZ01 : public IndexedMesh
+{
+  public:
+    CylinderZ01( const std::string & name, const unsigned num_slices ) ;
+} ;
 
 // ---------------------------------------------------------------------------------------
 
-CylinderZ01::CylinderZ01( const std::string & name, int num_slices )
+CylinderZ01::CylinderZ01( const std::string & name, const unsigned num_slices )
    
 :   IndexedMesh( )
 {
     using namespace std ;
-    constexpr unsigned int nz = 4, ns = 4 ;  // number of slices and sectors 
+    constexpr unsigned int na = 2 ;
+    const     unsigned     nb = num_slices ;  // number of rows and columns of vertexes 
     
     setName( name ) ;
-    CreateGridTopologyTriangles( triangles, nz, ns );  
+    CreateGridTopologyTriangles( triangles, na, nb );  
 
-    for( unsigned iz = 0 ; iz <= nz ; iz++ )
-    for( unsigned is = 0 ; is <= ns ; is++ )
+    for( unsigned iz = 0 ; iz < na  ; iz++ )
+    for( unsigned is = 0 ; is < nb ; is++ )
     {   
-        const float fz = float(iz)/float(nz), 
-                    fs = float(is)/float(ns) ,
+        const float fz = float(iz)/float(na-1), 
+                    fs = float(is)/float(nb-1), 
                     a  = 2.0f*M_PI*fs, 
                     ca = cos(a), 
                     sa = sin(a) ;
 
-        vertices.push_back( { ca, sa, fz } );
+        vertices.push_back( { ca, sa, fz } );   
+        //vertices.push_back( { fs, +0.5f, fz } );
         vert_colors.push_back( { fs, fz, 0.0f } );
         vert_tcc.push_back( { fs, fz } );
         vert_normals.push_back( { ca, sa, 0.0f } );
     }
 }
 
+// ---------------------------------------------------------------------------------------
 
-CylinderZ01::~CylinderZ01()
+
+AxesObject::AxesObject( ) 
 {
-    // nothing to do
+    setName( "axes object" ) ;
+    axes_cylinder = new CylinderZ01( "axes cylinder Z 01", 32 ) ; Assert( axes_cylinder != nullptr, "Cannot create axes cylinder" ) ;
+}
+
+// ---------------------------------------------------------------------------------------
+
+AxesObject::~AxesObject() 
+{
+    delete axes_cylinder ; axes_cylinder = nullptr ;
+}
+
+// ---------------------------------------------------------------------------------------
+
+void AxesObject::drawVK( vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk ) 
+{
+   Assert( axes_cylinder != nullptr, "Axes cylinder not initialized" ) ;
+
+   // retrieve a valid 3d pipeline  
+   using namespace vkhc ;
+   BasicPipeline * pipeline = BasicPipeline::current_binded_pipeline ;
+   Assert( pipeline != nullptr, "No pipeline binded when drawing axes object" ) ;
+   Pipeline3D * pipeline3d = static_cast<Pipeline3D*>( pipeline ) ;
+   Assert( pipeline3d != nullptr, "Current binded pipeline is not a 3D pipeline when drawing axes object" ) ;
+
+   pipeline3d->pushModelMatrix( cmd_vk, glm::scale(glm::vec3(0.1,0.1,1.0)) ) ; 
+   axes_cylinder->drawVK( context, cmd_vk ) ;
+   pipeline3d->popModelMatrix( cmd_vk ) ;
 }

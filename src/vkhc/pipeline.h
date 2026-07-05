@@ -40,7 +40,14 @@ std::string insert_source( const std::string & src, const std::string & keyword,
 
 class BasicPipeline
 {
+
     public:
+
+    // pointer to the current binded pipeline (if any)
+    // it is a polymorphic pointer to an instance ofa class derived from BasicPipeline
+    static BasicPipeline * current_binded_pipeline ; 
+
+    std::string name ; // name of this pipeline
 
     Device * device = nullptr ;
     RenderPass * render_pass = nullptr ;
@@ -103,12 +110,8 @@ class BasicPipeline
     std::vector<VkFormat> attributes_formats ; 
 
     // (5) depth testing configuration for graphics pipeline creation
-    bool        depth_test_enabled  = true ;
-    bool        depth_write_enabled = true ;
-    VkCompareOp depth_compare_op    = VK_COMPARE_OP_LESS ;
-
+    bool z_buffer_enabled = true ; // if false, disables depth testing and writing to depth buffer
     
-
     // (6) default type of primitives, can be changed dynamically in a command buffer with 
     // vkCmdSetPrimitiveTopology in Vulkan 1.3, or with 
     // vkCmdSetPrimitiveTopologyEXT if the extension VK_EXT_extended_dynamic_state3 is supported (and enabled)
@@ -183,7 +186,7 @@ class BasicPipeline
     void createGraphicsPipeline() ;
 
     // Constructor 
-    BasicPipeline( VulkanContext & vulkan_context ) ; 
+    BasicPipeline( VulkanContext & vulkan_context, const bool p_z_buffer_enabled ) ; // constructor, does not create the pipeline in the context, call 'initialize()' after setting configuration variables
     
     // Add this pipeline bind command to a command buffer 
     void bind( VkCommandBuffer & vk_cmd_buffer ) ;
