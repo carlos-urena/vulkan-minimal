@@ -178,11 +178,11 @@ App2DTess::App2DTess( )
 
     Assert( context != nullptr, "Tess1App constructor: 'context' instance is null !!" );
     
-    triangle       = new Triangle( *context ) ;             assert( triangle != nullptr ) ;
-    quad           = new Quad( *context ) ;                  assert( quad != nullptr ) ;
-    textures_set   = new ExampleTexturesSet( context ) ;    assert( textures_set != nullptr ) ;
-    pipeline_tris  = new vkhc::Pipeline2DTess( *context, 3 ) ; assert( pipeline_tris != nullptr ) ;
-    pipeline_quads = new vkhc::Pipeline2DTess( *context, 4 ) ; assert( pipeline_quads != nullptr ) ;
+    triangle       = new Triangle( *context ) ;                       assert( triangle != nullptr ) ;
+    quad           = new Quad( *context ) ;                           assert( quad != nullptr ) ;
+    textures_set   = new ExampleTexturesSet( context ) ;              assert( textures_set != nullptr ) ;
+    pipeline_tris  = new vkhc::Pipeline2DTess( *context, 3, false ) ; assert( pipeline_tris != nullptr ) ;
+    pipeline_quads = new vkhc::Pipeline2DTess( *context, 4, false ) ; assert( pipeline_quads != nullptr ) ;
 
     textures_set->bindTo( *pipeline_tris ) ; // bind the textures set to the pipeline, so that its textures can be used in the fragment shader.
     textures_set->bindTo( *pipeline_quads ) ; // bind the textures set to the pipeline, so that its textures can be used in the fragment shader.
@@ -203,7 +203,6 @@ App2DTess::~App2DTess()
 
     std::cout << "Deleted App2DTess" << std::endl ;
 }
-
 // ----------------------------------------------------------------------------------
 
 void App2DTess::keyboardEventCB( int key, int scancode, int action, int mods )
@@ -213,7 +212,6 @@ void App2DTess::keyboardEventCB( int key, int scancode, int action, int mods )
 }
 
 // ----------------------------------------------------------------------------------
-
 
 void App2DTess::updateViewProjMats( vkhc::VulkanContext & context,  vkhc::seconds_f frame_time_s )
 {
@@ -256,7 +254,6 @@ void App2DTess::drawIMGUIWidgets(  )
             if ( SliderInt("Tess. inner level 1 ", &tsc_inner_level_int[1], 1, max_tess_level) )
                 tsc_inner_level[1] = float(tsc_inner_level_int[1]) ;
 
-        
         SeparatorText("Outer tessellation levels") ;
         
         const int num_outer_levels = display_triangle ? 3 : 4 ;
@@ -310,18 +307,16 @@ void App2DTess::initFrame( const vkhc::seconds_f  time_elapsed )
         pipeline_quads->setUBOUniform( "tsc_outer_level_1", &tsc_outer_level[1] ) ;
         pipeline_quads->setUBOUniform( "tsc_outer_level_2", &tsc_outer_level[2] ) ;
         pipeline_quads->setUBOUniform( "tsc_outer_level_3", &tsc_outer_level[3] ) ;
-    }
-    
-    
+    } 
 }
 // ----------------------------------------------------------------------------------
 
 void App2DTess::drawFrame( VkCommandBuffer & cmd ) 
 {
-    Assert( context != nullptr, "Tess1App::drawFrame: 'context' instance is null !!" );
+    Assert( context != nullptr,       "Tess1App::drawFrame: 'context' instance is null !!" );
     Assert( pipeline_tris != nullptr, "Tess1App::drawFrame: 'pipeline' instance is null !!" );
-    Assert( triangle != nullptr, "Tess1App::drawFrame: 'triangle' instance is null !!" );
-    Assert( quad != nullptr, "Tess1App::drawFrame: 'quad' instance is null !!" );
+    Assert( triangle != nullptr,      "Tess1App::drawFrame: 'triangle' instance is null !!" );
+    Assert( quad != nullptr,          "Tess1App::drawFrame: 'quad' instance is null !!" );
    
     if ( display_triangle )
     {
@@ -338,7 +333,6 @@ void App2DTess::drawFrame( VkCommandBuffer & cmd )
         quad->draw( cmd );
     }
 }
-
 
 // end of class 'Tess1App'
 // *********************************************************************************

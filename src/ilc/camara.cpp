@@ -267,7 +267,7 @@ void CamaraOrbitalSimple::moverZ( const float dz )
 void CamaraOrbitalSimple::actualizarMatrices()
 {
    using namespace std ;
-   cout << "CamaraOrbitalSimple::actualizarMatrices() : inicio: a == " << a << ", b == " << b << ", d == " << d << endl ;
+   //cout << "CamaraOrbitalSimple::actualizarMatrices() : inicio: a == " << a << ", b == " << b << ", d == " << d << endl ;
    using namespace glm ;
    matriz_vista = translate( vec3( 0.0, 0.0, -d) ) *          // MAT_Traslacion( { 0.0, 0.0, -d } ) *
                   rotate( radians(b),  vec3( 1.0,0.0,0.0 )) * // MAT_Rotacion( b,  { 1.0,0.0,0.0} ) *

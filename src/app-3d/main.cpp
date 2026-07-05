@@ -282,11 +282,14 @@ void App3D::drawFrame( VkCommandBuffer & cmd )
    
     // activate the pipeline and sets the viewport
     pipeline->bind( cmd );
-    // context->setRenderAreaViewport( cmd ) ; /// THIS IS CALLED after 'initFrame' and before 'drawFrame' (does it works?)
+    
+    // send the current base colors set to the shaders (via UBO)
+    pipeline->setBaseColorsSet() ;
 
     // give initial values to the push constants at the begining of 'cmd'
     pipeline->setModelMatrix( cmd, model_mat ) ;
     pipeline->setTextureIndex( cmd, texture_index ) ;
+    pipeline->setBaseColorIndex( cmd, -1 ) ;
 
     // draw the axes 
     axes3D->drawVK( pipeline, *context, cmd ) ;

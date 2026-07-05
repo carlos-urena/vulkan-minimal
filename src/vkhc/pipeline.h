@@ -56,16 +56,16 @@ class BasicPipeline
     VkPipelineLayout              vk_pipeline_layout {  }; // layout in use 
     
     // UBO uniforms related variables (for the UBO bound at set=0, binding=0)
-    VkDescriptorSetLayout         vk_ubo_set_layout { VK_NULL_HANDLE }; // set=0 layout for UBOs used by shaders
+    VkDescriptorSetLayout         vk_ubo_set_layout      { VK_NULL_HANDLE }; // set=0 layout for UBOs used by shaders
     VkDescriptorPool              vk_ubo_descriptor_pool { VK_NULL_HANDLE };
-    VkDescriptorSet               vk_ubo_descriptor_set { VK_NULL_HANDLE };
-    VkBuffer                      vk_view_ubo_buffer { VK_NULL_HANDLE };
-    VkDeviceMemory                vk_view_ubo_memory { VK_NULL_HANDLE };
+    VkDescriptorSet               vk_ubo_descriptor_set  { VK_NULL_HANDLE };
+    VkBuffer                      vk_view_ubo_buffer     { VK_NULL_HANDLE };
+    VkDeviceMemory                vk_view_ubo_memory     { VK_NULL_HANDLE };
     
     // textures related variables (for the descriptor set bound at set=1, binding=0, with an array of texture samplers)
-    VkDescriptorSetLayout         vk_textures_set_layout { VK_NULL_HANDLE }; // set=1 layout for texture samplers array used by fragment shader
+    VkDescriptorSetLayout         vk_textures_set_layout      { VK_NULL_HANDLE }; // set=1 layout for texture samplers array used by fragment shader
     VkDescriptorPool              vk_textures_descriptor_pool { VK_NULL_HANDLE };
-    VkDescriptorSet               vk_textures_descriptor_set { VK_NULL_HANDLE };
+    VkDescriptorSet               vk_textures_descriptor_set  { VK_NULL_HANDLE };
 
     VkShaderModule vk_vertex_shader_module       = VK_NULL_HANDLE ; 
     VkShaderModule vk_tess_control_shader_module = VK_NULL_HANDLE ;

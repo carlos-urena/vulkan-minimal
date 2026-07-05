@@ -84,8 +84,15 @@ CylinderZ01::CylinderZ01( const std::string & name, const unsigned num_slices )
 
 AxesObject::AxesObject( ) 
 {
-    setName( "axes object" ) ;
-    axes_cylinder = new CylinderZ01( "axes cylinder Z 01", 32 ) ; Assert( axes_cylinder != nullptr, "Cannot create axes cylinder" ) ;
+   using namespace glm ; 
+   using namespace vkhc ;
+
+   setName( "axes object" ) ;
+   axes_cylinder = new CylinderZ01( "axes cylinder Z 01", 32 ) ; Assert( axes_cylinder != nullptr, "Cannot create axes cylinder" ) ;
+   
+   red_color_index   = BaseColorsSet::addBaseColor( vec3( 1.0f, 0.0f, 0.0f ) ) ;
+   green_color_index = BaseColorsSet::addBaseColor( vec3( 1.0f, 0.0f, 0.0f ) ) ;
+   blue_color_index  = BaseColorsSet::addBaseColor( vec3( 1.0f, 0.0f, 1.0f ) ) ;
 }
 
 // ---------------------------------------------------------------------------------------
@@ -110,17 +117,34 @@ void AxesObject::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & c
    Assert( pipeline3d != nullptr, "Current binded pipeline is not a 3D pipeline when drawing axes object" ) ;
 
    constexpr float radius = 0.05f ;
-   const mat4 scale_mat = glm::scale(glm::vec3( radius, radius, 1.0f)) ;
+   const mat4 
+      scale_mat = glm::scale(glm::vec3( radius, radius, 1.0f)),
+      rot_m90_x = glm::rotate( radians(-90.0f), glm::vec3(1.0,0.0,0.0) ),
+      rot_90_y  = glm::rotate( radians(90.0f),  glm::vec3(0.0,1.0,0.0) );
+
+   // save previous pipeline state
+   int prev_texture_index = pipeline3d->getTextureIndex() ; // save previous texture index
+   int prev_base_color_index = pipeline3d->getBaseColorIndex() ; // save previous base color index
+
+   // disable uso of textures
+   pipeline3d->setTextureIndex( cmd_vk, -1 ) ; // disable use of textures
 
    pipeline3d->pushModelMatrix( cmd_vk, scale_mat ) ; 
-   axes_cylinder->drawVK( pipeline, context, cmd_vk ) ; // axis Z
+   pipeline3d->setBaseColorIndex( cmd_vk, blue_color_index ) ;
+   axes_cylinder->drawVK( pipeline, context, cmd_vk ) ; // axis Z (blue)
    pipeline3d->popModelMatrix( cmd_vk ) ;
 
-   pipeline3d->pushModelMatrix( cmd_vk, glm::rotate(-float(M_PI/2.0), glm::vec3(1.0,0.0,0.0))* scale_mat ) ;
-   axes_cylinder->drawVK( pipeline, context, cmd_vk ) ; // axis Y
+   pipeline3d->pushModelMatrix( cmd_vk, rot_m90_x* scale_mat ) ;
+   pipeline3d->setBaseColorIndex( cmd_vk, green_color_index ) ;
+   axes_cylinder->drawVK( pipeline, context, cmd_vk ) ; // axis Y (green)
    pipeline3d->popModelMatrix( cmd_vk );
 
-   pipeline3d->pushModelMatrix( cmd_vk, glm::rotate( float(M_PI/2.0), glm::vec3(0.0,1.0,0.0)) *scale_mat) ;
-   axes_cylinder->drawVK( pipeline, context, cmd_vk ) ; // axis X
+   pipeline3d->pushModelMatrix( cmd_vk, rot_90_y *scale_mat) ;
+   pipeline3d->setBaseColorIndex( cmd_vk, red_color_index ) ;
+   axes_cylinder->drawVK( pipeline, context, cmd_vk ) ; // axis X (red)
    pipeline3d->popModelMatrix( cmd_vk );
+
+   // disable base color for next objects to be drawn
+   pipeline3d->setBaseColorIndex( cmd_vk,  prev_base_color_index ) ; // restore previous base color index
+   pipeline3d->setTextureIndex( cmd_vk, prev_texture_index ) ; // restore previous texture index
 }

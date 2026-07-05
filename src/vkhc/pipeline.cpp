@@ -210,6 +210,8 @@ void BasicPipeline::setUBOUniform( const std::string & name, const void * data_p
     vkMapMemory( device->vk_device, vk_view_ubo_memory, offset, size, 0, &mapped );
     memcpy( mapped, data_ptr, size );
     vkUnmapMemory( device->vk_device, vk_view_ubo_memory );
+    using namespace std ;
+    //cout << "Memory copied to UBO uniform '" << name << "' with size " << size << " bytes, offset " << offset << endl ;
 }
 // -----------------------------------------------------------------------------
 
@@ -664,7 +666,7 @@ void BasicPipeline::bind( VkCommandBuffer & vk_cmd_buffer )
 
     ///current_binded_pipeline = this ;  //tricky, think twice and update this. 
     using namespace std ;
-    cout << "Binded pipeline '" << name  << "'" << endl ;
+    //cout << "Binded pipeline '" << name  << "'" << endl ;
 }
 
 // ---------------------------------------------------------------------------------

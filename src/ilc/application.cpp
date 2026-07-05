@@ -13,6 +13,8 @@ ImGuiKey ImGui_ImplGlfw_KeyToImGuiKey(int keycode, int scancode); // not in imgu
 namespace ilc 
 {
 
+constexpr bool debug_events = false ;
+
 // definition of the pointer to the singleton instance 
 Application * Application::app_singleton = nullptr ; // initialize the static member of the class
 
@@ -30,7 +32,8 @@ Application * Application::app_singleton = nullptr ; // initialize the static me
 void Application::stKeyboardEventCB( GLFWwindow* window, int key, int scancode, int action, int mods ) 
 {
     using namespace std ;
-    cout << "Application::stKeyboardEventCB: key=" << key << ", scancode=" << scancode << ", action=" << action << ", mods=" << mods << endl ;
+    if ( debug_events) 
+        cout << "Application::stKeyboardEventCB: key=" << key << ", scancode=" << scancode << ", action=" << action << ", mods=" << mods << endl ;
     
     if ( app_singleton == nullptr ) 
     {   std::cerr << "KeyboardEventCB: warning: 'app_singleton' is null !" << std::endl ;
@@ -64,7 +67,8 @@ void Application::stKeyboardEventCB( GLFWwindow* window, int key, int scancode, 
 void Application::stMouseButtonEventCB( GLFWwindow* window, int button, int action, int mods ) 
 {
     using namespace std ;
-    cout << "Application::stMouseButtonEventCB: button=" << button << ", action=" << action << ", mods=" << mods << endl ;
+    if ( debug_events) 
+        cout << "Application::stMouseButtonEventCB: button=" << button << ", action=" << action << ", mods=" << mods << endl ;
 
     if ( app_singleton == nullptr ) 
     {   std::cerr << "MouseButtonEventCB: warning: 'app_singleton' is null !" << std::endl ;
@@ -95,7 +99,8 @@ void Application::stMouseButtonEventCB( GLFWwindow* window, int button, int acti
 void Application::stMousePositionEventCB( GLFWwindow* window, double xpos, double ypos ) 
 {
     using namespace std ;
-    cout << "Application::stMousePositionEventCB: xpos=" << xpos << ", ypos=" << ypos << endl ;
+    if ( debug_events) 
+        cout << "Application::stMousePositionEventCB: xpos=" << xpos << ", ypos=" << ypos << endl ;
 
     if ( app_singleton == nullptr ) 
     {   std::cerr << "MousePositionEventCB: warning: 'app_singleton' is null !" << std::endl ;
@@ -163,21 +168,24 @@ void Application::keyboardEventCB( int key, int scancode, int action, int mods )
 {
     // default implementation does nothing, derived classes can override it to process keyboard events
     using namespace std ;
-    cout << "Application::keyboardEventCB: key=" << key << " scancode=" << scancode << " action=" << action << " mods=" << mods << endl ;
+    if ( debug_events)
+        cout << "Application::keyboardEventCB: key=" << key << " scancode=" << scancode << " action=" << action << " mods=" << mods << endl ;
 }
 
 void Application::mouseButtonEventCB( double xpos, double ypos, int button, int action, int mods ) 
 {
     // default implementation does nothing, derived classes can override it to process mouse button events
     using namespace std ;
-    cout << "Application::mouseButtonEventCB: xpos=" << xpos << " ypos=" << ypos << " button=" << button << " action=" << action << " mods=" << mods << endl ;
+    if ( debug_events)
+        cout << "Application::mouseButtonEventCB: xpos=" << xpos << " ypos=" << ypos << " button=" << button << " action=" << action << " mods=" << mods << endl ;
 }
 
 void Application::mousePositionEventCB( double xpos, double ypos, int button ) 
 {
     // default implementation does nothing, derived classes can override it to process mouse position events
     using namespace std ;
-    cout << "Application::mousePositionEventCB: xpos=" << xpos << " ypos=" << ypos << " button=" << button << endl ;
+    if ( debug_events)
+        cout << "Application::mousePositionEventCB: xpos=" << xpos << " ypos=" << ypos << " button=" << button << endl ;
 }
 
 // --------------------------------------------------------------------------------

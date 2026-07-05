@@ -120,9 +120,9 @@ App2D::App2D( )
 
     Assert( context != nullptr, "Tess1App constructor: 'context' instance is null !!" );
     
-    triangle     = new Triangle( *context ) ;              assert( triangle != nullptr ) ;
-    textures_set = new ExampleTexturesSet( context ) ;     assert( textures_set != nullptr ) ;
-    pipeline     = new vkhc::BasicPipeline2D( *context ) ; assert( pipeline != nullptr ) ;
+    triangle     = new Triangle( *context ) ;                     assert( triangle != nullptr ) ;
+    textures_set = new ExampleTexturesSet( context ) ;            assert( textures_set != nullptr ) ;
+    pipeline     = new vkhc::BasicPipeline2D( *context, false ) ; assert( pipeline != nullptr ) ;
 
     textures_set->bindTo( *pipeline ) ; // bind the textures set to the pipeline, so that its textures can be used in the fragment shader.
 
