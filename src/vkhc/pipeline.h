@@ -100,6 +100,7 @@ class BasicPipeline
     std::vector<std::string>  ubou_names ;
     std::vector<uint32_t>     ubou_offsets ;
     std::vector<uint32_t>     ubou_sizes ;
+    std::vector<uint32_t>     ubou_alignments ;
     uint32_t                  ubou_total_size = 0 ; // current total size of UBO variables (see addUBOuniform)
     static constexpr uint32_t ubou_max_total_size = 16*1024 ; // probably more (check at runtme)
 
@@ -157,9 +158,10 @@ class BasicPipeline
     // Adds a push constant command to a command buffer, using the push constant name to find the corresponding range
     void setPushConstant( VkCommandBuffer & vk_cmd_buffer, const std::string & name, const void * data_ptr ) ;
    
-    // Adds a uniform variable to the UBO bound at set=0, binding=0
-    // the calls order must match the order of variables in the UBO in shaders
-    void addUBOUniform( const std::string & name, uint32_t size ) ;
+    // Adds a uniform variable to the UBO bound at set=0, binding=0.
+    // The calls order must match the order of variables in the UBO in shaders,
+    // and 'alignment' must match the GLSL/std140 alignment for that member.
+    void addUBOUniform( const std::string & name, uint32_t size, uint32_t alignment ) ;
     
     // Gives a value to a an UBO uniform (pre-rendering).
     void setUBOUniform( const std::string & name, const void * data_ptr ) ;

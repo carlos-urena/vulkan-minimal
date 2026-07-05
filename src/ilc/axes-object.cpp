@@ -91,8 +91,8 @@ AxesObject::AxesObject( )
    axes_cylinder = new CylinderZ01( "axes cylinder Z 01", 32 ) ; Assert( axes_cylinder != nullptr, "Cannot create axes cylinder" ) ;
    
    red_color_index   = BaseColorsSet::addBaseColor( vec3( 1.0f, 0.0f, 0.0f ) ) ;
-   green_color_index = BaseColorsSet::addBaseColor( vec3( 1.0f, 0.0f, 0.0f ) ) ;
-   blue_color_index  = BaseColorsSet::addBaseColor( vec3( 1.0f, 0.0f, 1.0f ) ) ;
+   green_color_index = BaseColorsSet::addBaseColor( vec3( 0.0f, 1.0f, 0.0f ) ) ;
+   blue_color_index  = BaseColorsSet::addBaseColor( vec3( 0.0f, 0.0f, 1.0f ) ) ;
 }
 
 // ---------------------------------------------------------------------------------------

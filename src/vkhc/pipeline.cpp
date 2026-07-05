@@ -166,19 +166,23 @@ void BasicPipeline::setPushConstant( VkCommandBuffer & vk_cmd_buffer, const std:
 // the calls order must match the order of variables in the UBO in shaders
 
 
-void BasicPipeline::addUBOUniform( const std::string & name, uint32_t size ) 
+void BasicPipeline::addUBOUniform( const std::string & name, uint32_t size, uint32_t alignment ) 
 {
     assert( ! initialized ); 
     assert( size > 0 );
-    //assert( size % 4 == 0 );
-    assert( ubou_total_size + size <= ubou_max_total_size );
+    assert( alignment > 0 );
+    assert( ( alignment & (alignment-1) ) == 0 );
+
+    const uint32_t aligned_offset = ( ubou_total_size + alignment - 1 ) & ~( alignment - 1 );
+    assert( aligned_offset + size <= ubou_max_total_size );
 
     ubou_names.push_back( name );
-    ubou_offsets.push_back( ubou_total_size );
+    ubou_offsets.push_back( aligned_offset );
     ubou_sizes.push_back( size );
-    std::cout << "Added UBO uniform '" << name << "' with size " << size << " bytes, offset " << ubou_total_size << std::endl ;
+    ubou_alignments.push_back( alignment );
+    std::cout << "Added UBO uniform '" << name << "' with size " << size << " bytes, alignment " << alignment << ", offset " << aligned_offset << std::endl ;
 
-    ubou_total_size += size ;
+    ubou_total_size = aligned_offset + size ;
 }
 
 // -----------------------------------------------------------------------------
