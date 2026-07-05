@@ -16,6 +16,6 @@ class AxesObject : public DrawableObject
     public:
     AxesObject( ) ;
     ~AxesObject() ;
-    virtual void drawVK( vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk ) override ;
+    virtual void drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk ) override ;
 
 } ;

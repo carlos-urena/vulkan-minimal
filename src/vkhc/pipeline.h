@@ -45,7 +45,7 @@ class BasicPipeline
 
     // pointer to the current binded pipeline (if any)
     // it is a polymorphic pointer to an instance ofa class derived from BasicPipeline
-    static BasicPipeline * current_binded_pipeline ; 
+    // static BasicPipeline * current_binded_pipeline ; // don't want to use this, there are better solutions
 
     std::string name ; // name of this pipeline
 

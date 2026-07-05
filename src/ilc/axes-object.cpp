@@ -97,18 +97,30 @@ AxesObject::~AxesObject()
 
 // ---------------------------------------------------------------------------------------
 
-void AxesObject::drawVK( vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk ) 
+void AxesObject::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk ) 
 {
    Assert( axes_cylinder != nullptr, "Axes cylinder not initialized" ) ;
 
    // retrieve a valid 3d pipeline  
    using namespace vkhc ;
-   BasicPipeline * pipeline = BasicPipeline::current_binded_pipeline ;
+   using namespace glm ;
+   
    Assert( pipeline != nullptr, "No pipeline binded when drawing axes object" ) ;
    Pipeline3D * pipeline3d = static_cast<Pipeline3D*>( pipeline ) ;
    Assert( pipeline3d != nullptr, "Current binded pipeline is not a 3D pipeline when drawing axes object" ) ;
 
-   pipeline3d->pushModelMatrix( cmd_vk, glm::scale(glm::vec3(0.1,0.1,1.0)) ) ; 
-   axes_cylinder->drawVK( context, cmd_vk ) ;
+   constexpr float radius = 0.05f ;
+   const mat4 scale_mat = glm::scale(glm::vec3( radius, radius, 1.0f)) ;
+
+   pipeline3d->pushModelMatrix( cmd_vk, scale_mat ) ; 
+   axes_cylinder->drawVK( pipeline, context, cmd_vk ) ; // axis Z
    pipeline3d->popModelMatrix( cmd_vk ) ;
+
+   pipeline3d->pushModelMatrix( cmd_vk, glm::rotate(-float(M_PI/2.0), glm::vec3(1.0,0.0,0.0))* scale_mat ) ;
+   axes_cylinder->drawVK( pipeline, context, cmd_vk ) ; // axis Y
+   pipeline3d->popModelMatrix( cmd_vk );
+
+   pipeline3d->pushModelMatrix( cmd_vk, glm::rotate( float(M_PI/2.0), glm::vec3(0.0,1.0,0.0)) *scale_mat) ;
+   axes_cylinder->drawVK( pipeline, context, cmd_vk ) ; // axis X
+   pipeline3d->popModelMatrix( cmd_vk );
 }

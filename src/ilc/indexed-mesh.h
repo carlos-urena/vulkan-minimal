@@ -57,7 +57,7 @@ class IndexedMesh : public DrawableObject
 
       // visualizar el objeto con OpenGL, métodos virtuales 
 
-      virtual void drawVK( vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk ) override ;
+      virtual void drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk ) override ;
       
 } ;
 // ---------------------------------------------------------------------

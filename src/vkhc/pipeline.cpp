@@ -20,7 +20,7 @@
 namespace vkhc
 {
 
-BasicPipeline * BasicPipeline::current_binded_pipeline = nullptr ; 
+//BasicPipeline * BasicPipeline::current_binded_pipeline = nullptr ; 
 
 // --------------------------------------------------------------------------------
 // Replaces a line starting with //#keyword with substituion text, returns new text 
@@ -662,7 +662,7 @@ void BasicPipeline::bind( VkCommandBuffer & vk_cmd_buffer )
     vkCmdBindDescriptorSets( vk_cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_pipeline_layout,
                                 0, 2, sets, 0, nullptr );
 
-    current_binded_pipeline = this ;  //tricky, think twice and update this.
+    ///current_binded_pipeline = this ;  //tricky, think twice and update this. 
     using namespace std ;
     cout << "Binded pipeline '" << name  << "'" << endl ;
 }
@@ -674,10 +674,10 @@ BasicPipeline::~BasicPipeline()
 {
     //assert( initialized ); // make sure the pipeline was initialized before destroying it
 
-    if ( ubou_names.size() > 0 ) ubou_names.clear();
+    if ( ubou_names.size() > 0 )   ubou_names.clear();
     if ( ubou_offsets.size() > 0 ) ubou_offsets.clear();
-    if ( ubou_sizes.size() > 0 ) ubou_sizes.clear();
-    if ( pc_names.size() > 0 ) pc_names.clear();
+    if ( ubou_sizes.size() > 0 )   ubou_sizes.clear();
+    if ( pc_names.size() > 0 )     pc_names.clear();
     
 
     if ( vk_pipeline != VK_NULL_HANDLE )

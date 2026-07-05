@@ -289,7 +289,7 @@ void App3D::drawFrame( VkCommandBuffer & cmd )
     pipeline->setTextureIndex( cmd, texture_index ) ;
 
     // draw the axes 
-    axes3D->drawVK( *context, cmd ) ;
+    axes3D->drawVK( pipeline, *context, cmd ) ;
 
 
     // draw the triangle and the widgets 

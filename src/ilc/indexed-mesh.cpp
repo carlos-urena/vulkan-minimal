@@ -143,7 +143,7 @@ void IndexedMesh::computeNormals()
 
 // --------------------------------------------------------------------------------------------
 
-void IndexedMesh::drawVK( vkhc::VulkanContext & context, VkCommandBuffer & cmdb_vk )
+void IndexedMesh::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & context, VkCommandBuffer & cmdb_vk )
 {
    using namespace std ;
    
