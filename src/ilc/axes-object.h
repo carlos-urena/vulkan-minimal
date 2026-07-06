@@ -7,11 +7,13 @@
 // a class for a solid cilinder in 01
 
 class CylinderZ01 ;
+class IMTriangle ;
 
 class AxesObject : public DrawableObject
 {
     private:
     CylinderZ01 * axes_cylinder = nullptr ;  // a solid cilinder in 01, used to visualize the axes of the 3D space.
+    IMTriangle * xtri = nullptr, * ytri = nullptr, * ztri = nullptr ; // triangles used to visualize the axes of the 3D space.  
     
     int 
         red_color_index = -1, 

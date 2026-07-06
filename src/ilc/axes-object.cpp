@@ -41,6 +41,36 @@ void CreateGridTopologyTriangles( std::vector<glm::uvec3> & indices,
       indices.push_back({ i00, i11, i10 });
    }
 }
+
+// ---------------------------------------------------------------------------------------
+// Indexed mesh with a single triangle 
+
+class IMTriangle : public IndexedMesh
+{
+   public:
+      IMTriangle( const std::vector<glm::vec3> & vertices, const glm::vec3 & color) ;   
+} ;
+
+
+
+IMTriangle::IMTriangle( const std::vector<glm::vec3> & p_vertices, const glm::vec3 & p_color ) 
+{
+   Assert( p_vertices.size() == 3, "IMTriangle: must have exactly 3 vertices" ) ;
+
+   using namespace glm ;
+   vec3 tri_normal = normalize( cross( p_vertices[1]-p_vertices[0], p_vertices[2]-p_vertices[0] ) ) ;
+   
+   for( unsigned iv = 0 ; iv < 3 ; iv++ )
+   {
+      vertices.push_back( p_vertices[iv] ) ;
+      vert_colors.push_back( p_color ) ;
+      vert_normals.push_back( tri_normal ) ;
+      vert_tcc.push_back( { 0.0f, 0.0f } ) ; // texture coordinates not used
+   }
+   triangles.push_back( { 0, 1, 2 } ) ;
+}
+
+
 // ---------------------------------------------------------------------------------------
 
 class CylinderZ01 : public IndexedMesh
@@ -93,6 +123,36 @@ AxesObject::AxesObject( )
    red_color_index   = BaseColorsSet::addBaseColor( vec3( 1.0f, 0.0f, 0.0f ) ) ;
    green_color_index = BaseColorsSet::addBaseColor( vec3( 0.0f, 1.0f, 0.0f ) ) ;
    blue_color_index  = BaseColorsSet::addBaseColor( vec3( 0.0f, 0.0f, 1.0f ) ) ;
+
+   constexpr float d = 1.05, h = 0.15 ;
+
+   xtri = new IMTriangle( 
+      std::vector<glm::vec3>{  
+         vec3( d,   0.0f, -h ), 
+         vec3( d,   0.0f, +h ), 
+         vec3( d+2*h, 0.0f, 0.0f ) 
+      }, 
+      vec3( 1.0f, 0.0f, 0.0f ) 
+   ) ;   
+   Assert( xtri != nullptr, "Cannot create X axis triangle" ) ;
+
+   ytri = new IMTriangle( 
+      {  vec3(  -h,  d,   0.0f ), 
+         vec3(   h,  d,   0.0f ), 
+         vec3( 0.0f, d+2*h, 0.0f ) 
+      }, 
+      vec3( 0.0f, 1.0f, 0.0f ) 
+   ) ;   
+   Assert( ytri != nullptr, "Cannot create Y axis triangle" ) ;
+
+   ztri = new IMTriangle( 
+      {  vec3(   -h, 0.0f, d ), 
+         vec3(    h, 0.0f, d ), 
+         vec3( 0.0f, 0.0f, d+2*h ) 
+      }, 
+      vec3( 0.0f, 0.0f, 1.0f ) 
+   ) ;   
+   Assert( ztri != nullptr, "Cannot create Z axis triangle" ) ;
 }
 
 // ---------------------------------------------------------------------------------------
@@ -100,6 +160,9 @@ AxesObject::AxesObject( )
 AxesObject::~AxesObject() 
 {
     delete axes_cylinder ; axes_cylinder = nullptr ;
+    delete xtri ; xtri = nullptr ;
+    delete ytri ; ytri = nullptr ;
+    delete ztri ; ztri = nullptr ;
 }
 
 // ---------------------------------------------------------------------------------------
@@ -116,7 +179,7 @@ void AxesObject::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & c
    Pipeline3D * pipeline3d = static_cast<Pipeline3D*>( pipeline ) ;
    Assert( pipeline3d != nullptr, "Current binded pipeline is not a 3D pipeline when drawing axes object" ) ;
 
-   constexpr float radius = 0.05f ;
+   constexpr float radius = 0.03f ;
    const mat4 
       scale_mat = glm::scale(glm::vec3( radius, radius, 1.0f)),
       rot_m90_x = glm::rotate( radians(-90.0f), glm::vec3(1.0,0.0,0.0) ),
@@ -143,6 +206,13 @@ void AxesObject::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & c
    pipeline3d->setBaseColorIndex( cmd_vk, red_color_index ) ;
    axes_cylinder->drawVK( pipeline, context, cmd_vk ) ; // axis X (red)
    pipeline3d->popModelMatrix( cmd_vk );
+
+   pipeline3d->setBaseColorIndex( cmd_vk, red_color_index ) ;
+   xtri->drawVK( pipeline, context, cmd_vk ) ; // axis X (red)
+   pipeline3d->setBaseColorIndex( cmd_vk, green_color_index ) ;
+   ytri->drawVK( pipeline, context, cmd_vk ) ; // axis Y (green)
+   pipeline3d->setBaseColorIndex( cmd_vk, blue_color_index ) ;
+   ztri->drawVK( pipeline, context, cmd_vk ) ; // axis Z (blue)
 
    // disable base color for next objects to be drawn
    pipeline3d->setBaseColorIndex( cmd_vk,  prev_base_color_index ) ; // restore previous base color index

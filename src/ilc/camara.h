@@ -14,27 +14,27 @@ namespace ilc
 class Viewport
 {
   public:
-  int       org_x, org_y, // origen en pixels (esquina inferior izquierda)
-            ancho, alto ; // dimensiones en pixels (núm. columnas, núm. filas)
-  float     ratio_yx ;    // == alto/ancho (relación de aspecto)
-  glm::mat4  matrizVp ,    // matriz de viewport ( pasa: NDC ==> DC )
-            matrizVpInv ; // matriz inversa ( pasa: DC ==> NDC )
+   int       org_x, org_y, // origin in pixels (lower-left corner)
+                  ancho, alto ; // dimensions in pixels (num. columns, num. rows)
+   float     ratio_yx ;    // == height/width (aspect ratio)
+   glm::mat4  matrizVp ,    // viewport matrix ( maps: NDC ==> DC )
+                  matrizVpInv ; // inverse matrix ( maps: DC ==> NDC )
   // constructor
-  Viewport() ; // crea viewport de 512 x 512 con origen en (0,0)
+   Viewport() ; // creates a 512 x 512 viewport with origin at (0,0)
   Viewport( int p_org_x, int p_org_y, int p_ancho, int p_alto );
 } ;
 
 // ******************************************************************
-// clase base para cámaras
+// base class for cameras
 
 class Camara
 {
    public: // ----------------------------
 
-   // cambio el valor de 'ratio_vp' (alto/ancho del viewport)
+   // change the value of 'ratio_vp' (viewport height/width)
    void fijarRatioViewport( const float nuevo_ratio ) ;
 
-   // lee la descripción de la cámara (y probablemente su estado)
+   // get the camera description (and probably its state)
    virtual std::string descripcion() ;
 
    inline glm::mat4 & viewMatrix() { actualizarMatrices() ; return matriz_vista ; };
@@ -44,86 +44,86 @@ class Camara
 
    protected: // ------------------------------
 
-   bool      matrices_actualizadas = false ;        // true si matrices actualizadas
-   glm::mat4 matriz_vista = glm::mat4(1.0) , // matriz de vista
-             matriz_proye  = glm::mat4(1) ; // matriz de proyección
-   float     ratio_vp      = 1.0 ;         // alto del viewport dividido por el ancho del viewport
+   bool      matrices_actualizadas = false ;        // true if matrices are updated
+   glm::mat4 matriz_vista = glm::mat4(1.0) , // view matrix
+             matriz_proye  = glm::mat4(1) ; // projection matrix
+   float     ratio_vp      = 1.0 ;         // viewport height divided by viewport width
 
-   // actualiza 'matriz_vista' y 'matriz_proye' a partir de los parámetros
-   // específicos de cada tipo de cámara
+   // update 'matriz_vista' and 'matriz_proye' from the parameters
+   // specific to each camera type
    virtual void actualizarMatrices() ;
 
    
 } ;
 
 // ******************************************************************
-// clase (abstracta) para cámaras interactivas (cámaras manipulables)
+// (abstract) class for interactive cameras (manipulable cameras)
 
 class CamaraInteractiva : public Camara
 {
    public:
-   // desplazar o rotar la cámara en horizontal 'da' unidades y en vertical 'db' unidades
-   // (en horizontal y en vertical aquí se entiende relativo al marco de camara)
+   // move or rotate the camera by 'da' units horizontally and 'db' units vertically
+   // (horizontal and vertical here are relative to the camera frame)
    virtual void desplRotarXY( const float da, const float db ) = 0 ;
 
-   // acercar/alejar o desplazar la camara en el eje Z un total de 'dz' unidades
-   // (el eje es el eje Z, relativo al marco de la camara, es decir, perpendicular al plano de visión)
+   // zoom in/out or move the camera along the Z axis by a total of 'dz' units
+   // (the axis is Z, relative to the camera frame, i.e., perpendicular to the view plane)
    virtual void moverZ( const float dz ) = 0 ;
 
-   // hacer que apunte hacía el punto de atención 'paten' y
-   // cambiar de modo a modo examinar
-   // por defecto imprime mensaje de advertencia de que la cámra no ofrece esta funcionalidad
+   // make it look toward the attention point 'paten' and
+   // switch to examine mode
+   // by default prints a warning that the camera does not provide this functionality
    virtual void mirarHacia( const glm::vec3 & paten ) ;
 
-   // cambiar el modo de la camara al siguiente modo o al primero
-   // por defecto imprime mensaje de advertencia de que la cámra no ofrece esta funcionalidad
+   // change the camera mode to the next one or the first one
+   // by default prints a warning that the camera does not provide this functionality
    virtual void siguienteModo()  ;
 
    virtual std::string descripcion() override 
    {
-      return "cámara interactiva" ;
+      return "interactive camera" ;
    }
 } ;
 
 // ******************************************************************
-// clase para una cámara orbital sencilla que siempre tiene el origen de
-// coordenadas del mundo en el centro de la imagen (tiene un modo único)
+// class for a simple orbital camera that always keeps the world
+// coordinate origin at the center of the image (single mode)
 
 class CamaraOrbitalSimple : public CamaraInteractiva
 {
    public:
 
-   // cambia la longitud usando 'da' y la latitud usando 'db'
+   // changes longitude using 'da' and latitude using 'db'
    virtual void desplRotarXY( const float da, const float db )   override ;
 
-   // acercar/alejar 'dz' unidades al origen (sin 'atravesarlo' nunca)
+   // zoom in/out by 'dz' units toward the origin (without ever crossing it)
    virtual void moverZ( const float dz )  override ;
 
-   // lee la descripción de la cámara (y probablemente su estado)
+   // get the camera description (and probably its state)
    virtual std::string descripcion() override ;
 
    protected:
-      // posición de la cámara en coordenadas esféricas relativas al origen de
-      // coordenadas del mundo (y a sus ejes)
-      float a = 0.0,   // ángulo horizontal (angulo del eje Z con el plano z==0 en cc.m.)
-            b = 0.0,   // ángulo vértical (angulo del eje Z con el plano y==0 en cc.m.)
-            d = 4.0 ;  // distancia entre origen de cámara y origen de cc. de mundo
+      // camera position in spherical coordinates relative to the world
+      // coordinate origin (and its axes)
+      float a = 0.0,   // horizontal angle (angle of Z axis with plane z==0 in world coords)
+            b = 0.0,   // vertical angle (angle of Z axis with plane y==0 in world coords)
+            d = 4.0 ;  // distance between camera origin and world coordinate origin
 
    virtual void actualizarMatrices() override ;
 } ;
 
-// tipo enumerado para los modos de las cámaras interactivas
+// enum type for interactive camera modes
 enum class ModoCam { examinar, prim_pers_rot, prim_pers_despl } ;
 
 // ******************************************************************
-// cámara interactiva completa, que puede funcionar en tres modos, y
-// que puede centrarse en un punto (pasa a modo examinar)
+// full interactive camera, can work in three modes,
+// and can focus on a point (switches to examine mode)
 //
-// Los modos son:
+// Modes are:
 //
-//   ** modo examinar (o modo orbital), relativo a un punto de atención
-//   ** modo primera persona con rotaciones (típico de los videojuegos)
-//   ** modo primera persona con desplazamientos  (horizontal o vertical)
+//   ** examine mode (or orbital mode), relative to an attention point
+//   ** first-person mode with rotations (typical in videogames)
+//   ** first-person mode with displacements (horizontal or vertical)
 
 
 
@@ -131,75 +131,75 @@ class Camara3Modos : public CamaraInteractiva
 {
    public:
 
-   // crea una cámara perspectiva con valores por defecto
+   // creates a perspective camera with default values
    Camara3Modos() ;
 
-   // crea una cámara, inicialmente en modo examinar, con el punto
-   // de atención en el origen, se especifica:
-   // * perspectiva_ini : true si es una camara perspectiva, false si es ortográfica
-   // * origen_ini      : punto de vista inicial (origen marco de cámara)
-   // * punto_aten_ini  : punto de atención
-   // * fovy_grad_ini   : si es perspectiva, la apertura de campo vertical, en grados
+   // creates a camera, initially in examine mode, with the attention
+   // point at the origin, specified by:
+   // * perspectiva_ini : true if it is a perspective camera, false if orthographic
+   // * origen_ini      : initial viewpoint (camera frame origin)
+   // * punto_aten_ini  : attention point
+   // * fovy_grad_ini   : if perspective, vertical field-of-view aperture in degrees
 
    Camara3Modos( const bool perspectiva_ini,
                  const glm::vec3 & origen_ini, const float ratio_vp_ini,
                  const glm::vec3 & punto_aten_ini, const float fovy_grad_ini = 70.0 ) ;
 
-   // desplazar o rotar la cámara en horizontal 'dx' unidades y en vertical 'dy' unidades
-   // (en horizontal y en vertical aquí se entiende relativo al marco de camara)
+   // move or rotate the camera by 'dx' units horizontally and 'dy' units vertically
+   // (horizontal and vertical here are relative to the camera frame)
    virtual void desplRotarXY( const float da, const float db )  override ;
 
-   // acercar/alejar la cámara respecto al punto de atención
-   // (el eje es el eje Z, relativo al marco de la camara, es decir, perpendicular al plano de visión)
+   // zoom in/out the camera relative to the attention point
+   // (the axis is Z, relative to the camera frame, i.e., perpendicular to the view plane)
    virtual void moverZ( const float dz )  override ;
 
-   // hacer que apunte hacía el punto de atención 'paten' y pasar a modo examinar
+   // make it look toward the attention point 'paten' and switch to examine mode
    virtual void mirarHacia( const glm::vec3 & nuevo_punto_aten )  override ;
 
-   // cambiar el modo de la camara al siguiente modo o al primero
+   // change the camera mode to the next one or the first one
    virtual void siguienteModo()  override ;
 
-   // devuelve el punto de atencion actual
+   // returns the current attention point
    virtual glm::vec3 puntoAtencion()  ;
 
-   // lee la descripción de la cámara (y probablemente su estado)
+   // get the camera description (and probably its state)
    virtual std::string descripcion() override ;
 
 private:
 
-      // modo actual de la cámara,
-      // (0=examinar, 1=prim.persona con desplazamientos, 2=prim.persona con rotaciones)
-      ModoCam modo_actual = ModoCam::examinar ;
+   // current camera mode,
+   // (0=examine, 1=first-person with displacements, 2=first-person with rotations)
+   ModoCam modo_actual = ModoCam::examinar ;
 
-      // true si la cámara es perspectiva, false en otro caso:
-      bool perspectiva = true ;
+   // true if the camera is perspective, false otherwise:
+   bool perspectiva = true ;
 
-      // apertura de campo vertical en grados
-      float fovy_grad = 60.0 ;
+   // vertical field-of-view aperture in degrees
+   float fovy_grad = 60.0 ;
 
-      // distancia inicial entre el origen del marco y el punto de atención
-      const float d_ini = 3.0 ;
+   // initial distance between frame origin and attention point
+   const float d_ini = 3.0 ;
 
-      // punto de atención
-      glm::vec3 punto_atencion = { 0.0, 0.0, 0.0 } ;
+   // attention point
+   glm::vec3 punto_atencion = { 0.0, 0.0, 0.0 } ;
 
-      // coordenadas polares del origen de coordenadas del mcv, respecto del punto de atención
-      // las componentes 0 y 1 son los ángulos de longitud y latitud, ambos EN RADIANES, inicialmente 0
-      // la componente 2 es la distancia al origen, inicialmente 'd_ini'
-      glm::vec3 org_polares = { 0.0, 0.0, d_ini } ;
+   // polar coordinates of the view-frame coordinate origin, relative to the attention point
+   // components 0 and 1 are longitude and latitude angles, both IN RADIANS, initially 0
+   // component 2 is the distance to the origin, initially 'd_ini'
+   glm::vec3 org_polares = { 0.0, 0.0, d_ini } ;
 
-      // coordenadas cartesianas del origen de coordenadas del mcv, respecto del punto de atención
-      // ( == origen del MCV menos punto de atención)
-      glm::vec3 org_cartesianas = { 0.0, 0.0, d_ini };
+   // cartesian coordinates of the view-frame coordinate origin, relative to the attention point
+   // ( == view-frame origin minus attention point)
+   glm::vec3 org_cartesianas = { 0.0, 0.0, d_ini };
 
-      // ejes del marco de coordenadas de vista
-      glm::vec3 eje[3] = {  { 1.0, 0.0, 0.0 }, // eje X
-                            { 0.0, 1.0, 0.0 }, // eje Y
-                            { 0.0, 0.0, 1.0 }  // eje Z
+   // axes of the view coordinate frame
+   glm::vec3 eje[3] = {  { 1.0, 0.0, 0.0 }, // X axis
+                { 0.0, 1.0, 0.0 }, // Y axis
+                { 0.0, 0.0, 1.0 }  // Z axis
                          };
 
-      virtual void actualizarMatrices() override ;
-      void actualizarEjesMCV() ;
+   virtual void actualizarMatrices() override ;
+   void actualizarEjesMCV() ;
 
 } ;
 

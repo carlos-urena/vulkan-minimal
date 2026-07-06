@@ -80,6 +80,10 @@ static const char* vert_shader_src = R"glsl(
 
     void main() 
     {
+        mat4 flipy_mat = mat4( 1.0, 0.0, 0.0, 0.0,
+                            0.0,-1.0, 0.0, 0.0,
+                            0.0, 0.0, 1.0, 0.0,
+                            0.0, 0.0, 0.0, 1.0 ) ;
         gl_Position = ubo.proj_mat * ubo.view_mat * pc.model_mat * vec4( in_position, 1.0 );
         color = in_color ;
         tex_coords = in_tex_coords ;
