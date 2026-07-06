@@ -22,6 +22,7 @@ void CreateCilindricalTopologyTriangles( std::vector<glm::uvec3> & indices,
       indices.push_back({ i00, i11, i10 });
    }
 }
+// ---------------------------------------------------------------------------
 
 void CreateGridTopologyTriangles( std::vector<glm::uvec3> & indices, 
                                             const unsigned na, const unsigned nb )
@@ -47,17 +48,18 @@ void CreateGridTopologyTriangles( std::vector<glm::uvec3> & indices,
 
 class IMTriangle : public IndexedMesh
 {
-   public:
-      IMTriangle( const std::vector<glm::vec3> & vertices, const glm::vec3 & color) ;   
+   public: IMTriangle( const std::vector<glm::vec3> & vertices, const glm::vec3 & color) ;   
 } ;
+
+// ---------------------------------------------------------------------------------------
+// Indexed mesh with a sphere shape
 
 class IMSphere : public IndexedMesh
 {
-   public:
-      IMSphere(  ) ;
+   public: IMSphere(  ) ;
 } ;
 
-
+// ---------------------------------------------------------------------------------------
 
 IMTriangle::IMTriangle( const std::vector<glm::vec3> & p_vertices, const glm::vec3 & p_color ) 
 {
@@ -209,7 +211,7 @@ void AxesObject::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & c
 
    constexpr float radius = 0.03f ;
    const mat4 
-      scale_mat = glm::scale(glm::vec3( radius, radius, 1.5f)),
+      scale_mat = glm::scale(glm::vec3( radius, radius, 1.0f)),
       rot_m90_x = glm::rotate( radians(-90.0f), glm::vec3(1.0,0.0,0.0) ),
       rot_90_y  = glm::rotate( radians(90.0f),  glm::vec3(0.0,1.0,0.0) ),
       sphere_scale_mat = glm::scale(glm::vec3( 0.3f, 0.3f, 0.3f )) ;

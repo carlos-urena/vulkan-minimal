@@ -242,10 +242,10 @@ void CamaraInteractiva::siguienteModo()
 // ----------------------------------------------------------------------------
 // changes longitude using 'dx' and latitude using 'dy'
 
-void CamaraOrbitalSimple::desplRotarXY( const float da, const float db )
+void CamaraOrbitalSimple::desplRotarXY( const float dh, const float dv )
 {
-   a = a+da ;
-   b = b+db ;
+   horz_angle_deg += dh ;
+   vert_angle_deg += dv ;
    matrices_actualizadas = false ;
 }
 
@@ -270,8 +270,8 @@ void CamaraOrbitalSimple::actualizarMatrices()
    //cout << "CamaraOrbitalSimple::actualizarMatrices() : start: a == " << a << ", b == " << b << ", d == " << d << endl ;
    using namespace glm ;
    matriz_vista = translate( vec3( 0.0, 0.0, -d) ) *          // MAT_Traslacion( { 0.0, 0.0, -d } ) *
-                  rotate( radians(b),  vec3( 1.0,0.0,0.0 )) * // MAT_Rotation( b,  { 1.0,0.0,0.0} ) *
-                  rotate( radians(-a), vec3( 0.0,1.0,0.0 )) ; // MAT_Rotation( -a, { 0.0,1.0,0.0}  ) ;
+                  rotate( radians(vert_angle_deg),  vec3( 1.0,0.0,0.0 )) * // MAT_Rotation( b,  { 1.0,0.0,0.0} ) *
+                  rotate( radians(-horz_angle_deg), vec3( 0.0,1.0,0.0 )) ; // MAT_Rotation( -a, { 0.0,1.0,0.0}  ) ;
 
    constexpr float
       fovy_grad = 70.0,
@@ -291,7 +291,7 @@ void CamaraOrbitalSimple::actualizarMatrices()
 std::string CamaraOrbitalSimple::descripcion()
 {
    using namespace std ;
-   return string("simple orbital camera, angles: a = ") + to_string(a) + ", b = " + to_string(b) ;
+   return string("simple orbital camera, angles: a = ") + to_string(horz_angle_deg) + ", b = " + to_string(vert_angle_deg) ;
 }
 
 // ******************************************************************
@@ -391,7 +391,7 @@ Camara3Modos::Camara3Modos( const bool perspectiva_ini,
 // move or rotate the camera by 'dx' units horizontally and 'dy' units vertically
 // (horizontal and vertical here are relative to the camera frame)
 
-void Camara3Modos::desplRotarXY( const float da, const float db )
+void Camara3Modos::desplRotarXY( const float dh, const float dv )
 {
    switch( modo_actual )
    {
@@ -404,8 +404,8 @@ void Camara3Modos::desplRotarXY( const float da, const float db )
          constexpr float pi2 = M_PI/2.0f - 0.01 ;
          float a = org_polares[0], b = org_polares[1], r = org_polares[2];
 
-         a = a + da*0.02f ; // note: 'a' is in radians
-         b = std::min( std::max( b+db*0.02f, -pi2), +pi2 );
+         a = a + dh*0.02f ; // note: 'a' is in radians
+         b = std::min( std::max( b+dv*0.02f, -pi2), +pi2 );
 
          org_polares     = glm::vec3 { a, b, r } ;
          org_cartesianas = Cartesianas( org_polares );
@@ -428,8 +428,8 @@ void Camara3Modos::desplRotarXY( const float da, const float db )
          float a = org_polares[0], b = org_polares[1], r = org_polares[2];
 
          // same as 'examine' mode
-         a = a + da*0.02f ; // note: 'a' is in radians
-         b = std::min( std::max( b+db*0.02f, -pi2), +pi2 );
+         a = a + dh*0.02f ; // note: 'a' is in radians
+         b = std::min( std::max( b+dv*0.02f, -pi2), +pi2 );
 
          org_polares = glm::vec3( a,b,r ) ;
 
@@ -450,7 +450,7 @@ void Camara3Modos::desplRotarXY( const float da, const float db )
          //   by 'db' units along camera Y axis.
          // (note: axes do not change)
          
-         punto_atencion = punto_atencion + da*0.02f*eje[0] + db*0.02f*eje[1] ;
+         punto_atencion = punto_atencion + dh*0.02f*eje[0] + dv*0.02f*eje[1] ;
          break ;
       }
    }

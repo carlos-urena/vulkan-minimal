@@ -64,7 +64,7 @@ class CamaraInteractiva : public Camara
    public:
    // move or rotate the camera by 'da' units horizontally and 'db' units vertically
    // (horizontal and vertical here are relative to the camera frame)
-   virtual void desplRotarXY( const float da, const float db ) = 0 ;
+   virtual void desplRotarXY( const float dh, const float dv ) = 0 ;
 
    // zoom in/out or move the camera along the Z axis by a total of 'dz' units
    // (the axis is Z, relative to the camera frame, i.e., perpendicular to the view plane)
@@ -94,7 +94,7 @@ class CamaraOrbitalSimple : public CamaraInteractiva
    public:
 
    // changes longitude using 'da' and latitude using 'db'
-   virtual void desplRotarXY( const float da, const float db )   override ;
+   virtual void desplRotarXY( const float dh, const float dv )   override ;
 
    // zoom in/out by 'dz' units toward the origin (without ever crossing it)
    virtual void moverZ( const float dz )  override ;
@@ -105,9 +105,9 @@ class CamaraOrbitalSimple : public CamaraInteractiva
    protected:
       // camera position in spherical coordinates relative to the world
       // coordinate origin (and its axes)
-      float a = 0.0,   // horizontal angle (angle of Z axis with plane z==0 in world coords)
-            b = 0.0,   // vertical angle (angle of Z axis with plane y==0 in world coords)
-            d = 4.0 ;  // distance between camera origin and world coordinate origin
+      float horz_angle_deg = 45.0,   // horizontal angle (angle of Z axis with plane z==0 in world coords) in degrees
+            vert_angle_deg = -20.0,   // vertical angle (angle of Z axis with plane y==0 in world coords) in degrees
+            d = 3.0 ;  // distance between camera origin and world coordinate origin
 
    virtual void actualizarMatrices() override ;
 } ;
@@ -147,7 +147,7 @@ class Camara3Modos : public CamaraInteractiva
 
    // move or rotate the camera by 'dx' units horizontally and 'dy' units vertically
    // (horizontal and vertical here are relative to the camera frame)
-   virtual void desplRotarXY( const float da, const float db )  override ;
+   virtual void desplRotarXY( const float dh, const float dv )  override ;
 
    // zoom in/out the camera relative to the attention point
    // (the axis is Z, relative to the camera frame, i.e., perpendicular to the view plane)
