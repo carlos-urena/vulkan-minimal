@@ -51,6 +51,12 @@ class IMTriangle : public IndexedMesh
       IMTriangle( const std::vector<glm::vec3> & vertices, const glm::vec3 & color) ;   
 } ;
 
+class IMSphere : public IndexedMesh
+{
+   public:
+      IMSphere(  ) ;
+} ;
+
 
 
 IMTriangle::IMTriangle( const std::vector<glm::vec3> & p_vertices, const glm::vec3 & p_color ) 
@@ -70,7 +76,32 @@ IMTriangle::IMTriangle( const std::vector<glm::vec3> & p_vertices, const glm::ve
    triangles.push_back( { 0, 1, 2 } ) ;
 }
 
+IMSphere::IMSphere(  ) 
+{
+   using namespace glm ;
+   constexpr unsigned int na = 16, nb = 32 ;  // number of rows and columns of vertexes 
+   
+   CreateCilindricalTopologyTriangles( triangles, na, nb );  
 
+   for( unsigned iz = 0 ; iz < na  ; iz++ )
+   for( unsigned is = 0 ; is < nb ; is++ )
+   {   
+      const float fz = float(iz)/float(na-1), 
+                  fs = float(is)/float(nb-1), 
+                  a  = 2.0f*M_PI*fs, 
+                  b  = M_PI*(fz-0.5f),
+                  ca = cos(a), 
+                  sa = sin(a),
+                  cb = cos(b),
+                  sb = sin(b);
+
+      vec3 vert = { ca*cb, sb, sa*cb } ;
+      vertices.push_back( vert );   
+      vert_colors.push_back( { 0.0f, 1.0f, 1.0f } );
+      vert_tcc.push_back( { fs, fz } );
+      vert_normals.push_back( vert );
+   }
+}
 // ---------------------------------------------------------------------------------------
 
 class CylinderZ01 : public IndexedMesh
@@ -108,9 +139,7 @@ CylinderZ01::CylinderZ01( const std::string & name, const unsigned num_slices )
         vert_normals.push_back( { ca, sa, 0.0f } );
     }
 }
-
 // ---------------------------------------------------------------------------------------
-
 
 AxesObject::AxesObject( ) 
 {
@@ -126,8 +155,7 @@ AxesObject::AxesObject( )
 
    constexpr float d = 1.05, h = 0.15 ;
 
-   xtri = new IMTriangle( 
-      std::vector<glm::vec3>{  
+   xtri = new IMTriangle( {  
          vec3( d,   0.0f, -h ), 
          vec3( d,   0.0f, +h ), 
          vec3( d+2*h, 0.0f, 0.0f ) 
@@ -136,8 +164,7 @@ AxesObject::AxesObject( )
    ) ;   
    Assert( xtri != nullptr, "Cannot create X axis triangle" ) ;
 
-   ytri = new IMTriangle( 
-      {  vec3(  -h,  d,   0.0f ), 
+   ytri = new IMTriangle( {  vec3(  -h,  d,   0.0f ), 
          vec3(   h,  d,   0.0f ), 
          vec3( 0.0f, d+2*h, 0.0f ) 
       }, 
@@ -145,14 +172,15 @@ AxesObject::AxesObject( )
    ) ;   
    Assert( ytri != nullptr, "Cannot create Y axis triangle" ) ;
 
-   ztri = new IMTriangle( 
-      {  vec3(   -h, 0.0f, d ), 
+   ztri = new IMTriangle( {  vec3(   -h, 0.0f, d ), 
          vec3(    h, 0.0f, d ), 
          vec3( 0.0f, 0.0f, d+2*h ) 
       }, 
       vec3( 0.0f, 0.0f, 1.0f ) 
    ) ;   
    Assert( ztri != nullptr, "Cannot create Z axis triangle" ) ;
+
+   sphere = new IMSphere() ; Assert( sphere != nullptr, "Cannot create sphere" ) ;
 }
 
 // ---------------------------------------------------------------------------------------
@@ -181,40 +209,55 @@ void AxesObject::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & c
 
    constexpr float radius = 0.03f ;
    const mat4 
-      scale_mat = glm::scale(glm::vec3( radius, radius, 1.0f)),
+      scale_mat = glm::scale(glm::vec3( radius, radius, 1.5f)),
       rot_m90_x = glm::rotate( radians(-90.0f), glm::vec3(1.0,0.0,0.0) ),
-      rot_90_y  = glm::rotate( radians(90.0f),  glm::vec3(0.0,1.0,0.0) );
+      rot_90_y  = glm::rotate( radians(90.0f),  glm::vec3(0.0,1.0,0.0) ),
+      sphere_scale_mat = glm::scale(glm::vec3( 0.3f, 0.3f, 0.3f )) ;
 
    // save previous pipeline state
    int prev_texture_index = pipeline3d->getTextureIndex() ; // save previous texture index
    int prev_base_color_index = pipeline3d->getBaseColorIndex() ; // save previous base color index
 
-   // disable uso of textures
+   // disable use of textures
    pipeline3d->setTextureIndex( cmd_vk, -1 ) ; // disable use of textures
 
+   // draw Z axis cylinder
    pipeline3d->pushModelMatrix( cmd_vk, scale_mat ) ; 
-   pipeline3d->setBaseColorIndex( cmd_vk, blue_color_index ) ;
-   axes_cylinder->drawVK( pipeline, context, cmd_vk ) ; // axis Z (blue)
+      pipeline3d->setBaseColorIndex( cmd_vk, blue_color_index ) ;
+      axes_cylinder->drawVK( pipeline, context, cmd_vk ) ; // axis Z (blue)
    pipeline3d->popModelMatrix( cmd_vk ) ;
 
+   // draw Y axis cylinder
    pipeline3d->pushModelMatrix( cmd_vk, rot_m90_x* scale_mat ) ;
-   pipeline3d->setBaseColorIndex( cmd_vk, green_color_index ) ;
-   axes_cylinder->drawVK( pipeline, context, cmd_vk ) ; // axis Y (green)
+      pipeline3d->setBaseColorIndex( cmd_vk, green_color_index ) ;
+      axes_cylinder->drawVK( pipeline, context, cmd_vk ) ; // axis Y (green)
    pipeline3d->popModelMatrix( cmd_vk );
 
+   // draw X axis cylinder
    pipeline3d->pushModelMatrix( cmd_vk, rot_90_y *scale_mat) ;
-   pipeline3d->setBaseColorIndex( cmd_vk, red_color_index ) ;
-   axes_cylinder->drawVK( pipeline, context, cmd_vk ) ; // axis X (red)
+      pipeline3d->setBaseColorIndex( cmd_vk, red_color_index ) ;
+      axes_cylinder->drawVK( pipeline, context, cmd_vk ) ; // axis X (red)
    pipeline3d->popModelMatrix( cmd_vk );
 
+   // draw X axis triangle
    pipeline3d->setBaseColorIndex( cmd_vk, red_color_index ) ;
    xtri->drawVK( pipeline, context, cmd_vk ) ; // axis X (red)
+   
+   // draw Y axis triangle
    pipeline3d->setBaseColorIndex( cmd_vk, green_color_index ) ;
    ytri->drawVK( pipeline, context, cmd_vk ) ; // axis Y (green)
+   
+   // draw Z axis triangle
    pipeline3d->setBaseColorIndex( cmd_vk, blue_color_index ) ;
    ztri->drawVK( pipeline, context, cmd_vk ) ; // axis Z (blue)
 
-   // disable base color for next objects to be drawn
+   // draw Sphere
+   pipeline3d->setBaseColorIndex( cmd_vk, -1 ) ; // disable base color for next objects to be drawn
+   pipeline3d->pushModelMatrix( cmd_vk, sphere_scale_mat ) ;
+      sphere->drawVK( pipeline, context, cmd_vk ) ; // draw a sphere to test normals, lighting and relative scalings in X, Y, Z
+   pipeline3d->popModelMatrix( cmd_vk ) ;
+
+   // restore previous colors in the pipeline
    pipeline3d->setBaseColorIndex( cmd_vk,  prev_base_color_index ) ; // restore previous base color index
    pipeline3d->setTextureIndex( cmd_vk, prev_texture_index ) ; // restore previous texture index
 }

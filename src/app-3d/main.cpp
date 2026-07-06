@@ -18,6 +18,8 @@
 
 class Triangle : public vkhc::VertexArray 
 {
+
+    
     public: 
     
     inline Triangle( vkhc::VulkanContext & vulkan_context)
@@ -66,6 +68,8 @@ class App3D : public ilc::Application
 {
 
     private:
+
+    static constexpr bool debug_events = false ; 
 
     // parameters for the triangle model matrix and animation
     float curr_angle_rad = M_PI/2.0f ;  // current angle in radians
@@ -171,11 +175,13 @@ App3D::~App3D()
 void App3D::mouseButtonEventCB( double xpos, double ypos, int button, int action, int mods )
 {
     using namespace std ;
-    cout << "App3D::mouseButtonEventCB: xpos=" << xpos << " ypos=" << ypos << " button=" << button << " action=" << action << " mods=" << mods << endl ;
+    if ( debug_events )
+        cout << "App3D::mouseButtonEventCB: xpos=" << xpos << " ypos=" << ypos << " button=" << button << " action=" << action << " mods=" << mods << endl ;
     if ( button == 1 && action == GLFW_PRESS )
     {
         prev_posx = xpos ;
         prev_posy = ypos ;
+        if ( debug_events )
         cout << "App3D::mouseButtonEventCB: DRAG STARTxpos=" << xpos << " ypos=" << ypos << " button=" << button << " action=" << action << " mods=" << mods << endl ;
     }
 }
@@ -186,7 +192,8 @@ void App3D::mousePositionEventCB( double xpos, double ypos, int button )
     if ( button != 1 ) // left button
         return ;
 
-    cout << "App3D::mousePositionEventCB: xpos=" << xpos << " ypos=" << ypos << " button=" << button << endl ;
+    if ( debug_events )
+        cout << "App3D::mousePositionEventCB: xpos=" << xpos << " ypos=" << ypos << " button=" << button << endl ;
     assert( camera != nullptr ) ;
     const float dx = float(xpos - prev_posx) ;
     const float dy = float(ypos - prev_posy) ;
@@ -287,7 +294,7 @@ void App3D::drawFrame( VkCommandBuffer & cmd )
     pipeline->setBaseColorsSet() ;
 
     // give initial values to the push constants at the begining of 'cmd'
-    pipeline->setModelMatrix( cmd, model_mat ) ;
+    pipeline->resetModelMatrix( cmd ) ; // sets the model matrix to identity and clears the model matrix stack
     pipeline->setTextureIndex( cmd, texture_index ) ;
     pipeline->setBaseColorIndex( cmd, -1 ) ;
 

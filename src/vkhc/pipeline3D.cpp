@@ -261,6 +261,7 @@ void Pipeline3D::resetModelMatrix( VkCommandBuffer & vk_cmd )
     if ( ! model_matrix_stack.empty() )
         std::cout << "Pipeline3D::resetModelMatrix: WARNING: model matrix stack was not empty, it has been cleared." << std::endl ;
     model_matrix_stack.clear() ;
+    current_model_matrix = glm::mat4(1.0f) ;
     setModelMatrix( vk_cmd, glm::mat4(1.0f) );
 }
 
