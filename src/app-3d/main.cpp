@@ -129,6 +129,9 @@ class App3D : public ilc::Application
     // button is 0 for the right button and 1 for the left button...
     virtual void mousePositionEventCB( double xpos, double ypos, int button ) override ; 
 
+    // scroll event callback (called when the mouse wheel is scrolled)
+    virtual void scrollEventCB( double xoffset, double yoffset ) override ;
+
 
     // mouse position event CB 
 } ;
@@ -153,7 +156,7 @@ App3D::App3D( )
     camera       = new CamaraOrbitalSimple();          assert( camera != nullptr ) ;
 
     textures_set->bindTo( *pipeline ) ; // bind the textures set to the pipeline, so that its textures can be used in the fragment shader.
-    captureEvents( true, true, true );
+    captureEvents( true, true, true, true );
     cout  << "App3D::App3D -- ends" << endl ;
 } ;
 
@@ -185,6 +188,8 @@ void App3D::mouseButtonEventCB( double xpos, double ypos, int button, int action
         cout << "App3D::mouseButtonEventCB: DRAG STARTxpos=" << xpos << " ypos=" << ypos << " button=" << button << " action=" << action << " mods=" << mods << endl ;
     }
 }
+// ----------------------------------------------------------------------------------
+
 
 void App3D::mousePositionEventCB( double xpos, double ypos, int button ) 
 {
@@ -201,6 +206,16 @@ void App3D::mousePositionEventCB( double xpos, double ypos, int button )
     prev_posx = xpos ;
     prev_posy = ypos ;
     
+}
+// ----------------------------------------------------------------------------------
+
+void App3D::scrollEventCB( double xoffset, double yoffset ) 
+{
+    using namespace std ;
+    //if ( debug_events )
+        cout << "App3D::scrollEventCB: xoffset=" << xoffset << " yoffset=" << yoffset << endl ;
+    assert( camera != nullptr ) ;
+    camera->moverZ( -0.1f*float(yoffset) ) ; // zoom in/out
 }
 
 // ----------------------------------------------------------------------------------

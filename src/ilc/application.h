@@ -47,6 +47,7 @@ class Application
     bool key_events = false ; // key down/up 
     bool mouse_button_events = false ; // mouse button down/up
     bool mouse_position_events = false ; // mouse movements (with a button pressed)
+    bool scroll_events = false ; // mouse scroll events
 
     // ---------------------------------------------------------------------------------
 
@@ -59,7 +60,7 @@ class Application
     virtual ~Application() ;
 
     // Called by derived classes constructors to set which callbacks are captured 
-    void captureEvents( bool key_events, bool mouse_button_events, bool mouse_position_events ) ;
+    void captureEvents( bool key_events, bool mouse_button_events, bool mouse_position_events, bool scroll_events ) ;
 
     // Runs the aplication event + render loop (main loop)
     void run() ;
@@ -88,6 +89,7 @@ class Application
     
     // Event callback virtual methods (called by glfwPollEvents() or 
     // glfwWaitEvents() when a keyboard event is raised)
+    // If any derived class wants to capture, it must override the method.
 
     // Called when a key is pressed or released
     virtual void keyboardEventCB( int key, int scancode, int action, int mods ) ;
@@ -99,11 +101,14 @@ class Application
     // button is 0 for the right button and 1 for the left button...
     virtual void mousePositionEventCB( double xpos, double ypos, int button ) ; 
 
+    // Called when mouse wheel is scrolled
+    virtual void scrollEventCB( double xoffset, double yoffset ) ;
+
     // static event callback functions
     static void stKeyboardEventCB( GLFWwindow* window, int key, int scancode, int action, int mods ) ;
     static void stMouseButtonEventCB( GLFWwindow* window, int button, int action, int mods ) ;
     static void stMousePositionEventCB( GLFWwindow* window, double xpos, double ypos ) ; 
-
+    static void stScrollEventCB( GLFWwindow* window, double xoffset, double yoffset ) ;
 } ; // end of class Application
 
 } // end of namespace ilc

@@ -120,6 +120,26 @@ void Application::stMousePositionEventCB( GLFWwindow* window, double xpos, doubl
     
 }
 
+void Application::stScrollEventCB( GLFWwindow* window, double xoffset, double yoffset ) 
+{
+    using namespace std ;
+    if ( debug_events) 
+        cout << "Application::stScrollEventCB: xoffset=" << xoffset << ", yoffset=" << yoffset << endl ;
+
+    if ( app_singleton == nullptr ) 
+    {   std::cerr << "ScrollEventCB: warning: 'app_singleton' is null !" << std::endl ;
+        return ;
+    }
+
+    // forward the event to IMGUI (so it can process it, and set io.WantCaptureMouse accordingly)
+    ImGuiIO& io = ImGui::GetIO();
+    io.AddMouseWheelEvent( (float)xoffset, (float)yoffset ); 
+
+    if ( !io.WantCaptureMouse && app_singleton->scroll_events )
+        app_singleton->scrollEventCB( xoffset, yoffset ) ;
+    
+}
+
 // --------------------------------------------------------------------------------
 // Constructor of the base, Application class 
 
@@ -143,7 +163,7 @@ Application::Application( int nx, int ny, const std::string & title )
 // --------------------------------------------------------------------------------
 
 // Called by derived classes constructors to set which callbacks are captured 
-void Application::captureEvents( bool p_key_events, bool p_mouse_button_events, bool p_mouse_position_events ) 
+void Application::captureEvents( bool p_key_events, bool p_mouse_button_events, bool p_mouse_position_events, bool p_scroll_events )  
 {
     // keyboard event callback
     key_events = p_key_events ; // when true, key events are passed to the application 
@@ -158,6 +178,11 @@ void Application::captureEvents( bool p_key_events, bool p_mouse_button_events, 
     mouse_position_events = p_mouse_position_events ;
     if ( mouse_position_events )
         glfwSetCursorPosCallback( glfw_context->glfw_window, stMousePositionEventCB ) ; 
+    
+    // scroll event callback
+    scroll_events = p_scroll_events ;
+    if ( scroll_events )
+        glfwSetScrollCallback( glfw_context->glfw_window, stScrollEventCB ) ; 
 }
 
 // --------------------------------------------------------------------------------
@@ -186,6 +211,15 @@ void Application::mousePositionEventCB( double xpos, double ypos, int button )
     using namespace std ;
     if ( debug_events)
         cout << "Application::mousePositionEventCB: xpos=" << xpos << " ypos=" << ypos << " button=" << button << endl ;
+}
+
+
+void Application::scrollEventCB( double xoffset, double yoffset ) 
+{
+    // default implementation does nothing, derived classes can override it to process scroll events
+    using namespace std ;
+    if ( debug_events)
+        cout << "Application::scrollEventCB: xoffset=" << xoffset << " yoffset=" << yoffset << endl ;
 }
 
 // --------------------------------------------------------------------------------
