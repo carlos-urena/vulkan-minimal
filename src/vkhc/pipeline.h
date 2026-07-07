@@ -28,8 +28,9 @@ class ShadersSources
 } ;
 
 // ----------------------------------------------------------------------------
+// Types for values of Uniform or variables.
 
-enum UVT // Uniform value type
+enum class VType 
 {
     FLOAT,
     INT,
@@ -180,7 +181,7 @@ class BasicPipeline
     // (and 'alignment' must match the GLSL/std140 alignment for that member) <-- computed, not specified
     
     //void addUBOUniform( const std::string & name, uint32_t size, uint32_t alignment ) ;
-    void addUBOUniform( const std::string & name, const UVT type, const uint32_t num_values ) ;
+    void addUBOUniform( const std::string & name, const VType, const uint32_t num_values ) ;
 
     
     // Gives a value to a an UBO uniform (pre-rendering).

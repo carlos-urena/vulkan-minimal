@@ -492,29 +492,16 @@ Pipeline2DTess::Pipeline2DTess( VulkanContext & vulkan_context,
     addPushConstant( "model_mat", sizeof(glm::mat4) ); // model matrix 
     addPushConstant( "texture_index", sizeof(int) ); // active texture index, -1 if no texture is active.
     
-
-    // set metadata about UBO uniforms 
-    // addUBOUniform( "view_mat", sizeof(glm::mat4), 16 ); // view matrix
-    // addUBOUniform( "proj_mat", sizeof(glm::mat4), 16 ); // projection matrix
+    addUBOUniform( "view_mat", VType::MAT4x4, 1 ); // view matrix
+    addUBOUniform( "proj_mat", VType::MAT4x4, 1 ); // projection matrix
     
-    // addUBOUniform( "tsc_inner_level_0", sizeof(float), 4 ); // inner tessellation levels
-    // addUBOUniform( "tsc_inner_level_1", sizeof(float), 4 ); // inner tessellation levels
+    addUBOUniform( "tsc_inner_level_0", VType::FLOAT, 1 ); // inner tessellation levels
+    addUBOUniform( "tsc_inner_level_1", VType::FLOAT, 1 ); // inner tessellation levels
 
-    // addUBOUniform( "tsc_outer_level_0", sizeof(float), 4 ); // outer tessellation levels
-    // addUBOUniform( "tsc_outer_level_1", sizeof(float), 4 ); // outer tessellation levels
-    // addUBOUniform( "tsc_outer_level_2", sizeof(float), 4 ); // outer tessellation levels
-    // addUBOUniform( "tsc_outer_level_3", sizeof(float), 4 ); // outer tessellation levels
-
-    addUBOUniform( "view_mat", MAT4x4, 1 ); // view matrix
-    addUBOUniform( "proj_mat", MAT4x4, 1 ); // projection matrix
-    
-    addUBOUniform( "tsc_inner_level_0", FLOAT, 1 ); // inner tessellation levels
-    addUBOUniform( "tsc_inner_level_1", FLOAT, 1 ); // inner tessellation levels
-
-    addUBOUniform( "tsc_outer_level_0", FLOAT, 1 ); // outer tessellation levels
-    addUBOUniform( "tsc_outer_level_1", FLOAT, 1 ); // outer tessellation levels
-    addUBOUniform( "tsc_outer_level_2", FLOAT, 1 ); // outer tessellation levels
-    addUBOUniform( "tsc_outer_level_3", FLOAT, 1 ); // outer tessellation levels
+    addUBOUniform( "tsc_outer_level_0", VType::FLOAT, 1 ); // outer tessellation levels
+    addUBOUniform( "tsc_outer_level_1", VType::FLOAT, 1 ); // outer tessellation levels
+    addUBOUniform( "tsc_outer_level_2", VType::FLOAT, 1 ); // outer tessellation levels
+    addUBOUniform( "tsc_outer_level_3", VType::FLOAT, 1 ); // outer tessellation levels
 
 
     // set shaders sources 

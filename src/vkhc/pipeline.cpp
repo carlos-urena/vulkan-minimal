@@ -160,16 +160,18 @@ void BasicPipeline::setPushConstant( VkCommandBuffer & vk_cmd_buffer, const std:
     const VkPushConstantRange & range = vk_pc_ranges[ index ];
     vkCmdPushConstants( vk_cmd_buffer, vk_pipeline_layout, range.stageFlags, range.offset, range.size, data_ptr );
 }
+// -----------------------------------------------------------------------------
 
-// alignement must be 4 (for 4 bytes scalars) or 16 (for arrays of scalars), see std140 
-// layout rules for UBOs. The offset of each uniform is updated.
+// UBO uniforms alignment rules:
+//
+
 //
 // For alignment rules, see: Sub-section 2.15.3.1.2 - Standard Uniform Block Layout
 // here: https://registry.khronos.org/OpenGL/extensions/ARB/ARB_uniform_buffer_object.txt
 
-// The computed alignment in bytes is a power of two, more concretelly:
+// The computed alignment in bytes is a power of two, more concretely:
 //
-// - for floats, ints, unsigned ints: 4 bytes (just its size), rule (1)
+// - for floats, ints, unsigned ints: 4 bytes , rule (1)
 // - for vec2, ivec2, uvec2: 8 bytes, rule (2) 
 // - for vec3, uvec3: 16 bytes,  rule (3)
 // - for vec4, ivec4, uvec4: 16 bytes, rule (2) 
@@ -178,8 +180,30 @@ void BasicPipeline::setPushConstant( VkCommandBuffer & vk_cmd_buffer, const std:
 //   Note that for arrays, the next uniform offset is the next multiple of the alignment,
 //   This is implemented by computing a padded_size for the uniform.
 
+// ----
+// helper functions:
 
-void ComputeAlignmentAndPaddedSize( const UVT type, const uint32_t num_values, 
+// -------------------------------------------------------------------------------------
+// Compute a padded size from a size and alignment. If alignment is 2^n, then the 
+// padded size is the next multiple of alignment (greater or equal to the original size)
+// The value is computed by setting to 0 the n least significative bits of 
+// ( size + alignment - 1), 
+//
+// Paramters: 
+//   size      --> original size 
+//   alignment --> alignment (must be a power of two)
+
+uint32_t PaddedSize( const uint32_t size, const uint32_t alignment ) 
+{
+    Assert( ( alignment & (alignment-1) ) == 0, "Computed alignment is not a power of two" );
+    return ( size + alignment - 1 ) & ~( alignment - 1 );
+}
+
+// -----------------------------------------------------------------------------
+// Compute the alignment and padded size for uniforms (for scalars, vectors, matrices, and also 
+// for arrays of those.
+
+void ComputeAlignmentAndPaddedSize( const VType type, const uint32_t num_values, 
                                     uint32_t & base_alignment, uint32_t & padded_size ) 
 {
     Assert( num_values > 0, "Error: num_values must be greater than 0" );
@@ -187,13 +211,13 @@ void ComputeAlignmentAndPaddedSize( const UVT type, const uint32_t num_values,
 
     switch( type ) 
     {
-        case FLOAT:  value_size = 4u;   value_alignment = 4u;  break ;
-        case INT:    value_size = 4u;   value_alignment = 4u;  break ;
-        case UINT:   value_size = 4u;   value_alignment = 4u;  break ;
-        case VEC2:   value_size = 8u;   value_alignment = 8u;  break ;
-        case VEC3:   value_size = 16u;  value_alignment = 16u; break ;
-        case VEC4:   value_size = 16u;  value_alignment = 16u; break ;
-        case MAT4x4: value_size = 64u;  value_alignment = 16u; break ;
+        case VType::FLOAT  : value_size = 4u  ;  value_alignment = 4u;  break ;
+        case VType::INT    : value_size = 4u  ;  value_alignment = 4u;  break ;
+        case VType::UINT   : value_size = 4u  ;  value_alignment = 4u;  break ;
+        case VType::VEC2   : value_size = 8u  ;  value_alignment = 8u;  break ;
+        case VType::VEC3   : value_size = 16u ;  value_alignment = 16u; break ;
+        case VType::VEC4   : value_size = 16u ;  value_alignment = 16u; break ;
+        case VType::MAT4x4 : value_size = 64u ;  value_alignment = 16u; break ;
         default: ErrorExit("Unsupported uniform type");
     }
 
@@ -205,8 +229,8 @@ void ComputeAlignmentAndPaddedSize( const UVT type, const uint32_t num_values,
     }
     else // the uniform is an array of values
     {
-        base_alignment = std::max( value_alignment, 16u ); // alignment is at least that of a vec4 for arrays
-        padded_size    = ( values_size + base_alignment - 1 ) & ~( base_alignment - 1 );  // adds padding at the end
+        base_alignment = std::max( value_alignment, 16u ); // alignment is at least that of a vec4 for arrays (that is, 16)
+        padded_size    = PaddedSize( values_size, base_alignment );  // adds padding at the end
     }
 
     // check that the alignment is a power of two
@@ -222,7 +246,7 @@ void ComputeAlignmentAndPaddedSize( const UVT type, const uint32_t num_values,
 // type: the type of the uniform variable (if not an array) or the type of each item in the array (if it is an array)
 // num_values: if the uniform is not an array, then 1, else the num of values in the array.
 
-void BasicPipeline::addUBOUniform( const std::string & name, const UVT type, const uint32_t num_values ) 
+void BasicPipeline::addUBOUniform( const std::string & name, const VType type, const uint32_t num_values ) 
 {
     assert( ! initialized ); 
     assert( num_values > 0 );
@@ -230,11 +254,8 @@ void BasicPipeline::addUBOUniform( const std::string & name, const UVT type, con
     uint32_t base_alignment, padded_size ;
     ComputeAlignmentAndPaddedSize( type, num_values, base_alignment, padded_size );
 
-    // compute the aligned offset for this new uniform. If alignment is 2^n, then the 
-    // aligned offset is the next multiple of alignment (greater or equal to >= ubou_total_size)
-    // The value is computed by setting to 0 the n least significative bits of 
-    // (ubou_total_size + alignment - 1), which is the maximun offset possible value.
-    const uint32_t aligned_offset = ( ubou_total_size + base_alignment - 1 ) & ~( base_alignment - 1 );
+    
+    const uint32_t aligned_offset = PaddedSize( ubou_total_size , base_alignment );
 
     // compute the new total size of the UBO, including the padding at the end of the new uniform
     const uint32_t new_ubou_total_size = aligned_offset + padded_size ;
