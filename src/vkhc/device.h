@@ -43,6 +43,8 @@ class Device  // includes physical device, device and queue creation
     bool likelyHasWireframeRender = false ;
     bool hasDynamicPrimitiveTopology = false ;
 
+    VkDeviceSize maxUBOSize = 0 ;
+
     float queuePriority = 1.0f;
 
     // list of required extensions 

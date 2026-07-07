@@ -129,7 +129,6 @@ App2D::App2D( )
     captureEvents( true, true, true, true );
     cout << "App2D::App2D -- ends" << endl ;
 } ;
-
 // ----------------------------------------------------------------------------------
 
 App2D::~App2D() 
@@ -141,9 +140,7 @@ App2D::~App2D()
 
     std::cout << "Deleted 'App2D' instance" << std::endl ;
 }
-
 // ----------------------------------------------------------------------------------
-
 
 void App2D::updateViewProjMats( vkhc::seconds_f frame_time_s )
 {
@@ -161,7 +158,6 @@ void App2D::updateViewProjMats( vkhc::seconds_f frame_time_s )
     proj_mat = scale( vec3( std::min(1.0f, ayx), std::min(1.0f, 1.0f/ayx), 1.0f ) ) ; 
 }
 // ----------------------------------------------------------------------------------
-
 
 char buffer[256] = { 0 } ; // buffer for IMGUI input text widget
 

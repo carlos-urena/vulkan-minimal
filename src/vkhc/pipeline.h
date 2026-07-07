@@ -119,7 +119,7 @@ class BasicPipeline
     std::vector<uint32_t>     ubou_sizes ;
     std::vector<uint32_t>     ubou_alignments ;
     uint32_t                  ubou_total_size = 0 ; // current total size of UBO variables (see addUBOuniform)
-    static constexpr uint32_t ubou_max_total_size = 16*1024 ; // probably more (check at runtme)
+    uint32_t                  ubou_max_total_size = 0 ; // obtained from the device in the constructor
 
     // (3) pointers to sources for each shader stage 
     ShadersSources shaders_sources ;

@@ -256,35 +256,6 @@ void BasicPipeline::addUBOUniform( const std::string & name, const UVT type, con
               << "offset " << aligned_offset 
               << std::endl ;
 }
-
-// void BasicPipeline::addUBOUniform( const std::string & name, uint32_t size, uint32_t alignment ) 
-// {
-//     assert( ! initialized ); 
-//     assert( size > 0 );
-//     assert( alignment > 0 );
-//     assert( ( alignment & (alignment-1) ) == 0 );
-
-//     // compute the aligned offset for this new uniform. If alignment is 2^n, then the 
-//     // aligned offset is the next multiple of alignment (greater or equal to >= ubou_total_size)
-//     // The value is computed by setting to 0 the n least significative bits of 
-//     // (ubou_total_size + alignment - 1), which is the maximun offset possible value.
-    
-
-//     const uint32_t aligned_offset = ( ubou_total_size + alignment - 1 ) & ~( alignment - 1 );
-
-//     // check that the new total size will fit in the maximum allowed size for UBOs 
-//     // (usually 64KB, but can be queried from the device properties)
-//     assert( aligned_offset + size <= ubou_max_total_size );
-
-//     ubou_names.push_back( name );
-//     ubou_offsets.push_back( aligned_offset );
-//     ubou_sizes.push_back( size );
-//     ubou_alignments.push_back( alignment );
-//     std::cout << "Added UBO uniform '" << name << "' with size " << size << " bytes, alignment " << alignment << ", offset " << aligned_offset << std::endl ;
-
-//     ubou_total_size = aligned_offset + size ;
-// }
-
 // -----------------------------------------------------------------------------
 // Searchs for an UBO uniform with the given name, returns its index or -1 when not found
 
@@ -755,6 +726,9 @@ BasicPipeline::BasicPipeline( VulkanContext & p_vulkan_context, const bool p_z_b
 
     assert( device != nullptr );
     assert( render_pass != nullptr );
+
+    ubou_max_total_size = device->maxUBOSize ;
+    Assert( ubou_max_total_size > 0, "BasicPipeline::BasicPipeline: Error: max UBO size is zero." );
 }
 // -------------------------------------------------------------------------------------------------
 // add this pipeline bind command to a command buffer 

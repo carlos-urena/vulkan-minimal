@@ -136,6 +136,8 @@ void Device::initializeGPUProperties()
     likelyHasTessellation = (vk_available_feat.tessellationShader == VK_TRUE);
     likelyHasGeometryShader = (vk_available_feat.geometryShader == VK_TRUE);
     likelyHasWireframeRender = (vk_available_feat.fillModeNonSolid == VK_TRUE);
+
+    maxUBOSize = vk_gpu_props.limits.maxUniformBufferRange;
     
     using namespace std ;
     cout
@@ -149,10 +151,13 @@ void Device::initializeGPUProperties()
             << VK_VERSION_MINOR(vk_gpu_props.driverVersion) << "." 
             << VK_VERSION_PATCH(vk_gpu_props.driverVersion) << endl
         << "  Max size for push constants block            : " << vk_gpu_props.limits.maxPushConstantsSize << " bytes" << endl 
+        << "  Max size for uniform buffer object (UBO)     : " << maxUBOSize << " bytes" << endl
         << "  Tessellation shader capability (guess)       : " << (likelyHasTessellation ? "likely yes" : "likely no") << endl 
         << "  Geometry shader capability (guess)           : " << (likelyHasGeometryShader ? "likely yes" : "likely no") << endl
         << "  Wireframe rendering capability (guess)       : " << (likelyHasWireframeRender ? "likely yes" : "likely no") << endl
-        << "  Dynamic primitive topology capability         : " << (hasDynamicPrimitiveTopology ? "yes" : "no") << endl ;
+        << "  Dynamic primitive topology capability        : " << (hasDynamicPrimitiveTopology ? "yes" : "no") << endl ;
+
+    
 
 }
 // ----------------------------------------------------------------------------------------
