@@ -164,16 +164,38 @@ void BasicPipeline::setPushConstant( VkCommandBuffer & vk_cmd_buffer, const std:
 // -----------------------------------------------------------------------------
 // adds a uniform variable to the UBO bound at set=0, binding=0
 // the calls order must match the order of variables in the UBO in shaders
+// alignement must be 4 (for 4 bytes scalars) or 16 (for arrays of scalars), see std140 
+// layout rules for UBOs. The offset of each uniform is updated.
+//
+// For alignment rules, see: Sub-section 2.15.3.1.2 - Standard Uniform Block Layout
+// here: https://registry.khronos.org/OpenGL/extensions/ARB/ARB_uniform_buffer_object.txt
 
+// The alignment in bytes is a power of two, more concretelly:
+//
+    // - for floats, ints, unsigned ints: 4 bytes (just its size), rule (1)
+    // - for vec2, ivec2, uvec2: 8 bytes, rule (2) 
+    // - for vec3, uvec3: 16 bytes,  rule (3)
+    // - for vec4, ivec4, uvec4: 16 bytes, rule (2) 
+    // - for arrays of values of any of the above, then rule (4) is used and
+    //   the alignment is the same as the values alignment, according to rules above.
 
 void BasicPipeline::addUBOUniform( const std::string & name, uint32_t size, uint32_t alignment ) 
 {
     assert( ! initialized ); 
     assert( size > 0 );
-    assert( alignment > 0 );
+    assert( alignment == 4 || alignment == 16 );
     assert( ( alignment & (alignment-1) ) == 0 );
 
+    // compute the aligned offset for this new uniform. If alignment is 2^n, then the 
+    // aligned offset is the next multiple of alignment (greater or equal to >= ubou_total_size)
+    // The value is computed by setting to 0 the n least significative bits of 
+    // (ubou_total_size + alignment - 1), which is the maximun offset possible value.
+    
+
     const uint32_t aligned_offset = ( ubou_total_size + alignment - 1 ) & ~( alignment - 1 );
+
+    // check that the new total size will fit in the maximum allowed size for UBOs 
+    // (usually 64KB, but can be queried from the device properties)
     assert( aligned_offset + size <= ubou_max_total_size );
 
     ubou_names.push_back( name );
