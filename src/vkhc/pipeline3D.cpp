@@ -154,15 +154,22 @@ Pipeline3D::Pipeline3D( VulkanContext & vulkan_context, const bool p_z_buffer_en
     addPushConstant( "base_color_index", sizeof(int) ); // base color index, -1 if no base color is active.
 
     
+    addUBOUniform( "view_mat", MAT4x4, 1 ); // view matrix
+    addUBOUniform( "proj_mat", MAT4x4, 1 ); // projection matrix
+    addUBOUniform( "material_params",  VEC4, max_num_materials ); // array of materials parameters
+    addUBOUniform( "materials_colors", VEC4, max_num_materials ); // array of materials colors
+    addUBOUniform( "num_materials", INT, 1 ); // current number of entries used in the 'material_params' and 'materials_colors' arrays
+    addUBOUniform( "base_colors", VEC4, max_num_base_colors ); // array of base colors
+    addUBOUniform( "num_base_colors", INT, 1 ); // current number of entries used in the 'base_colors' array
 
     // set metadata about UBO uniforms 
-    addUBOUniform( "view_mat", sizeof(glm::mat4), 16 ); // view matrix
-    addUBOUniform( "proj_mat", sizeof(glm::mat4), 16 ); // projection matrix
-    addUBOUniform( "material_params",  sizeof(glm::vec4)*max_num_materials, 16 ); // array of materials parameters
-    addUBOUniform( "materials_colors", sizeof(glm::vec4)*max_num_materials, 16 ); // array of materials colors
-    addUBOUniform( "num_materials", sizeof(int), 4 ); // current number of entries used in the 'material_params' and 'materials_colors' arrays
-    addUBOUniform( "base_colors", sizeof(glm::vec4)*max_num_base_colors, 16 ); // array of base colors
-    addUBOUniform( "num_base_colors", sizeof(int), 4 ); // current number of entries used in the 'base_colors' array
+    // addUBOUniform( "view_mat", sizeof(glm::mat4), 16 ); // view matrix
+    // addUBOUniform( "proj_mat", sizeof(glm::mat4), 16 ); // projection matrix
+    // addUBOUniform( "material_params",  sizeof(glm::vec4)*max_num_materials, 16 ); // array of materials parameters
+    // addUBOUniform( "materials_colors", sizeof(glm::vec4)*max_num_materials, 16 ); // array of materials colors
+    // addUBOUniform( "num_materials", sizeof(int), 4 ); // current number of entries used in the 'material_params' and 'materials_colors' arrays
+    // addUBOUniform( "base_colors", sizeof(glm::vec4)*max_num_base_colors, 16 ); // array of base colors
+    // addUBOUniform( "num_base_colors", sizeof(int), 4 ); // current number of entries used in the 'base_colors' array
     
     // set shaders sources 
     shaders_sources = 

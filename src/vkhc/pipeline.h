@@ -27,6 +27,23 @@ class ShadersSources
     std::string * fragment_shader_src     = nullptr ;
 } ;
 
+// ----------------------------------------------------------------------------
+
+enum UVT // Uniform value type
+{
+    FLOAT,
+    INT,
+    UINT,
+    VEC2,
+    VEC3,
+    VEC4,
+    MAT4x4
+} ;
+
+// -----------------------------------------------------------------------------
+
+//void ComputeAlignmentAndPaddedSize( const UVT type, const uint32_t num_values, uint32_t & alignment, uint32_t & size ) ;
+
 // --------------------------------------------------------------------------------
 // Replaces a line starting with //#keyword with substituion text, returns new text 
 
@@ -160,8 +177,11 @@ class BasicPipeline
    
     // Adds a uniform variable to the UBO bound at set=0, binding=0.
     // The calls order must match the order of variables in the UBO in shaders,
-    // and 'alignment' must match the GLSL/std140 alignment for that member.
-    void addUBOUniform( const std::string & name, uint32_t size, uint32_t alignment ) ;
+    // (and 'alignment' must match the GLSL/std140 alignment for that member) <-- computed, not specified
+    
+    //void addUBOUniform( const std::string & name, uint32_t size, uint32_t alignment ) ;
+    void addUBOUniform( const std::string & name, const UVT type, const uint32_t num_values ) ;
+
     
     // Gives a value to a an UBO uniform (pre-rendering).
     void setUBOUniform( const std::string & name, const void * data_ptr ) ;

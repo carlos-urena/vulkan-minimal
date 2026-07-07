@@ -128,8 +128,8 @@ BasicPipeline2D::BasicPipeline2D( VulkanContext & vulkan_context,
     addPushConstant( "texture_index", sizeof(int) ); // active texture index, -1 if no texture is active.
 
     // set metadata about UBO uniforms 
-    addUBOUniform( "view_mat", sizeof(glm::mat4), 16 ); // view matrix
-    addUBOUniform( "proj_mat", sizeof(glm::mat4), 16 ); // projection matrix
+    addUBOUniform( "view_mat", MAT4x4, 1 ); // view matrix
+    addUBOUniform( "proj_mat", MAT4x4, 1 ); // projection matrix
     
     // set shaders sources 
     shaders_sources = 

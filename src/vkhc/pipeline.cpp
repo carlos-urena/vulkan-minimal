@@ -161,51 +161,129 @@ void BasicPipeline::setPushConstant( VkCommandBuffer & vk_cmd_buffer, const std:
     vkCmdPushConstants( vk_cmd_buffer, vk_pipeline_layout, range.stageFlags, range.offset, range.size, data_ptr );
 }
 
-// -----------------------------------------------------------------------------
-// adds a uniform variable to the UBO bound at set=0, binding=0
-// the calls order must match the order of variables in the UBO in shaders
 // alignement must be 4 (for 4 bytes scalars) or 16 (for arrays of scalars), see std140 
 // layout rules for UBOs. The offset of each uniform is updated.
 //
 // For alignment rules, see: Sub-section 2.15.3.1.2 - Standard Uniform Block Layout
 // here: https://registry.khronos.org/OpenGL/extensions/ARB/ARB_uniform_buffer_object.txt
 
-// The alignment in bytes is a power of two, more concretelly:
+// The computed alignment in bytes is a power of two, more concretelly:
 //
-    // - for floats, ints, unsigned ints: 4 bytes (just its size), rule (1)
-    // - for vec2, ivec2, uvec2: 8 bytes, rule (2) 
-    // - for vec3, uvec3: 16 bytes,  rule (3)
-    // - for vec4, ivec4, uvec4: 16 bytes, rule (2) 
-    // - for arrays of values of any of the above, then rule (4) is used and
-    //   the alignment is the same as the values alignment, according to rules above.
+// - for floats, ints, unsigned ints: 4 bytes (just its size), rule (1)
+// - for vec2, ivec2, uvec2: 8 bytes, rule (2) 
+// - for vec3, uvec3: 16 bytes,  rule (3)
+// - for vec4, ivec4, uvec4: 16 bytes, rule (2) 
+// - for arrays of values of any of the above, then rule (4) is used and
+//   the alignment is the same as the values alignment, according to rules above, but at least 16.
+//   Note that for arrays, the next uniform offset is the next multiple of the alignment,
+//   This is implemented by computing a padded_size for the uniform.
 
-void BasicPipeline::addUBOUniform( const std::string & name, uint32_t size, uint32_t alignment ) 
+
+void ComputeAlignmentAndPaddedSize( const UVT type, const uint32_t num_values, 
+                                    uint32_t & base_alignment, uint32_t & padded_size ) 
+{
+    Assert( num_values > 0, "Error: num_values must be greater than 0" );
+    uint32_t value_size = 0, value_alignment = 0 ; 
+
+    switch( type ) 
+    {
+        case FLOAT:  value_size = 4u;   value_alignment = 4u;  break ;
+        case INT:    value_size = 4u;   value_alignment = 4u;  break ;
+        case UINT:   value_size = 4u;   value_alignment = 4u;  break ;
+        case VEC2:   value_size = 8u;   value_alignment = 8u;  break ;
+        case VEC3:   value_size = 16u;  value_alignment = 16u; break ;
+        case VEC4:   value_size = 16u;  value_alignment = 16u; break ;
+        case MAT4x4: value_size = 64u;  value_alignment = 16u; break ;
+        default: ErrorExit("Unsupported uniform type");
+    }
+
+    const uint32_t values_size = num_values*value_size ;
+    if ( num_values == 1 )
+    {   
+        base_alignment = value_alignment ;
+        padded_size    = values_size ;
+    }
+    else // the uniform is an array of values
+    {
+        base_alignment = std::max( value_alignment, 16u ); // alignment is at least that of a vec4 for arrays
+        padded_size    = ( values_size + base_alignment - 1 ) & ~( base_alignment - 1 );  // adds padding at the end
+    }
+
+    // check that the alignment is a power of two
+    Assert( ( base_alignment & (base_alignment-1) ) == 0, "Computed alignment is not a power of two" );
+}
+// -----------------------------------------------------------------------------
+// adds a uniform variable to the UBO bound at set=0, binding=0
+// the calls order must match the order of variables in the UBO in shaders
+
+// Parameters:
+//
+// name: name of the uniform variable
+// type: the type of the uniform variable (if not an array) or the type of each item in the array (if it is an array)
+// num_values: if the uniform is not an array, then 1, else the num of values in the array.
+
+void BasicPipeline::addUBOUniform( const std::string & name, const UVT type, const uint32_t num_values ) 
 {
     assert( ! initialized ); 
-    assert( size > 0 );
-    assert( alignment == 4 || alignment == 16 );
-    assert( ( alignment & (alignment-1) ) == 0 );
+    assert( num_values > 0 );
+
+    uint32_t base_alignment, padded_size ;
+    ComputeAlignmentAndPaddedSize( type, num_values, base_alignment, padded_size );
 
     // compute the aligned offset for this new uniform. If alignment is 2^n, then the 
     // aligned offset is the next multiple of alignment (greater or equal to >= ubou_total_size)
     // The value is computed by setting to 0 the n least significative bits of 
     // (ubou_total_size + alignment - 1), which is the maximun offset possible value.
-    
+    const uint32_t aligned_offset = ( ubou_total_size + base_alignment - 1 ) & ~( base_alignment - 1 );
 
-    const uint32_t aligned_offset = ( ubou_total_size + alignment - 1 ) & ~( alignment - 1 );
+    // compute the new total size of the UBO, including the padding at the end of the new uniform
+    const uint32_t new_ubou_total_size = aligned_offset + padded_size ;
 
     // check that the new total size will fit in the maximum allowed size for UBOs 
     // (usually 64KB, but can be queried from the device properties)
-    assert( aligned_offset + size <= ubou_max_total_size );
+    Assert( aligned_offset + padded_size <= ubou_max_total_size, "Uniform does not fit in UBO" );
+
+    // update the total size of the UBO 
+    ubou_total_size = new_ubou_total_size ;
 
     ubou_names.push_back( name );
     ubou_offsets.push_back( aligned_offset );
-    ubou_sizes.push_back( size );
-    ubou_alignments.push_back( alignment );
-    std::cout << "Added UBO uniform '" << name << "' with size " << size << " bytes, alignment " << alignment << ", offset " << aligned_offset << std::endl ;
-
-    ubou_total_size = aligned_offset + size ;
+    ubou_sizes.push_back( padded_size );
+    ubou_alignments.push_back( base_alignment );
+    std::cout << "Added UBO uniform '" << name << "', " 
+              << "with (padded) size " << padded_size << " bytes, " 
+              << "base alignment " << base_alignment << ", "
+              << "offset " << aligned_offset 
+              << std::endl ;
 }
+
+// void BasicPipeline::addUBOUniform( const std::string & name, uint32_t size, uint32_t alignment ) 
+// {
+//     assert( ! initialized ); 
+//     assert( size > 0 );
+//     assert( alignment > 0 );
+//     assert( ( alignment & (alignment-1) ) == 0 );
+
+//     // compute the aligned offset for this new uniform. If alignment is 2^n, then the 
+//     // aligned offset is the next multiple of alignment (greater or equal to >= ubou_total_size)
+//     // The value is computed by setting to 0 the n least significative bits of 
+//     // (ubou_total_size + alignment - 1), which is the maximun offset possible value.
+    
+
+//     const uint32_t aligned_offset = ( ubou_total_size + alignment - 1 ) & ~( alignment - 1 );
+
+//     // check that the new total size will fit in the maximum allowed size for UBOs 
+//     // (usually 64KB, but can be queried from the device properties)
+//     assert( aligned_offset + size <= ubou_max_total_size );
+
+//     ubou_names.push_back( name );
+//     ubou_offsets.push_back( aligned_offset );
+//     ubou_sizes.push_back( size );
+//     ubou_alignments.push_back( alignment );
+//     std::cout << "Added UBO uniform '" << name << "' with size " << size << " bytes, alignment " << alignment << ", offset " << aligned_offset << std::endl ;
+
+//     ubou_total_size = aligned_offset + size ;
+// }
 
 // -----------------------------------------------------------------------------
 // Searchs for an UBO uniform with the given name, returns its index or -1 when not found

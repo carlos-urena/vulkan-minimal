@@ -126,7 +126,7 @@ App2D::App2D( )
 
     textures_set->bindTo( *pipeline ) ; // bind the textures set to the pipeline, so that its textures can be used in the fragment shader.
 
-    captureEvents( true, true, true );
+    captureEvents( true, true, true, true );
     cout << "App2D::App2D -- ends" << endl ;
 } ;
 

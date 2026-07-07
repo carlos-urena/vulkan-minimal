@@ -187,7 +187,7 @@ App2DTess::App2DTess( )
     textures_set->bindTo( *pipeline_tris ) ; // bind the textures set to the pipeline, so that its textures can be used in the fragment shader.
     textures_set->bindTo( *pipeline_quads ) ; // bind the textures set to the pipeline, so that its textures can be used in the fragment shader.
 
-    captureEvents( true, true, true ); 
+    captureEvents( true, true, true, true ); 
 } ;
 
 // ----------------------------------------------------------------------------------
@@ -235,11 +235,13 @@ void App2DTess::drawIMGUIWidgets(  )
     
     if ( Button("Close window" ) )    
         close_requested = true ;
+
+    SliderFloat("Speed", &rotation_speed, 0.0f, 3.0f);
+    SliderFloat("Scale", &triangle_scale, 0.2f, 2.0f);
     
     if (CollapsingHeader("Tessellation controls", ImGuiTreeNodeFlags_DefaultOpen))
     {       
-        SliderFloat("Speed", &rotation_speed, 0.0f, 3.0f);
-        SliderFloat("Scale", &triangle_scale, 0.2f, 2.0f);
+        
 
         int primitive_type = display_triangle ? 0 : 1 ; // map 'display_triangle' bool to an int for the combo box (0 for triangle, 1 for quad)
         if ( Combo("Primitive type", &primitive_type, "Triangle\0Quad\0") )
