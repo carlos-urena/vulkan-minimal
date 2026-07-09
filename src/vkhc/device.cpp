@@ -198,8 +198,8 @@ void Device::createLogicalDeviceAndGetQueue()
     vk_desired_feat = {};
     if ( vk_available_feat.tessellationShader == VK_TRUE )
         vk_desired_feat.tessellationShader = VK_TRUE;
-    if ( vk_available_feat.fillModeNonSolid == VK_TRUE )
-        vk_desired_feat.fillModeNonSolid = VK_TRUE;
+    if ( vk_available_feat.fillModeNonSolid == VK_TRUE ) 
+        vk_desired_feat.fillModeNonSolid = VK_TRUE; // unconditionally setting this to true breaks logical device creation ??
     if ( hasDynamicPrimitiveTopology )
     {
         ext_dyn_feat.extendedDynamicState = VK_TRUE;
@@ -303,7 +303,7 @@ void Device::createBufferAndCopyData( VkDeviceSize vk_total_size_bytes, const vo
         .sType      = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO ,
         .size       = vk_total_size_bytes,
         .usage      = usage_flags,
-    .   sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
     } ;
     vkCreateBuffer( vk_device, &bci, nullptr, &vk_buffer );
 
