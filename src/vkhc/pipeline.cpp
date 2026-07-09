@@ -649,8 +649,8 @@ void BasicPipeline::createGraphicsPipeline()
     };
     VkPipelineRasterizationStateCreateInfo rs{ 
         .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO ,
-        //.polygonMode = VK_POLYGON_MODE_LINE,  //// AQUI AQUI MODO LÍNEAS   
-        .polygonMode  = VK_POLYGON_MODE_FILL,
+        .polygonMode = VK_POLYGON_MODE_LINE,  //// AQUI AQUI MODO LÍNEAS CUA
+        //.polygonMode  = VK_POLYGON_MODE_FILL,
         .cullMode     = VK_CULL_MODE_NONE,
         .lineWidth    = 1.0f,
     };
