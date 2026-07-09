@@ -41,6 +41,25 @@ enum class VType
     MAT4x4
 } ;
 
+
+std::string VTypeToString( const VType type ) ; 
+
+//-----------------------------------------------------------------------------
+// metadata relative to each of the uniform variables in an UBO
+
+class UBOUniformMetadata 
+{
+    public:
+
+    std::string name ;   // name in the source code of the shader
+    VType       type ;   // type of the uniform variable (if not an array) or the type of each item in the array (if it is an array)  
+    uint32_t    offset ; // offset in the UBO buffer (aligned)
+    uint32_t    size ;   // size in bytes of this uniform variable (including padding at the end)
+    // used ?
+    uint32_t    alignment ;  // alignment in bytes of this uniform variable (for std140 layout)
+    uint32_t    num_values ; // 1 for float,int, vecn, mat4x4, >1 for arrays of those types
+} ;
+
 // -----------------------------------------------------------------------------
 
 //void ComputeAlignmentAndPaddedSize( const UVT type, const uint32_t num_values, uint32_t & alignment, uint32_t & size ) ;
@@ -115,12 +134,10 @@ class BasicPipeline
     // (2) vectors with offset, sizes and names of uniform variables in the 
     // UBO bound at set=0, binding=0 (see addUBOUniform) )
 
-    std::vector<std::string>  ubou_names ;
-    std::vector<uint32_t>     ubou_offsets ;
-    std::vector<uint32_t>     ubou_sizes ;
-    std::vector<uint32_t>     ubou_alignments ;
-    uint32_t                  ubou_total_size = 0 ; // current total size of UBO variables (see addUBOuniform)
-    uint32_t                  ubou_max_total_size = 0 ; // obtained from the device in the constructor
+    std::vector<UBOUniformMetadata> unif_data ; // metadata for each uniform variable in the UBO (see addUBOUniform)
+    
+    uint32_t   ubou_total_size = 0 ; // current total size of UBO variables (see addUBOuniform)
+    uint32_t   ubou_max_total_size = 0 ; // obtained from the device in the constructor
 
     // (3) pointers to sources for each shader stage 
     ShadersSources shaders_sources ;

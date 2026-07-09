@@ -20,6 +20,22 @@
 namespace vkhc
 {
 
+    std::string VTypeToString( const VType type ) 
+{
+    switch( type ) 
+    {
+        case VType::FLOAT  : return "float" ;
+        case VType::INT    : return "int" ;
+        case VType::UINT   : return "uint" ;
+        case VType::VEC2   : return "vec2" ;
+        case VType::VEC3   : return "vec3" ;
+        case VType::VEC4   : return "vec4" ;
+        case VType::MAT4x4 : return "mat4x4" ;
+        default: ErrorExit("Unsupported uniform type"); 
+                 return "unknown var. type" ;
+    }
+}
+
 //BasicPipeline * BasicPipeline::current_binded_pipeline = nullptr ; 
 
 // --------------------------------------------------------------------------------
@@ -253,8 +269,6 @@ void BasicPipeline::addUBOUniform( const std::string & name, const VType type, c
 
     uint32_t base_alignment, padded_size ;
     ComputeAlignmentAndPaddedSize( type, num_values, base_alignment, padded_size );
-
-    
     const uint32_t aligned_offset = PaddedSize( ubou_total_size , base_alignment );
 
     // compute the new total size of the UBO, including the padding at the end of the new uniform
@@ -267,10 +281,21 @@ void BasicPipeline::addUBOUniform( const std::string & name, const VType type, c
     // update the total size of the UBO 
     ubou_total_size = new_ubou_total_size ;
 
-    ubou_names.push_back( name );
-    ubou_offsets.push_back( aligned_offset );
-    ubou_sizes.push_back( padded_size );
-    ubou_alignments.push_back( base_alignment );
+    UBOUniformMetadata udata { 
+        .name       = name, 
+        .type       = type,
+        .offset     = aligned_offset,
+        .size       = padded_size,
+        .alignment  = base_alignment,
+        .num_values = num_values 
+    };
+
+    unif_data.push_back( udata );
+
+    // ubou_names.push_back( name );
+    // ubou_offsets.push_back( aligned_offset );
+    // ubou_sizes.push_back( padded_size );
+    // ubou_alignments.push_back( base_alignment );
     std::cout << "Added UBO uniform '" << name << "', " 
               << "with (padded) size " << padded_size << " bytes, " 
               << "base alignment " << base_alignment << ", "
@@ -282,10 +307,15 @@ void BasicPipeline::addUBOUniform( const std::string & name, const VType type, c
 
 int BasicPipeline::findUBOUniformIndex( const std::string & name ) 
 {
-    auto it = std::find( ubou_names.begin(), ubou_names.end(), name );
-    if ( it == ubou_names.end() )
-        return -1 ;
-    return (int) std::distance( ubou_names.begin(), it );
+    // auto it = std::find( ubou_names.begin(), ubou_names.end(), name );
+    // if ( it == ubou_names.end() )
+    //     return -1 ;
+    for( int i = 0; i < (int)unif_data.size(); i++ ) 
+        if ( unif_data[i].name == name ) 
+            return i;
+    
+    return -1 ;
+    //return (int) std::distance( ubou_names.begin(), it );
 }
 
 // -----------------------------------------------------------------------------
@@ -296,9 +326,11 @@ void BasicPipeline::setUBOUniform( const std::string & name, const void * data_p
     assert( initialized ); 
 
     const int index = findUBOUniformIndex( name );
-    Assert( index != -1, "Error: UBO uniform with name '" + name + "' not found in the pipeline" ); 
-    const uint32_t offset = ubou_offsets[ index ];
-    const uint32_t size = ubou_sizes[ index ];
+    Assert( index != -1, "BasicPipeline::setUBOUniform: Error: UBO uniform with name '" + name + "' not found in the pipeline" ); 
+
+    const uint32_t 
+        offset = unif_data[index].offset,
+        size   = unif_data[index].size;
 
     assert( vk_view_ubo_memory != VK_NULL_HANDLE );
 
@@ -775,10 +807,12 @@ BasicPipeline::~BasicPipeline()
 {
     //assert( initialized ); // make sure the pipeline was initialized before destroying it
 
-    if ( ubou_names.size() > 0 )   ubou_names.clear();
-    if ( ubou_offsets.size() > 0 ) ubou_offsets.clear();
-    if ( ubou_sizes.size() > 0 )   ubou_sizes.clear();
-    if ( pc_names.size() > 0 )     pc_names.clear();
+    // if ( ubou_names.size() > 0 )   ubou_names.clear();
+    // if ( ubou_offsets.size() > 0 ) ubou_offsets.clear();
+    // if ( ubou_sizes.size() > 0 )   ubou_sizes.clear();
+    // if ( pc_names.size() > 0 )     pc_names.clear();
+
+    if ( unif_data.size() > 0 ) unif_data.clear();
     
 
     if ( vk_pipeline != VK_NULL_HANDLE )

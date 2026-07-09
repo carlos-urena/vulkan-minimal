@@ -273,13 +273,13 @@ void Pipeline3D::setBaseColorsSet()
     setUBOUniform( "num_base_colors", & nc );
     setUBOUniform( "base_colors", value_ptr( BaseColorsSet::colors[0] ) );
 
-    for ( unsigned i = 0 ; i < BaseColorsSet::colors.size() ; ++i )
-    {
-        using namespace glm ;
-        vec3 c = BaseColorsSet::colors[i] ;
-        using namespace std ;
-        //cout << "Pipeline3D::setBaseColorsSet: sending base color " << i << ": (" << c.r << ", " << c.g << ", " << c.b << ")" << endl ;
-    }
+    // for ( unsigned i = 0 ; i < BaseColorsSet::colors.size() ; ++i )
+    // {
+    //     using namespace glm ;
+    //     vec3 c = BaseColorsSet::colors[i] ;
+    //     using namespace std ;
+    //     cout << "Pipeline3D::setBaseColorsSet: sending base color " << i << ": (" << c.r << ", " << c.g << ", " << c.b << ")" << endl ;
+    // }
 
     using namespace std ;
     //cout << "Pipeline3D::setBaseColorsSet: sending " << nc << " base colors to the shaders." << endl ;
