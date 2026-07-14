@@ -190,6 +190,7 @@ class Segment : public DrawableObject
       glm::vec3 p0, p1, color ;
    public:
       Segment( const glm::vec3 & p_p0, const glm::vec3 & p_p1, const glm::vec3 & p_color ) ;
+      virtual ~Segment() { delete vertex_array ; vertex_array = nullptr ; } ;
       virtual void drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & context, VkCommandBuffer & cmdb_vk ) override ;
 } ;
 
@@ -223,6 +224,7 @@ void Segment::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & cont
       vertex_array->addAttribData( tcc ) ;
       vertex_array->addAttribData( normals ) ;
    }
+   vertex_array->draw(  cmdb_vk ) ;
 }
 // ---------------------------------------------------------------------------------------
 
@@ -243,8 +245,12 @@ AxesObject::AxesObject( )
 
    constexpr float start = -1.5f, end = 5.0f ;
 
+   line_x = new Segment( vec3( start, 0.0f, 0.0f ), vec3( end, 0.0f, 0.0f ), vec3( 1.0f, 0.0f, 0.0f ) ) ;
+   line_y = new Segment( vec3( 0.0f, start, 0.0f ), vec3( 0.0f, end, 0.0f ), vec3( 0.0f, 1.0f, 0.0f ) ) ;
    line_z = new Segment( vec3( 0.0f, 0.0f, start ), vec3( 0.0f, 0.0f, end ), vec3( 0.0f, 0.0f, 1.0f ) ) ;
+   line01z = new Segment( vec3( 0.0f, 0.0f, 0.0f ), vec3( 0.0f, 0.0f, 1.0f ), vec3( 0.5f, 0.5f, 0.5f ) ) ;
 
+   
    // constexpr float d = 1.05, h = 0.15 ;
 
    // xtri = new IMTriangle( {  
@@ -277,9 +283,13 @@ AxesObject::AxesObject( )
 
 AxesObject::~AxesObject() 
 {
-    delete axes_cylinder ; axes_cylinder = nullptr ;
-    delete sphere ; sphere = nullptr ;
-    delete axes_cone ; axes_cone = nullptr ;
+   delete axes_cylinder ; axes_cylinder = nullptr ;
+   delete sphere ; sphere = nullptr ;
+   delete axes_cone ; axes_cone = nullptr ;
+   delete line_x ; line_x = nullptr ;
+   delete line_y ; line_y = nullptr ;
+   delete line_z ; line_z = nullptr ;
+
    
    //  delete xtri ; xtri = nullptr ;
    //  delete ytri ; ytri = nullptr ;
@@ -360,21 +370,34 @@ void AxesObject::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & c
    p->popModelMatrix( cmd_vk );
 
 
-   // draw Z axis line
-   p->setBaseColorIndex( cmd_vk, blue_color_index ) ;
+   // draw axis lines
+   p->setBaseColorIndex( cmd_vk, -1 ) ;
+   line_x->drawVK( pipeline, context, cmd_vk ) ; // draw a line along the X axis
+   line_y->drawVK( pipeline, context, cmd_vk ) ; // draw a line along the Y axis
    line_z->drawVK( pipeline, context, cmd_vk ) ; // draw a line along the Z axis
 
-   // // draw X axis triangle
-   // pipeline3d->setBaseColorIndex( cmd_vk, red_color_index ) ;
-   // xtri->drawVK( pipeline, context, cmd_vk ) ; // axis X (red)
+   // draw grid 
+   constexpr int n = 40 ;
+   constexpr float start = -3.0f, end = 3.0f ;
+   const mat4 sctr_mat = translate(vec3{start,0.0f,start})*scale(vec3{ end-start, 1.0f, end-start }) ;
+   const mat4 rot_90y =  rotate(radians(90.0f), vec3( 0.0f, 1.0f, 0.0f ) ) ;
    
-   // // draw Y axis triangle
-   // pipeline3d->setBaseColorIndex( cmd_vk, green_color_index ) ;
-   // ytri->drawVK( pipeline, context, cmd_vk ) ; // axis Y (green)
-   
-   // // draw Z axis triangle
-   // pipeline3d->setBaseColorIndex( cmd_vk, blue_color_index ) ;
-   // ztri->drawVK( pipeline, context, cmd_vk ) ; // axis Z (blue)
+
+   for( int iz = 0 ; iz <= n ; iz++ )
+   {
+      const float fz = float(iz)/float(n);
+      p->pushModelMatrix( cmd_vk, sctr_mat*translate( vec3{ fz, 0.0f, 0.0f }) ) ;
+         line01z->drawVK( pipeline, context, cmd_vk ) ; // draw a line along the Z axis
+      p->popModelMatrix( cmd_vk ) ;
+   }
+  
+   for( int ix = 0 ; ix <= n ; ix++ )
+   {
+      const float fx = float(ix)/float(n);
+      p->pushModelMatrix( cmd_vk, sctr_mat*translate( vec3{ 0.0f, 0.0f, fx }) * rot_90y ) ;
+         line01z->drawVK( pipeline, context, cmd_vk ) ; // draw a line along the X axis
+      p->popModelMatrix( cmd_vk ) ;
+   }
 
    // draw Sphere
    p->setBaseColorIndex( cmd_vk, -1 ) ; // disable base color for next objects to be drawn

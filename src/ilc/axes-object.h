@@ -15,11 +15,18 @@ class Segment ;
 class AxesObject : public DrawableObject
 {
     private:
-    CylinderZ01 * axes_cylinder = nullptr ;  // a solid cilinder in 01, used to visualize the axes of the 3D space.
-    ConeZ01 * axes_cone = nullptr ;  // a solid cone in 01, used to visualize the axes of the 3D space.
+    CylinderZ01 
+        * axes_cylinder = nullptr ;  // a solid cilinder in 01, used to visualize the axes of the 3D space.
+    ConeZ01 
+        * axes_cone = nullptr ;  // a solid cone in 01, used to visualize the axes of the 3D space.
     //IMTriangle * xtri = nullptr, * ytri = nullptr, * ztri = nullptr ; // triangles used to visualize the axes of the 3D space.  
-    IMSphere * sphere = nullptr ; // a solid sphere, used to test normals, lighting and relative scalings in X, Y, Z
-    Segment * line_z = nullptr ;
+    IMSphere 
+        * sphere = nullptr ; // a solid sphere, used to test normals, lighting and relative scalings in X, Y, Z
+    Segment 
+        *line_x = nullptr ,
+        *line_y = nullptr , 
+        *line_z = nullptr ,
+        * line01z = nullptr ;
     int 
         red_color_index = -1, 
         green_color_index = -1, 
