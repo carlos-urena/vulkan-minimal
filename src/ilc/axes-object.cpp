@@ -101,7 +101,7 @@ IMSphere::IMSphere(  )
 
       vec3 vert = { ca*cb, sb, sa*cb } ;
       vertices.push_back( vert );   
-      vert_colors.push_back( { 0.1f, 0.6f, 0.6f } );
+      vert_colors.push_back( { 0.1f, 0.8f, 0.8f } );
       vert_tcc.push_back( { fs, fz } );
       vert_normals.push_back( vert );
    }
@@ -216,7 +216,7 @@ void Segment::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & cont
       std::vector<glm::vec3> vertices = { p0, p1 } ;
       std::vector<glm::vec3> colors = { color, color } ;
       std::vector<glm::vec2> tcc = { glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 1.0f) } ;
-      std::vector<glm::vec3> normals = { glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f) } ;
+      std::vector<glm::vec3> normals = { glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3( 0.0f, 1.0f, 0.0f )} ;
 
       vertex_array->addAttribData( vertices ) ;
       vertex_array->addAttribData( colors ) ;
@@ -240,6 +240,10 @@ AxesObject::AxesObject( )
    blue_color_index  = BaseColorsSet::addBaseColor( vec3( 0.0f, 0.0f, 1.0f ) ) ;
 
    sphere = new IMSphere() ; Assert( sphere != nullptr, "Cannot create sphere" ) ;
+
+   constexpr float start = -1.5f, end = 5.0f ;
+
+   line_z = new Segment( vec3( 0.0f, 0.0f, start ), vec3( 0.0f, 0.0f, end ), vec3( 0.0f, 0.0f, 1.0f ) ) ;
 
    // constexpr float d = 1.05, h = 0.15 ;
 
@@ -267,8 +271,6 @@ AxesObject::AxesObject( )
    //    vec3( 0.0f, 0.0f, 1.0f ) 
    // ) ;   
    // Assert( ztri != nullptr, "Cannot create Z axis triangle" ) ;
-
-   
 }
 
 // ---------------------------------------------------------------------------------------
@@ -278,6 +280,7 @@ AxesObject::~AxesObject()
     delete axes_cylinder ; axes_cylinder = nullptr ;
     delete sphere ; sphere = nullptr ;
     delete axes_cone ; axes_cone = nullptr ;
+   
    //  delete xtri ; xtri = nullptr ;
    //  delete ytri ; ytri = nullptr ;
    //  delete ztri ; ztri = nullptr ;
@@ -310,7 +313,7 @@ void AxesObject::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & c
       mat_cone = translate_mat_cone * scale_mat_cone,
       rot_m90_x = glm::rotate( radians(-90.0f), glm::vec3(1.0,0.0,0.0) ),
       rot_90_y  = glm::rotate( radians(90.0f),  glm::vec3(0.0,1.0,0.0) ),
-      sphere_scale_mat = glm::scale(glm::vec3( 0.1f, 0.1f, 0.1f )) ;
+      sphere_scale_mat = glm::scale(glm::vec3( 0.07f, 0.07f, 0.07f )) ;
 
    // save previous pipeline state
    int prev_texture_index = p->getTextureIndex() ; // save previous texture index
@@ -356,6 +359,11 @@ void AxesObject::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & c
       axes_cone->drawVK( pipeline, context, cmd_vk ) ; // axis X (red)
    p->popModelMatrix( cmd_vk );
 
+
+   // draw Z axis line
+   p->setBaseColorIndex( cmd_vk, blue_color_index ) ;
+   line_z->drawVK( pipeline, context, cmd_vk ) ; // draw a line along the Z axis
+
    // // draw X axis triangle
    // pipeline3d->setBaseColorIndex( cmd_vk, red_color_index ) ;
    // xtri->drawVK( pipeline, context, cmd_vk ) ; // axis X (red)
@@ -377,4 +385,6 @@ void AxesObject::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & c
    // restore previous colors in the pipeline
    p->setBaseColorIndex( cmd_vk,  prev_base_color_index ) ; // restore previous base color index
    p->setTextureIndex( cmd_vk, prev_texture_index ) ; // restore previous texture index
+
+   
 }
