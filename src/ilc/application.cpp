@@ -119,6 +119,8 @@ void Application::stMousePositionEventCB( GLFWwindow* window, double xpos, doubl
         }
     
 }
+// --------------------------------------------------------------------------------
+
 
 void Application::stScrollEventCB( GLFWwindow* window, double xoffset, double yoffset ) 
 {

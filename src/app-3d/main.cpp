@@ -190,7 +190,6 @@ void App3D::mouseButtonEventCB( double xpos, double ypos, int button, int action
 }
 // ----------------------------------------------------------------------------------
 
-
 void App3D::mousePositionEventCB( double xpos, double ypos, int button ) 
 {
     using namespace std ;
@@ -212,10 +211,20 @@ void App3D::mousePositionEventCB( double xpos, double ypos, int button )
 void App3D::scrollEventCB( double xoffset, double yoffset ) 
 {
     using namespace std ;
-    //if ( debug_events )
+    if ( debug_events )
         cout << "App3D::scrollEventCB: xoffset=" << xoffset << " yoffset=" << yoffset << endl ;
     assert( camera != nullptr ) ;
-    camera->moverZ( -0.1f*float(yoffset) ) ; // zoom in/out
+    
+    // zoom factor per scroll unit (depends on platform, because the scroll units are different in Linux and Windows/MacOS)
+    #if defined(__linux__)
+    constexpr float zoom_factor = -0.7f ; 
+    #elif defined(__MACOS__) || defined(_WIN32)
+    constexpr float zoom_factor = -0.1f ; // zoom factor per scroll unit
+    #else
+    constexpr float zoom_factor = -0.1f ; // zoom factor per scroll unit
+    #endif
+
+    camera->moverZ( zoom_factor*float(yoffset) ) ; // zoom in/out
 }
 
 // ----------------------------------------------------------------------------------
