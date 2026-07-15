@@ -32,9 +32,17 @@ class AxesObject : public DrawableObject
         green_color_index = -1, 
         blue_color_index = -1 ;  // indices of the base colors used to visualize the axes
 
+    bool draw_axes = true ;
+    bool draw_grid = true ;
+
+    void drawGridVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk ) ;
+    void drawAxesVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk ) ;
+
+
     public:
     AxesObject( ) ;
     ~AxesObject() ;
+    void setActive( bool p_draw_axes, bool p_draw_grid ) ;
     virtual void drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk ) override ;
 
 } ;

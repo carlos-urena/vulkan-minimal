@@ -16,43 +16,97 @@
 // -------------------------------------------------------------------------------  
 // class 'Triangle' (a 'vertex-array' like object )
 
-class Triangle : public vkhc::VertexArray 
-{
+// class Triangle : public vkhc::VertexArray 
+// {
 
     
+//     public: 
+    
+//     inline Triangle( vkhc::VulkanContext & vulkan_context)
+//     :   VertexArray( vulkan_context, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST ) // VK_PRIMITIVE_TOPOLOGY_PATCH_LIST ) 
+//     {
+//         using namespace glm ;
+//         using namespace std ;
+        
+//         addAttribData( vector<vec3>{ 
+//             vec3{ 0.7f, 0.0f, 0.0f },
+//             vec3{ 0.0f, 0.7f, 0.0f},
+//             vec3{ 0.0f, 0.0f, 0.7f }  
+//         });
+        
+        
+
+//         // location 1: vertex colors
+//         addAttribData( vector<vec3>{ {1.0f,0.0f,0.0f}, {0.0f,1.0f,0.0f}, {0.0f,0.0f,1.0f} });
+//         // location 2: vertex texture coordinates 
+//         addAttribData( vector<vec2>{ {0.0f,0.0f}, {0.5f,1.0f}, {1.0f,0.0f} });
+//         // indexes 
+//         setIndexData( vector<uvec3>{{ 0, 1, 2 }} ); 
+//     }
+// } ;
+
+class Triangle : public DrawableObject
+{
+    private:
+    
+    int texture_index = -1 ;
+    vkhc::VertexArray * vertex_array = nullptr ;
+
     public: 
     
-    inline Triangle( vkhc::VulkanContext & vulkan_context)
-    :   VertexArray( vulkan_context, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST ) // VK_PRIMITIVE_TOPOLOGY_PATCH_LIST ) 
+    Triangle( vkhc::VulkanContext & vulkan_context) ;
+    virtual void drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk ) override ;
+    void drawIMGUIWidgets() override ;
+    virtual ~Triangle()  {} ;   
+} ;
+
+Triangle::Triangle( vkhc::VulkanContext & vulkan_context)
+    
     {
         using namespace glm ;
         using namespace std ;
-        const float 
-            r  = 1.0f , // triangle radius (distance from the center of the triangle to its vertices)
-            a0 = M_PI , // initial angle of the first vertex (in radians), the other vertices will be at angles a0 + 2*pi/3 and a0 + 4*pi/3, so that the triangle is equilateral and one vertex is pointing upwards.
-            a  = M_PI*2.0f/3.0f ;  // angle between vertices (in radians), for an equilateral triangle this is 2*pi/3
 
-        // addAttribData( vector<vec3>{ 
-        //     vec3{ r*cos(a0),        r*sin(a0),         0.0f },
-        //     vec3{ r*cos(a0+a),      r*sin(a0+a),       0.0f },
-        //     vec3{ r*cos(a0+2.0f*a), r*sin(a0+2.0f*a),  0.0f }  
-        // });
-        addAttribData( vector<vec3>{ 
-            vec3{ 0.0f, 0.0f, 0.0f },
-            vec3{ 1.0f, 0.0f, 0.0f},
-            vec3{ 0.0f, 0.0f, 1.0f }  
+        vertex_array = new vkhc::VertexArray( vulkan_context, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST ) ; // VK_PRIMITIVE_TOPOLOGY_PATCH_LIST ) 
+        Assert( vertex_array != nullptr, "cannot create vertex array for triangle" ) ;
+
+        vertex_array->addAttribData( vector<vec3>{ 
+            vec3{ 0.7f, 0.0f, 0.0f },
+            vec3{ 0.0f, 0.7f, 0.0f},
+            vec3{ 0.0f, 0.0f, 0.7f }  
         });
         
-        
-
         // location 1: vertex colors
-        addAttribData( vector<vec3>{ {1.0f,0.0f,0.0f}, {0.0f,1.0f,0.0f}, {0.0f,0.0f,1.0f} });
+        vertex_array->addAttribData( vector<vec3>{ {1.0f,0.0f,0.0f}, {0.0f,1.0f,0.0f}, {0.0f,0.0f,1.0f} });
         // location 2: vertex texture coordinates 
-        addAttribData( vector<vec2>{ {0.0f,0.0f}, {0.5f,1.0f}, {1.0f,0.0f} });
+        vertex_array->addAttribData( vector<vec2>{ {0.0f,0.0f}, {0.5f,1.0f}, {1.0f,0.0f} });
         // indexes 
-        setIndexData( vector<uvec3>{{ 0, 1, 2 }} ); 
+        vertex_array->setIndexData( vector<uvec3>{{ 0, 1, 2 }} ); 
     }
-} ;
+
+void Triangle::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk )
+{
+    Assert( vertex_array != nullptr, "cannot draw triangle: vertex array is null" ) ;
+    vkhc::Pipeline3D * p = static_cast<vkhc::Pipeline3D *>( pipeline ) ;
+    Assert( p != nullptr, "cannot get pipeline 3d" );
+    p->setTextureIndex( cmd_vk,texture_index );
+    vertex_array->draw( cmd_vk ) ;
+}
+
+void Triangle::drawIMGUIWidgets() 
+{
+    using namespace ImGui ;
+
+    if (CollapsingHeader("Triangle object controls", ImGuiTreeNodeFlags_DefaultOpen))
+    {       
+        
+        int texture_combo_index = texture_index + 1 ; // map -1..3 to 0..4 for ImGui combo
+        if ( Combo("Texture", &texture_combo_index, "No texture (vert. colors)\0Wood 1\0Wood 2\0Wood 3\0Procedural texture\0") )
+        {
+            texture_index = texture_combo_index - 1 ;
+            std::cout << "Triangle::drawIMGUIWidgets: new texture_index == " << texture_index << std::endl ;
+        }
+    }
+}
 
 //  ------------------------------------------------------------------------------
 
@@ -82,9 +136,15 @@ class App3D : public ilc::Application
     float rotation_speed = 0.0f ; // angular speed in cycles per second 
     float triangle_scale = 0.8f ;
 
+    // draw grid 
+    bool draw_grid = true ;
+
+    // draw axes
+    bool draw_axes = true ;
+
     
     // active texture index (-1 for none)
-    int texture_index = -1 ;  
+    //int texture_index = -1 ;  
 
     // model, view and projection matrices
     glm::mat4 model_mat ;            // model matrix passed to the pipeline via a push constant
@@ -270,23 +330,21 @@ char buffer[256] = { 0 } ; // buffer for IMGUI input text widget
 void App3D::drawIMGUIWidgets(  ) 
 {
     using namespace ImGui ;
-
     using namespace std ;
+    Assert( triangle != nullptr, "App2D::drawIMGUIWidgets: 'triangle' instance is null !!" ) ;
     //cout << "App2D::drawIMGUIWidgets: drawing IMGUI widgets -- close_requested:" << close_requested << endl ;
 
     
     
     if ( Button("Close window" ) ) close_requested = true ;
-    if (CollapsingHeader("Triangle controls", ImGuiTreeNodeFlags_DefaultOpen))
-    {       
-        SliderFloat("Speed", &rotation_speed, 0.0f, 3.0f);
-        SliderFloat("Scale", &triangle_scale, 0.2f, 2.0f);
-
-        int texture_combo_index = texture_index + 1 ; // map -1..3 to 0..4 for ImGui combo
-        if ( Combo("Texture", &texture_combo_index, "No texture (vert. colors)\0Wood 1\0Wood 2\0Wood 3\0Procedural texture\0") )
-            texture_index = texture_combo_index - 1 ;
+    if (CollapsingHeader("View config", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        Checkbox("Draw grid", &draw_grid);
+        Checkbox("Draw axes", &draw_axes);
     }
-    if ( InputText("Input text", buffer, IM_ARRAYSIZE(buffer)) ) // debug
+    triangle->drawIMGUIWidgets() ; // draw the triangle object widgets
+    
+    if ( InputText("Input text (debug)", buffer, IM_ARRAYSIZE(buffer)) ) // debug
     {
         // do something with the input text in 'buffer'
         using namespace std ;
@@ -325,15 +383,16 @@ void App3D::drawFrame( VkCommandBuffer & cmd )
 
     // give initial values to the push constants at the begining of 'cmd'
     pipeline->resetModelMatrix( cmd ) ; // sets the model matrix to identity and clears the model matrix stack
-    pipeline->setTextureIndex( cmd, texture_index ) ;
+    pipeline->setTextureIndex( cmd, -1) ;   // no texture by default
     pipeline->setBaseColorIndex( cmd, -1 ) ;
 
     // draw the axes 
+    axes3D->setActive( draw_axes, draw_grid );
     axes3D->drawVK( pipeline, *context, cmd ) ;
 
 
     // draw the triangle and the widgets 
-    triangle->draw( cmd );
+    triangle->drawVK( pipeline, *context, cmd );
 }
 
 

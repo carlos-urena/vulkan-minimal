@@ -281,6 +281,12 @@ AxesObject::AxesObject( )
    // Assert( ztri != nullptr, "Cannot create Z axis triangle" ) ;
 }
 
+void AxesObject::setActive( bool p_draw_axes, bool p_draw_grid ) 
+{
+   draw_axes = p_draw_axes ;
+   draw_grid = p_draw_grid ;
+}
+
 // ---------------------------------------------------------------------------------------
 
 AxesObject::~AxesObject() 
@@ -300,9 +306,50 @@ AxesObject::~AxesObject()
 
 // ---------------------------------------------------------------------------------------
 
-void AxesObject::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk ) 
+void AxesObject::drawGridVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk )
 {
-   Assert( axes_cylinder != nullptr, "Axes cylinder not initialized" ) ;
+Assert( axes_cylinder != nullptr, "Axes cylinder not initialized" ) ;
+
+   // retrieve a valid 3d pipeline  
+   using namespace vkhc ;
+   using namespace glm ;
+   
+   Assert( pipeline != nullptr, "No pipeline binded when drawing axes object" ) ;
+   Pipeline3D * p = static_cast<Pipeline3D*>( pipeline ) ;
+   Assert( p != nullptr, "Current binded pipeline is not a 3D pipeline when drawing axes object" ) ;
+
+   
+   // draw grid 
+   constexpr int n = 40 ;
+   
+   const mat4 sctr_mat = translate(vec3{ gstart, 0.0f, gstart })* scale(vec3{ gend-gstart, 1.0f, gend-gstart }) ;
+   const mat4 rot_90y =  rotate(radians(90.0f), vec3( 0.0f, 1.0f, 0.0f ) ) ;
+   
+
+   for( int iz = 0 ; iz <= n ; iz++ )
+   {
+      const float fz = float(iz)/float(n);
+      p->pushModelMatrix( cmd_vk, sctr_mat*translate( vec3{ fz, 0.0f, 0.0f }) ) ;
+         line01z->drawVK( pipeline, context, cmd_vk ) ; // draw a line along the Z axis
+      p->popModelMatrix( cmd_vk ) ;
+   }
+  
+   for( int ix = 0 ; ix <= n ; ix++ )
+   {
+      const float fx = float(ix)/float(n);
+      p->pushModelMatrix( cmd_vk, sctr_mat*translate( vec3{ 0.0f, 0.0f, fx }) * rot_90y ) ;
+         line01z->drawVK( pipeline, context, cmd_vk ) ; // draw a line along the X axis
+      p->popModelMatrix( cmd_vk ) ;
+   }
+
+   
+
+
+}
+
+void AxesObject::drawAxesVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk )
+{
+Assert( axes_cylinder != nullptr, "Axes cylinder not initialized" ) ;
 
    // retrieve a valid 3d pipeline  
    using namespace vkhc ;
@@ -378,29 +425,6 @@ void AxesObject::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & c
    line_y->drawVK( pipeline, context, cmd_vk ) ; // draw a line along the Y axis
    line_z->drawVK( pipeline, context, cmd_vk ) ; // draw a line along the Z axis
 
-   // draw grid 
-   constexpr int n = 40 ;
-   
-   const mat4 sctr_mat = translate(vec3{ gstart, 0.0f, gstart })* scale(vec3{ gend-gstart, 1.0f, gend-gstart }) ;
-   const mat4 rot_90y =  rotate(radians(90.0f), vec3( 0.0f, 1.0f, 0.0f ) ) ;
-   
-
-   for( int iz = 0 ; iz <= n ; iz++ )
-   {
-      const float fz = float(iz)/float(n);
-      p->pushModelMatrix( cmd_vk, sctr_mat*translate( vec3{ fz, 0.0f, 0.0f }) ) ;
-         line01z->drawVK( pipeline, context, cmd_vk ) ; // draw a line along the Z axis
-      p->popModelMatrix( cmd_vk ) ;
-   }
-  
-   for( int ix = 0 ; ix <= n ; ix++ )
-   {
-      const float fx = float(ix)/float(n);
-      p->pushModelMatrix( cmd_vk, sctr_mat*translate( vec3{ 0.0f, 0.0f, fx }) * rot_90y ) ;
-         line01z->drawVK( pipeline, context, cmd_vk ) ; // draw a line along the X axis
-      p->popModelMatrix( cmd_vk ) ;
-   }
-
    // draw Sphere
    p->setBaseColorIndex( cmd_vk, -1 ) ; // disable base color for next objects to be drawn
    p->pushModelMatrix( cmd_vk, sphere_scale_mat ) ;
@@ -411,5 +435,13 @@ void AxesObject::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & c
    p->setBaseColorIndex( cmd_vk,  prev_base_color_index ) ; // restore previous base color index
    p->setTextureIndex( cmd_vk, prev_texture_index ) ; // restore previous texture index
 
-   
+
+}
+
+void AxesObject::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk ) 
+{
+   if ( draw_grid ) 
+      drawGridVK( pipeline, context, cmd_vk ) ;
+   if ( draw_axes ) 
+      drawAxesVK( pipeline, context, cmd_vk ) ;
 }
