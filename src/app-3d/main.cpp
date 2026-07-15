@@ -32,11 +32,17 @@ class Triangle : public vkhc::VertexArray
             a0 = M_PI , // initial angle of the first vertex (in radians), the other vertices will be at angles a0 + 2*pi/3 and a0 + 4*pi/3, so that the triangle is equilateral and one vertex is pointing upwards.
             a  = M_PI*2.0f/3.0f ;  // angle between vertices (in radians), for an equilateral triangle this is 2*pi/3
 
-       addAttribData( vector<vec3>{ 
-            vec3{ r*cos(a0),        r*sin(a0),         0.0f },
-            vec3{ r*cos(a0+a),      r*sin(a0+a),       0.0f },
-            vec3{ r*cos(a0+2.0f*a), r*sin(a0+2.0f*a),  0.0f }  
+        // addAttribData( vector<vec3>{ 
+        //     vec3{ r*cos(a0),        r*sin(a0),         0.0f },
+        //     vec3{ r*cos(a0+a),      r*sin(a0+a),       0.0f },
+        //     vec3{ r*cos(a0+2.0f*a), r*sin(a0+2.0f*a),  0.0f }  
+        // });
+        addAttribData( vector<vec3>{ 
+            vec3{ 0.0f, 0.0f, 0.0f },
+            vec3{ 1.0f, 0.0f, 0.0f},
+            vec3{ 0.0f, 0.0f, 1.0f }  
         });
+        
         
 
         // location 1: vertex colors

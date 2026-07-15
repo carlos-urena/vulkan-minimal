@@ -228,6 +228,8 @@ void Segment::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & cont
 }
 // ---------------------------------------------------------------------------------------
 
+constexpr float gstart = -4.0f, gend = 4.0f ;
+
 AxesObject::AxesObject( ) 
 {
    using namespace glm ; 
@@ -243,12 +245,12 @@ AxesObject::AxesObject( )
 
    sphere = new IMSphere() ; Assert( sphere != nullptr, "Cannot create sphere" ) ;
 
-   constexpr float start = -1.5f, end = 5.0f ;
+   //constexpr float start = -1.5f, end = 5.0f ;
 
-   line_x = new Segment( vec3( start, 0.0f, 0.0f ), vec3( end, 0.0f, 0.0f ), vec3( 1.0f, 0.0f, 0.0f ) ) ;
-   line_y = new Segment( vec3( 0.0f, start, 0.0f ), vec3( 0.0f, end, 0.0f ), vec3( 0.0f, 1.0f, 0.0f ) ) ;
-   line_z = new Segment( vec3( 0.0f, 0.0f, start ), vec3( 0.0f, 0.0f, end ), vec3( 0.0f, 0.0f, 1.0f ) ) ;
-   line01z = new Segment( vec3( 0.0f, 0.0f, 0.0f ), vec3( 0.0f, 0.0f, 1.0f ), vec3( 0.5f, 0.5f, 0.5f ) ) ;
+   line_x = new Segment( vec3( gstart, 0.0f,   0.0f ),   vec3( gend, 0.0f, 0.0f ), vec3( 1.0f, 0.0f, 0.0f ) ) ;
+   line_y = new Segment( vec3( 0.0f,   gstart, 0.0f ),   vec3( 0.0f, gend, 0.0f ), vec3( 0.0f, 1.0f, 0.0f ) ) ;
+   line_z = new Segment( vec3( 0.0f,   0.0f,   gstart ), vec3( 0.0f, 0.0f, gend ), vec3( 0.0f, 0.0f, 1.0f ) ) ;
+   line01z = new Segment( vec3( 0.0f,  0.0f,   0.0f ),   vec3( 0.0f, 0.0f, 1.0f ), vec3( 0.5f, 0.5f, 0.5f ) ) ;
 
    
    // constexpr float d = 1.05, h = 0.15 ;
@@ -311,7 +313,7 @@ void AxesObject::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & c
    Assert( p != nullptr, "Current binded pipeline is not a 3D pipeline when drawing axes object" ) ;
 
    constexpr float
-      radius = 0.02f ,
+      radius = 0.017f ,
       len_cyl = 0.85f ,
       len_cone = 1.0f - len_cyl ,
       rad_cone = radius*2.0f ; 
@@ -323,7 +325,7 @@ void AxesObject::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & c
       mat_cone = translate_mat_cone * scale_mat_cone,
       rot_m90_x = glm::rotate( radians(-90.0f), glm::vec3(1.0,0.0,0.0) ),
       rot_90_y  = glm::rotate( radians(90.0f),  glm::vec3(0.0,1.0,0.0) ),
-      sphere_scale_mat = glm::scale(glm::vec3( 0.07f, 0.07f, 0.07f )) ;
+      sphere_scale_mat = glm::scale(glm::vec3( 0.05f, 0.05f, 0.05f )) ;
 
    // save previous pipeline state
    int prev_texture_index = p->getTextureIndex() ; // save previous texture index
@@ -378,8 +380,8 @@ void AxesObject::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & c
 
    // draw grid 
    constexpr int n = 40 ;
-   constexpr float start = -3.0f, end = 3.0f ;
-   const mat4 sctr_mat = translate(vec3{start,0.0f,start})*scale(vec3{ end-start, 1.0f, end-start }) ;
+   
+   const mat4 sctr_mat = translate(vec3{ gstart, 0.0f, gstart })* scale(vec3{ gend-gstart, 1.0f, gend-gstart }) ;
    const mat4 rot_90y =  rotate(radians(90.0f), vec3( 0.0f, 1.0f, 0.0f ) ) ;
    
 
