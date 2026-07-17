@@ -29,21 +29,38 @@ VertexArray::VertexArray( VulkanContext & p_vulkan_context, const VkPrimitiveTop
 // adds an already created vertex buffer, the caller is responsible to keep it alive 
 // and delete it  after this vertex array is deleted
 
-void VertexArray::setVertexBuffer( const int attribute_index, VertexBuffer * vertex_buffer ) 
+void VertexArray::setVertexBuffer( const uint32_t attribute_index, VertexBuffer * vertex_buffer ) 
 {
     Assert( vertex_buffer != nullptr, "VertexArray::setVertexBuffer: vertex_buffer is null" );
-    Assert( attribute_index >= 0 && attribute_index < num_attributes, "VertexArray::setVertexBuffer: attribute_index is out of bounds" );
+    Assert( attribute_index < num_attributes, "VertexArray::setVertexBuffer: attribute_index is out of bounds" );
+    clearVertexBuffer( attribute_index ) ; // clear the previous vertex buffer in this index if it is set and owned
     vertex_buffers[attribute_index] = vertex_buffer ;
     owner[attribute_index] = false ;
+}
+
+// -------------------------------------------------------------------------------
+// clears a vertex buffer if it is set and owned.
+
+void VertexArray::clearVertexBuffer( const uint32_t attribute_index ) 
+{
+    Assert( attribute_index < num_attributes, "VertexArray::clearVertexBuffer: attribute_index is out of bounds" );
+    if ( vertex_buffers[attribute_index] == nullptr ) 
+        return ;
+        
+    if ( owner[attribute_index] ) 
+    {   delete vertex_buffers[attribute_index] ;
+        vertex_buffers[attribute_index] = nullptr ;
+        owner[attribute_index] = false ;
+    }
 }
 
 // -------------------------------------------------------------------------------
 // creates a vertex buffer from a data table and adds it to the vertex buffers vector,
 // the vertex buffer is deleted when the destructor of this vertex array is called 
 
-void VertexArray::setAttribData( const int attribute_index, const std::span< const glm::vec2 > data_span ) 
+void VertexArray::setAttribData( const uint32_t attribute_index, const std::span< const glm::vec2 > data_span ) 
 {
-    Assert( attribute_index >= 0 && attribute_index < num_attributes, "VertexArray::setAttribData: attribute_index is out of bounds" );
+    Assert( attribute_index < num_attributes, "VertexArray::setAttribData: attribute_index is out of bounds" );
     setVertexBuffer( attribute_index, new VertexBuffer( vulkan_context.device, data_span ) );
     owner[attribute_index] = true ;
 }
@@ -51,9 +68,9 @@ void VertexArray::setAttribData( const int attribute_index, const std::span< con
 // creates a vertex buffer from a data table and adds it to the vertex buffers vector,
 // the vertex buffer is deleted when the destructor of this vertex array is called 
 
-void VertexArray::setAttribData( const int attribute_index, const std::span< const glm::vec3 > data_span ) 
+void VertexArray::setAttribData( const uint32_t attribute_index, const std::span< const glm::vec3 > data_span ) 
 {
-    Assert( attribute_index >= 0 && attribute_index < num_attributes, "VertexArray::setAttribData: attribute_index is out of bounds" );
+    Assert( attribute_index < num_attributes, "VertexArray::setAttribData: attribute_index is out of bounds" );
     setVertexBuffer( attribute_index, new VertexBuffer( vulkan_context.device, data_span ) );
     owner[attribute_index] = true ;
 }
@@ -71,7 +88,6 @@ void VertexArray::clearIndexBuffer()
         index_buffer = nullptr ;
         index_owner = false ;
     }
-    // missing: free GPU memory ??
 }
 
 // -------------------------------------------------------------------------------
@@ -102,7 +118,7 @@ void VertexArray::setIndexData( const std::span< const unsigned > data_span )
     setIndexBuffer( new VertexBuffer( vulkan_context.device, data_span ) );
     index_owner = true ;
 }
-
+// -------------------------------------------------------------------------------
 
 VertexArray::~VertexArray() 
 {
@@ -123,21 +139,20 @@ VertexArray::~VertexArray()
 
 void VertexArray::draw( VkCommandBuffer & vk_cmd_buffer )  
 {
-    assert( ! vertex_buffers.empty() );
-    assert( vertex_buffers[0] != nullptr );
-    assert( vertex_buffers[0]->num_tuples > 0 );
+    Assert( ! vertex_buffers.empty() , "VertexArray::draw: vertex_buffers is empty" );
+    Assert( vertex_buffers[0] != nullptr , "VertexArray::draw: vertex_buffers[0] is null" );
+    Assert( vertex_buffers[0]->num_tuples > 0 , "VertexArray::draw: vertex_buffers[0] has no tuples" );
     //std::cout << "Vertex buffer 0 has " << vertex_buffers[0]->num_tuples << " tuples." << std::endl ;
 
-    for( uint32_t i = 1 ; i < vertex_buffers.size() ; i++ ) 
+    for( uint32_t i = 1 ; i < num_attributes ; i++ ) 
     {
-        assert( vertex_buffers[i] != nullptr );
+        Assert( vertex_buffers[i] != nullptr , "VertexArray::draw: vertex_buffers[i] is null" );
         //std::cout << "Vertex buffer " << i << " has " << vertex_buffers[i]->num_tuples << " tuples." << std::endl ;
-        assert( vertex_buffers[i]->num_tuples == vertex_buffers[0]->num_tuples ); // all vertex buffers should have the same number of vertexes (same size)
+        Assert( vertex_buffers[i]->num_tuples == vertex_buffers[0]->num_tuples , "VertexArray::draw: vertex_buffers[i] has a different number of tuples" ); // all vertex buffers should have the same number of vertexes (same size)
     }
 
-    uint32_t i = 0 ;
-    for ( auto vertex_buffer : vertex_buffers ) 
-        vertex_buffer->bind( vk_cmd_buffer, i++ ); // bind each vertex buffer to its corresponding binding point in the pipeline 
+    for ( uint32_t i = 0 ; i < vertex_buffers.size() ; i++ )
+        vertex_buffers[i]->bind( vk_cmd_buffer, i ); // bind each vertex buffer to its corresponding binding point in the pipeline 
 
     if ( vulkan_context.device != nullptr && vulkan_context.device->hasDynamicPrimitiveTopology )
         vkCmdSetPrimitiveTopology( vk_cmd_buffer, topology );
