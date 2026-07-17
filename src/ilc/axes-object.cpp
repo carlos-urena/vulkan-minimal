@@ -211,7 +211,7 @@ void Segment::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & cont
 {
    if ( vertex_array == nullptr ) 
    {
-      vertex_array = new vkhc::VertexArray( context, VK_PRIMITIVE_TOPOLOGY_LINE_LIST );
+      vertex_array = new vkhc::VertexArray( context, VK_PRIMITIVE_TOPOLOGY_LINE_LIST, 4 );
       Assert( vertex_array != nullptr, "cannot create a VAO" );
 
       std::vector<glm::vec3> vertices = { p0, p1 } ;
@@ -219,10 +219,10 @@ void Segment::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & cont
       std::vector<glm::vec2> tcc = { glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 1.0f) } ;
       std::vector<glm::vec3> normals = { glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3( 0.0f, 1.0f, 0.0f )} ;
 
-      vertex_array->addAttribData( vertices ) ;
-      vertex_array->addAttribData( colors ) ;
-      vertex_array->addAttribData( tcc ) ;
-      vertex_array->addAttribData( normals ) ;
+      vertex_array->setAttribData( 0, vertices ) ;
+      vertex_array->setAttribData( 1, colors ) ;
+      vertex_array->setAttribData( 2, tcc ) ;
+      vertex_array->setAttribData( 3, normals ) ;
    }
    vertex_array->draw(  cmdb_vk ) ;
 }

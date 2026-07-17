@@ -19,6 +19,7 @@ class VertexArray
     public:
 
     VkPrimitiveTopology topology ;
+    int num_attributes = 0 ; // number of attributes (vertex input) expected by the vertex shader, 
     std::vector<VertexBuffer *> vertex_buffers ; // vertex buffers to bind to the pipeline 
     std::vector<bool> owner ; // for each added vertex buffer, indicates if this vertex array is the owner of the buffer (and should delete it in the destructor) or not (e.g. if the buffer is shared with other vertex arrays, it should not be deleted by this vertex array)
     VertexBuffer * index_buffer = nullptr ; // optional index buffer (if not null, it will be bound as index buffer, and draw calls should be indexed)
@@ -27,12 +28,12 @@ class VertexArray
 
     // Methods:
 
-    VertexArray( VulkanContext & p_vulkan_context, const VkPrimitiveTopology p_topology ) ;
+    VertexArray( VulkanContext & p_vulkan_context, const VkPrimitiveTopology p_topology, const int p_num_attributes ) ;
     
     // adds an already created vertex buffer, the caller is responsible to keep it alive 
     // and delete it  after this vertex array is deleted
 
-    void addVertexBuffer( VertexBuffer * vertex_buffer ) ;
+    void setVertexBuffer( const int attribute_index, VertexBuffer * vertex_buffer ) ;
     
     // sets a vertex buffer as the index buffer, the caller is responsible to keep it 
     // alive and delete it after this vertex array is deleted.
@@ -42,12 +43,12 @@ class VertexArray
     // creates a vertex buffer from a data table and adds it to the vertex buffers vector,
     // the vertex buffer is deleted when the destructor of this vertex array is called 
 
-    void addAttribData( const std::span< const glm::vec2 > data_span ) ;
+    void setAttribData( const int attribute_index, const std::span< const glm::vec2 > data_span ) ;
     
     // creates a vertex buffer from a data table and adds it to the vertex buffers vector,
     // the vertex buffer is deleted when the destructor of this vertex array is called 
 
-    void addAttribData( const std::span< const glm::vec3 > data_span ) ;
+    void setAttribData( const int attribute_index,const std::span< const glm::vec3 > data_span ) ;
     
 
     // sets the index data

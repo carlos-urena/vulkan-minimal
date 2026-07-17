@@ -166,6 +166,9 @@ class BasicPipeline
     // ------------------------------------------------------------------------------
     // Methods.
 
+    // returns the number of attributes (vertex input) expected by the vertex shader, based on the size of the 'attributes_formats' vector
+    uint32_t getNumAttributes() const { return static_cast<uint32_t>( attributes_formats.size() ) ; }
+
     // searchs for a push constant with the given name, returns its index or -1 when not found
     int findPushConstantIndex( const std::string & name ) ;
 

@@ -14,22 +14,27 @@ namespace vkhc
 // -------------------------------------------------------------------------------
 // Constructor
 
-VertexArray::VertexArray( VulkanContext & p_vulkan_context, const VkPrimitiveTopology p_topology ) 
+VertexArray::VertexArray( VulkanContext & p_vulkan_context, const VkPrimitiveTopology p_topology, const int p_num_attributes  ) 
 
 :   topology( p_topology ), 
+    num_attributes( p_num_attributes ),
     vulkan_context( p_vulkan_context )
-{    
+{  
+    Assert( num_attributes > 0, "VertexArray constructor: num_attributes must be > 0" );
+    vertex_buffers.resize( num_attributes, nullptr );
+    owner.resize( num_attributes, false );
 }
 
 // -------------------------------------------------------------------------------
 // adds an already created vertex buffer, the caller is responsible to keep it alive 
 // and delete it  after this vertex array is deleted
 
-void VertexArray::addVertexBuffer( VertexBuffer * vertex_buffer ) 
+void VertexArray::setVertexBuffer( const int attribute_index, VertexBuffer * vertex_buffer ) 
 {
-    assert( vertex_buffer != nullptr );
-    vertex_buffers.push_back( vertex_buffer );
-    owner.push_back( false );
+    Assert( vertex_buffer != nullptr, "VertexArray::setVertexBuffer: vertex_buffer is null" );
+    Assert( attribute_index >= 0 && attribute_index < num_attributes, "VertexArray::setVertexBuffer: attribute_index is out of bounds" );
+    vertex_buffers[attribute_index] = vertex_buffer ;
+    owner[attribute_index] = false ;
 }
 // -------------------------------------------------------------------------------
 // sets a vertex buffer as the index buffer, the caller is responsible to keep it 
@@ -46,19 +51,21 @@ void VertexArray::setIndexBuffer( VertexBuffer * vertex_buffer )
 // creates a vertex buffer from a data table and adds it to the vertex buffers vector,
 // the vertex buffer is deleted when the destructor of this vertex array is called 
 
-void VertexArray::addAttribData( const std::span< const glm::vec2 > data_span ) 
+void VertexArray::setAttribData( const int attribute_index, const std::span< const glm::vec2 > data_span ) 
 {
-    vertex_buffers.push_back( new VertexBuffer( vulkan_context.device, data_span ) );
-    owner.push_back( true );
+    Assert( attribute_index >= 0 && attribute_index < num_attributes, "VertexArray::setAttribData: attribute_index is out of bounds" );
+    vertex_buffers[attribute_index] = new VertexBuffer( vulkan_context.device, data_span );
+    owner[attribute_index] = true ;
 }
 // -------------------------------------------------------------------------------
 // creates a vertex buffer from a data table and adds it to the vertex buffers vector,
 // the vertex buffer is deleted when the destructor of this vertex array is called 
 
-void VertexArray::addAttribData( const std::span< const glm::vec3 > data_span ) 
+void VertexArray::setAttribData( const int attribute_index, const std::span< const glm::vec3 > data_span ) 
 {
-    vertex_buffers.push_back( new VertexBuffer( vulkan_context.device, data_span ) );  
-    owner.push_back( true );
+    Assert( attribute_index >= 0 && attribute_index < num_attributes, "VertexArray::setAttribData: attribute_index is out of bounds" );
+    vertex_buffers[attribute_index] = new VertexBuffer( vulkan_context.device, data_span );
+    owner[attribute_index] = true ;
 }
 
 // -------------------------------------------------------------------------------

@@ -154,13 +154,13 @@ void IndexedMesh::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & 
    
    if ( dvao == nullptr ) 
    {
-      dvao = new vkhc::VertexArray( context, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST );
+      dvao = new vkhc::VertexArray( context, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, 4 );
       Assert( dvao != nullptr, "cannot create a VAO" );
 
-      dvao->addAttribData( vertices );      
-      dvao->addAttribData( vert_colors );
-      dvao->addAttribData( vert_normals );
-      dvao->addAttribData( vert_tcc );
+      dvao->setAttribData( 0, vertices );
+      dvao->setAttribData( 1, vert_colors );
+      dvao->setAttribData( 2, vert_normals );
+      dvao->setAttribData( 3, vert_tcc );
 
       dvao->setIndexData( triangles );
 

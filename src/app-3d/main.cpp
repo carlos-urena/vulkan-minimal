@@ -66,19 +66,19 @@ Triangle::Triangle( vkhc::VulkanContext & vulkan_context)
         using namespace glm ;
         using namespace std ;
 
-        vertex_array = new vkhc::VertexArray( vulkan_context, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST ) ; // VK_PRIMITIVE_TOPOLOGY_PATCH_LIST ) 
+        vertex_array = new vkhc::VertexArray( vulkan_context, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, 3 ) ; // VK_PRIMITIVE_TOPOLOGY_PATCH_LIST ) 
         Assert( vertex_array != nullptr, "cannot create vertex array for triangle" ) ;
 
-        vertex_array->addAttribData( vector<vec3>{ 
+        vertex_array->setAttribData( 0, vector<vec3>{ 
             vec3{ 0.7f, 0.0f, 0.0f },
             vec3{ 0.0f, 0.7f, 0.0f},
             vec3{ 0.0f, 0.0f, 0.7f }  
         });
         
         // location 1: vertex colors
-        vertex_array->addAttribData( vector<vec3>{ {1.0f,0.0f,0.0f}, {0.0f,1.0f,0.0f}, {0.0f,0.0f,1.0f} });
+        vertex_array->setAttribData( 1, vector<vec3>{ {1.0f,0.0f,0.0f}, {0.0f,1.0f,0.0f}, {0.0f,0.0f,1.0f} });
         // location 2: vertex texture coordinates 
-        vertex_array->addAttribData( vector<vec2>{ {0.0f,0.0f}, {0.5f,1.0f}, {1.0f,0.0f} });
+        vertex_array->setAttribData( 2, vector<vec2>{ {0.0f,0.0f}, {0.5f,1.0f}, {1.0f,0.0f} });
         // indexes 
         vertex_array->setIndexData( vector<uvec3>{{ 0, 1, 2 }} ); 
     }

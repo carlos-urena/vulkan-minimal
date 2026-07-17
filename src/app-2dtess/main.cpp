@@ -20,7 +20,7 @@ class Triangle : public vkhc::VertexArray
     public: 
     
     inline Triangle( vkhc::VulkanContext & vulkan_context)
-    :   VertexArray( vulkan_context, VK_PRIMITIVE_TOPOLOGY_PATCH_LIST ) 
+    :   VertexArray( vulkan_context, VK_PRIMITIVE_TOPOLOGY_PATCH_LIST, 3 ) 
     {
         using namespace glm ;
         using namespace std ;
@@ -30,12 +30,12 @@ class Triangle : public vkhc::VertexArray
             a  = M_PI*2.0f/3.0f ;  // angle between vertices (in radians), for an equilateral triangle this is 2*pi/3
 
         // location 0: vertex positions
-        addAttribData( vector<vec2>{ {r*cos(a0),r*sin(a0)}, {r*cos(a0+a),r*sin(a0+a)}, 
+        setAttribData( 0, vector<vec2>{ {r*cos(a0),r*sin(a0)}, {r*cos(a0+a),r*sin(a0+a)}, 
                                      {r*cos(a0+2.0f*a),r*sin(a0+2.0f*a)}  });
         // location 1: vertex colors
-        addAttribData( vector<vec3>{ {1.0f,0.0f,0.0f}, {0.0f,1.0f,0.0f}, {0.0f,0.0f,1.0f} });
+        setAttribData( 1, vector<vec3>{ {1.0f,0.0f,0.0f}, {0.0f,1.0f,0.0f}, {0.0f,0.0f,1.0f} });
         // location 2: vertex texture coordinates 
-        addAttribData( vector<vec2>{ {0.0f,0.0f}, {0.5f,1.0f}, {1.0f,0.0f} });
+        setAttribData( 2, vector<vec2>{ {0.0f,0.0f}, {0.5f,1.0f}, {1.0f,0.0f} });
         // indexes 
         setIndexData( vector<uvec3>{{ 0, 1, 2 }} ); 
     }
@@ -47,7 +47,7 @@ class Quad : public vkhc::VertexArray
     public: 
     
     inline Quad( vkhc::VulkanContext & vulkan_context)
-    :   VertexArray( vulkan_context, VK_PRIMITIVE_TOPOLOGY_PATCH_LIST ) 
+    :   VertexArray( vulkan_context, VK_PRIMITIVE_TOPOLOGY_PATCH_LIST, 3 ) 
     {
         using namespace glm ;
         using namespace std ;
@@ -55,12 +55,12 @@ class Quad : public vkhc::VertexArray
             s  = 1.0f ; // triangle radius (distance from the center of the triangle to its vertices)
             
         // location 0: vertex positions
-        addAttribData( vector<vec2>{ {-s,-s}, {s,-s}, {s,s}, {-s,s} });
+        setAttribData( 0, vector<vec2>{ {-s,-s}, {s,-s}, {s,s}, {-s,s} });
 
         // location 1: vertex colors
-        addAttribData( vector<vec3>{ {1.0f,0.0f,0.0f}, {0.0f,1.0f,0.0f}, {0.0f,0.0f,1.0f}, {1.0f,1.0f,0.0f} });
+        setAttribData( 1, vector<vec3>{ {1.0f,0.0f,0.0f}, {0.0f,1.0f,0.0f}, {0.0f,0.0f,1.0f}, {1.0f,1.0f,0.0f} });
         // location 2: vertex texture coordinates 
-        addAttribData( vector<vec2>{ {0.0f,0.0f}, {1.0f,0.0f}, {1.0f,1.0f}, {0.0f,1.0f} });
+        setAttribData( 2, vector<vec2>{ {0.0f,0.0f}, {1.0f,0.0f}, {1.0f,1.0f}, {0.0f,1.0f} });
         // indexes 
         setIndexData( vector<unsigned>{ 0, 1, 2, 3 } ); 
     }
