@@ -25,6 +25,7 @@ class VertexArray
     VertexBuffer * index_buffer = nullptr ; // optional index buffer (if not null, it will be bound as index buffer, and draw calls should be indexed)
     bool index_owner = false ;
     VulkanContext & vulkan_context ;
+    bool gpu_updated = false ; // true iif the GPU has the same data as the CPU.
 
     // Methods:
 
@@ -35,10 +36,7 @@ class VertexArray
 
     void setVertexBuffer( const int attribute_index, VertexBuffer * vertex_buffer ) ;
     
-    // sets a vertex buffer as the index buffer, the caller is responsible to keep it 
-    // alive and delete it after this vertex array is deleted.
-
-    void setIndexBuffer( VertexBuffer * vertex_buffer ) ;
+    
     
     // creates a vertex buffer from a data table and adds it to the vertex buffers vector,
     // the vertex buffer is deleted when the destructor of this vertex array is called 
@@ -50,7 +48,14 @@ class VertexArray
 
     void setAttribData( const int attribute_index,const std::span< const glm::vec3 > data_span ) ;
     
+    // clears the index buffer if it is set and owned.
+    void clearIndexBuffer() ;
 
+    // sets a vertex buffer as the index buffer, the caller is responsible to keep it 
+    // alive and delete it after this vertex array is deleted.
+
+    void setIndexBuffer( VertexBuffer * vertex_buffer ) ;
+    
     // sets the index data
     void setIndexData( const std::span< const glm::uvec3 > data_span ) ;
     void setIndexData( const std::span< const unsigned > data_span ) ;

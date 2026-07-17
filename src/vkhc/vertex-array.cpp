@@ -36,17 +36,7 @@ void VertexArray::setVertexBuffer( const int attribute_index, VertexBuffer * ver
     vertex_buffers[attribute_index] = vertex_buffer ;
     owner[attribute_index] = false ;
 }
-// -------------------------------------------------------------------------------
-// sets a vertex buffer as the index buffer, the caller is responsible to keep it 
-// alive and delete it after this vertex array is deleted.
 
-void VertexArray::setIndexBuffer( VertexBuffer * vertex_buffer ) 
-{
-    assert( vertex_buffer != nullptr );
-    assert( index_buffer == nullptr );
-    index_buffer = vertex_buffer ;
-    index_owner = false ;
-}
 // -------------------------------------------------------------------------------
 // creates a vertex buffer from a data table and adds it to the vertex buffers vector,
 // the vertex buffer is deleted when the destructor of this vertex array is called 
@@ -54,7 +44,7 @@ void VertexArray::setIndexBuffer( VertexBuffer * vertex_buffer )
 void VertexArray::setAttribData( const int attribute_index, const std::span< const glm::vec2 > data_span ) 
 {
     Assert( attribute_index >= 0 && attribute_index < num_attributes, "VertexArray::setAttribData: attribute_index is out of bounds" );
-    vertex_buffers[attribute_index] = new VertexBuffer( vulkan_context.device, data_span );
+    setVertexBuffer( attribute_index, new VertexBuffer( vulkan_context.device, data_span ) );
     owner[attribute_index] = true ;
 }
 // -------------------------------------------------------------------------------
@@ -64,9 +54,39 @@ void VertexArray::setAttribData( const int attribute_index, const std::span< con
 void VertexArray::setAttribData( const int attribute_index, const std::span< const glm::vec3 > data_span ) 
 {
     Assert( attribute_index >= 0 && attribute_index < num_attributes, "VertexArray::setAttribData: attribute_index is out of bounds" );
-    vertex_buffers[attribute_index] = new VertexBuffer( vulkan_context.device, data_span );
+    setVertexBuffer( attribute_index, new VertexBuffer( vulkan_context.device, data_span ) );
     owner[attribute_index] = true ;
 }
+
+// -------------------------------------------------------------------------------
+
+void VertexArray::clearIndexBuffer()
+{
+    if ( index_buffer == nullptr )
+        return ; 
+        
+    if (index_owner ) 
+    {
+        delete index_buffer ;
+        index_buffer = nullptr ;
+        index_owner = false ;
+    }
+    // missing: free GPU memory ??
+}
+
+// -------------------------------------------------------------------------------
+// sets a vertex buffer as the index buffer, the caller is responsible to keep it 
+// alive and delete it after this vertex array is deleted.
+
+void VertexArray::setIndexBuffer( VertexBuffer * vertex_buffer ) 
+{
+    Assert( vertex_buffer != nullptr , "VertexArray::setIndexBuffer: vertex_buffer is null" );
+    clearIndexBuffer() ;
+    index_buffer = vertex_buffer ;
+    index_owner = false ;
+    gpu_updated = false ;
+}
+
 
 // -------------------------------------------------------------------------------
 
