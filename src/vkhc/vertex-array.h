@@ -31,7 +31,7 @@ class VertexArray
     VertexBuffer * index_buffer = nullptr ; // optional index buffer (if not null, it will be bound as index buffer, and draw calls should be indexed)
     bool index_owner = false ;
     VulkanContext & vulkan_context ;
-    bool gpu_updated = false ; // true iif the GPU has the same data as the CPU.
+    
 
     public: // methods
 

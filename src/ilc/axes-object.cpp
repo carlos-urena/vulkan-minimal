@@ -181,7 +181,7 @@ ConeZ01::ConeZ01( const std::string & name, const unsigned num_slices )
     }
 }
 
-// --------------
+// -----------------------------------------------------------------------------------------
 
 class Segment : public DrawableObject
 {
@@ -193,6 +193,7 @@ class Segment : public DrawableObject
       virtual ~Segment() { delete vertex_array ; vertex_array = nullptr ; } ;
       virtual void drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & context, VkCommandBuffer & cmdb_vk ) override ;
 } ;
+// -----------------------------------------------------------------------------------------
 
 
 Segment::Segment( const glm::vec3 & p_p0, const glm::vec3 & p_p1, const glm::vec3 & p_color ) 
@@ -419,12 +420,34 @@ Assert( axes_cylinder != nullptr, "Axes cylinder not initialized" ) ;
    p->popModelMatrix( cmd_vk );
 
 
-   // draw axis lines
-   p->setBaseColorIndex( cmd_vk, -1 ) ;
-   line_x->drawVK( pipeline, context, cmd_vk ) ; // draw a line along the X axis
-   line_y->drawVK( pipeline, context, cmd_vk ) ; // draw a line along the Y axis
-   line_z->drawVK( pipeline, context, cmd_vk ) ; // draw a line along the Z axis
+   // draw axis lines (deactivated, thin-cylinders are used instead)
+   //p->setBaseColorIndex( cmd_vk, -1 ) ;
+   //line_x->drawVK( pipeline, context, cmd_vk ) ; // draw a line along the X axis
+   //line_y->drawVK( pipeline, context, cmd_vk ) ; // draw a line along the Y axis
+   //line_z->drawVK( pipeline, context, cmd_vk ) ; // draw a line along the Z axis
 
+   // draw thin cylinders in the axes
+   // draw Z axis cylinder
+   constexpr float lines_radius = 0.005f ;
+   const mat4 lines_scale_mat = glm::translate(vec3{0.0f,0.0f,gstart})*glm::scale(glm::vec3( lines_radius, lines_radius, gend-gstart )) ;
+   p->pushModelMatrix( cmd_vk, lines_scale_mat ) ; 
+      p->setBaseColorIndex( cmd_vk, blue_color_index ) ;
+      axes_cylinder->drawVK( pipeline, context, cmd_vk ) ; // axis Z (blue)
+   p->popModelMatrix( cmd_vk ) ;
+
+   // draw Y axis cylinder
+   p->pushModelMatrix( cmd_vk, rot_m90_x* lines_scale_mat ) ;
+      p->setBaseColorIndex( cmd_vk, green_color_index ) ;
+      axes_cylinder->drawVK( pipeline, context, cmd_vk ) ; // axis Y (green)
+   p->popModelMatrix( cmd_vk );
+
+   // draw X axis cylinder
+   p->pushModelMatrix( cmd_vk, rot_90_y *lines_scale_mat) ;
+      p->setBaseColorIndex( cmd_vk, red_color_index ) ;
+      axes_cylinder->drawVK( pipeline, context, cmd_vk ) ; // axis X (red)
+   p->popModelMatrix( cmd_vk );
+
+   // -----------
    // draw Sphere
    p->setBaseColorIndex( cmd_vk, -1 ) ; // disable base color for next objects to be drawn
    p->pushModelMatrix( cmd_vk, sphere_scale_mat ) ;

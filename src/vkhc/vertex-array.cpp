@@ -100,7 +100,6 @@ void VertexArray::setIndexBuffer( VertexBuffer * vertex_buffer )
     clearIndexBuffer() ;
     index_buffer = vertex_buffer ;
     index_owner = false ;
-    gpu_updated = false ;
 }
 
 
