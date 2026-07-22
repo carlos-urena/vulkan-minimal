@@ -39,11 +39,13 @@ class Pipeline3D : public BasicPipeline
 {
     private:
 
-    // model matrix stack 
+    // model matrix stack (and normal matrix stack)
     std::vector<glm::mat4> model_matrix_stack ;
+    std::vector<glm::mat4> model_matrix_normals_stack ;
     
-    // current model matrix 
+    // current model matrix and model matrix for normals
     glm::mat4 current_model_matrix = glm::mat4(1.0f) ; 
+    glm::mat4 current_model_matrix_normals = glm::mat4(1.0f) ;
 
     // current texture index 
     int current_texture_index = -1 ; // -1 means no texture is active

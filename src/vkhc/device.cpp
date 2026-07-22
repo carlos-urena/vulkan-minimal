@@ -138,6 +138,10 @@ void Device::initializeGPUProperties()
     likelyHasWireframeRender = (vk_available_feat.fillModeNonSolid == VK_TRUE);
 
     maxUBOSize = vk_gpu_props.limits.maxUniformBufferRange;
+    maxPCSize  = vk_gpu_props.limits.maxPushConstantsSize;
+
+    Assert( maxUBOSize > 0, "Selected GPU has maxUniformBufferRange == 0" );
+    Assert( maxPCSize >= 128, "Selected GPU has maxPushConstantsSize == "+std::to_string(maxPCSize) + " (less than 128)" );
     
     using namespace std ;
     cout
@@ -150,7 +154,7 @@ void Device::initializeGPUProperties()
             << VK_VERSION_MAJOR(vk_gpu_props.driverVersion) << "." 
             << VK_VERSION_MINOR(vk_gpu_props.driverVersion) << "." 
             << VK_VERSION_PATCH(vk_gpu_props.driverVersion) << endl
-        << "  Max size for push constants block            : " << vk_gpu_props.limits.maxPushConstantsSize << " bytes" << endl 
+        << "  Max size for push constants block            : " << maxPCSize << " bytes" << endl 
         << "  Max size for uniform buffer object (UBO)     : " << maxUBOSize << " bytes" << endl
         << "  Tessellation shader capability (guess)       : " << (likelyHasTessellation ? "likely yes" : "likely no") << endl 
         << "  Geometry shader capability (guess)           : " << (likelyHasGeometryShader ? "likely yes" : "likely no") << endl

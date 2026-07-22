@@ -125,7 +125,7 @@ class BasicPipeline
         VK_SHADER_STAGE_GEOMETRY_BIT |
         VK_SHADER_STAGE_FRAGMENT_BIT ;
 
-    static constexpr uint32_t        max_pc_total_size = 128 ; // maximum total size of push constant ranges, in bytes (Vulkan spec guarantees at least 128 bytes)
+    uint32_t                         max_pc_total_size = 0 ; // maximum total size of push constant ranges, in bytes (Vulkan spec guarantees at least 128 bytes)
     std::vector<VkPushConstantRange> vk_pc_ranges{} ;  // vector of push constant ranges (see addPushConstant) 
     std::vector<std::string>         pc_names ;        // names of push constants, used for debugging 
     uint32_t                         pc_total_size = 0 ; // current total size of push constant ranges (see addPushConstant) 

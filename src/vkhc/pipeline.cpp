@@ -134,23 +134,28 @@ uint32_t BasicPipeline::getAttributeFormatSize( const VkFormat format )
 
 void BasicPipeline::addPushConstant( const std::string & name, uint32_t p_size )
 {
-    assert( ! initialized ); 
-    assert( p_size > 0 );
-    assert( p_size % 4 == 0 );
-    assert( pc_total_size + p_size <= max_pc_total_size );
+    using namespace std ;
+    Assert( ! initialized, "BasicPipeline::addPushConstant -- pipeline already initialized" ); 
+    Assert( p_size > 0, "BasicPipeline::addPushConstant -- size must be positive" );
+    Assert( p_size % 4 == 0, "BasicPipeline::addPushConstant -- size must be a multiple of 4" );
 
+    const uint32_t new_pc_total_size = pc_total_size + p_size ;
+    if( new_pc_total_size > max_pc_total_size )
+    {
+        cout << "BasicPipeline::addPushConstant: ERROR: total size of push constants exceeds maximum allowed ( new size == " 
+             << new_pc_total_size << ", max size == " << max_pc_total_size << ")." << endl ;
+        exit( EXIT_FAILURE );
+    }
     VkPushConstantRange vk_pcr{
         .stageFlags = allStagesFlags ,
-        .offset = pc_total_size ,
-        .size = p_size ,
+        .offset     = pc_total_size ,
+        .size       = p_size ,
     };
-    
     vk_pc_ranges.push_back( vk_pcr );
     pc_names.push_back( name );
 
     std::cout << "Added push constant '" << name << "' with size " << p_size << " bytes, offset " << pc_total_size << std::endl ;
-
-    pc_total_size += p_size ;
+    pc_total_size = new_pc_total_size ;
 }
 
 // -----------------------------------------------------------------------------
@@ -781,7 +786,10 @@ BasicPipeline::BasicPipeline( VulkanContext & p_vulkan_context, const bool p_z_b
     assert( render_pass != nullptr );
 
     ubou_max_total_size = device->maxUBOSize ;
+    max_pc_total_size  = device->maxPCSize ;
+
     Assert( ubou_max_total_size > 0, "BasicPipeline::BasicPipeline: Error: max UBO size is zero." );
+    Assert( max_pc_total_size >= 128, "BasicPipeline::BasicPipeline: Error: max PC size is less than 128 bytes." );
 }
 // -------------------------------------------------------------------------------------------------
 // add this pipeline bind command to a command buffer 

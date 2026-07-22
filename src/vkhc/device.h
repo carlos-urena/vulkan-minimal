@@ -20,22 +20,17 @@ class Device  // includes physical device, device and queue creation
     uint32_t ava_gpus_count = 0 ;  // total number of available GPUs in the system
     uint32_t gpu_index      = 0 ;  // index of selected GPU
     
-    VkDevice                      vk_device ;           // logical device created from the physical device
-    VkPhysicalDevice              vk_gpu;               // selected GPU (physical device)
-    VkPhysicalDeviceProperties    vk_gpu_props{};       // properties for the selected gpu
-    
-    VkQueue                       vk_queue ;            // queue used to submit command buffers and present to the swap chain
-    //VkSampler                     vk_sampler { VK_NULL_HANDLE }; // shared sampler used by texture descriptors
-    
-    //VkPhysicalDeviceProperties    vk_gpu_props{};       // properties for the selected gpu
-    VkPhysicalDeviceFeatures      vk_desired_feat{};    // requested features for physical device creation 
-    VkPhysicalDeviceFeatures      vk_available_feat{};  // available features found after physical device creation
+    VkDevice                           vk_device ;           // logical device created from the physical device
+    VkPhysicalDevice                   vk_gpu;               // selected GPU (physical device)
+    VkPhysicalDeviceProperties         vk_gpu_props{};       // properties for the selected gpu
+    VkQueue                            vk_queue ;            // queue used to submit command buffers and present to the swap chain
+    //VkSampler                        vk_sampler { VK_NULL_HANDLE }; // shared sampler used by texture descriptors
+    //VkPhysicalDeviceProperties       vk_gpu_props{};       // properties for the selected gpu
+    VkPhysicalDeviceFeatures           vk_desired_feat{};    // requested features for physical device creation 
+    VkPhysicalDeviceFeatures           vk_available_feat{};  // available features found after physical device creation
     std::vector<VkExtensionProperties> supp_extensions;      // vector with extensions supported by the physical device
     VkPhysicalDeviceMemoryProperties   vk_mem_props{};       // memory properties, used later when a vertex buffer is created..
 
-    
-    
-    
     uint32_t supp_extensions_count = 0; // total number of extension supported by the physical device
     
     bool likelyHasTessellation = false ;
@@ -44,6 +39,7 @@ class Device  // includes physical device, device and queue creation
     bool hasDynamicPrimitiveTopology = false ;
 
     VkDeviceSize maxUBOSize = 0 ;
+    VkDeviceSize maxPCSize  = 0 ;
 
     float queuePriority = 1.0f;
 
