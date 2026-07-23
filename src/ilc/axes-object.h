@@ -1,6 +1,7 @@
 #pragma once
 
 
+#include <pipeline3D.h>
 #include <indexed-mesh.h>
 
 
@@ -35,8 +36,8 @@ class AxesObject : public DrawableObject
     bool draw_axes = true ;
     bool draw_grid = true ;
 
-    void drawGridVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk ) ;
-    void drawAxesVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk ) ;
+    void drawGridVK( vkhc::Pipeline3D * pipeline, vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk ) ;
+    void drawAxesVK( vkhc::Pipeline3D * pipeline, vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk ) ;
 
 
     public:

@@ -102,8 +102,9 @@ IMSphere::IMSphere(  )
       vec3 vert = { ca*cb, sb, sa*cb } ;
       vertices.push_back( vert );   
       vert_colors.push_back( { 0.1f, 0.8f, 0.8f } );
-      vert_tcc.push_back( { fs, fz } );
       vert_normals.push_back( vert );
+      vert_tcc.push_back( { fs, fz } );
+      
    }
 }
 // ---------------------------------------------------------------------------------------
@@ -307,7 +308,7 @@ AxesObject::~AxesObject()
 
 // ---------------------------------------------------------------------------------------
 
-void AxesObject::drawGridVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk )
+void AxesObject::drawGridVK( vkhc::Pipeline3D * pipeline, vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk )
 {
 Assert( axes_cylinder != nullptr, "Axes cylinder not initialized" ) ;
 
@@ -342,29 +343,23 @@ Assert( axes_cylinder != nullptr, "Axes cylinder not initialized" ) ;
          line01z->drawVK( pipeline, context, cmd_vk ) ; // draw a line along the X axis
       p->popModelMatrix( cmd_vk ) ;
    }
-
-   
-
-
 }
+// ---------------------------------------------------------------------------------------
 
-void AxesObject::drawAxesVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk )
+void AxesObject::drawAxesVK( vkhc::Pipeline3D * p, vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk )
 {
-Assert( axes_cylinder != nullptr, "Axes cylinder not initialized" ) ;
+   Assert( axes_cylinder != nullptr, "Axes cylinder not initialized" ) ;
 
    // retrieve a valid 3d pipeline  
    using namespace vkhc ;
    using namespace glm ;
    
-   Assert( pipeline != nullptr, "No pipeline binded when drawing axes object" ) ;
-   Pipeline3D * p = static_cast<Pipeline3D*>( pipeline ) ;
-   Assert( p != nullptr, "Current binded pipeline is not a 3D pipeline when drawing axes object" ) ;
-
    constexpr float
       radius = 0.017f ,
       len_cyl = 0.85f ,
       len_cone = 1.0f - len_cyl ,
-      rad_cone = radius*2.0f ; 
+      rad_cone = radius*2.0f ,
+      rad_sphere = 1.3f ; // 0.05f ;
 
    const mat4 
       scale_mat = glm::scale(glm::vec3( radius, radius, len_cyl )),
@@ -373,50 +368,49 @@ Assert( axes_cylinder != nullptr, "Axes cylinder not initialized" ) ;
       mat_cone = translate_mat_cone * scale_mat_cone,
       rot_m90_x = glm::rotate( radians(-90.0f), glm::vec3(1.0,0.0,0.0) ),
       rot_90_y  = glm::rotate( radians(90.0f),  glm::vec3(0.0,1.0,0.0) ),
-      sphere_scale_mat = glm::scale(glm::vec3( 0.05f, 0.05f, 0.05f )) ;
-
-   // save previous pipeline state
-   int prev_texture_index = p->getTextureIndex() ; // save previous texture index
-   int prev_base_color_index = p->getBaseColorIndex() ; // save previous base color index
+      sphere_scale_mat = glm::scale(glm::vec3( rad_sphere, rad_sphere, rad_sphere )) ;
 
    // disable use of textures
    p->setTextureIndex( cmd_vk, -1 ) ; // disable use of textures
 
+   // disable lighting 
+   p->setEvalIllumination( cmd_vk, false ) ; // disable illumination evaluation in the shaders
+
    // draw Z axis cylinder
    p->pushModelMatrix( cmd_vk, scale_mat ) ; 
       p->setBaseColorIndex( cmd_vk, blue_color_index ) ;
-      axes_cylinder->drawVK( pipeline, context, cmd_vk ) ; // axis Z (blue)
+      axes_cylinder->drawVK( p, context, cmd_vk ) ; // axis Z (blue)
    p->popModelMatrix( cmd_vk ) ;
 
    // draw Y axis cylinder
    p->pushModelMatrix( cmd_vk, rot_m90_x* scale_mat ) ;
       p->setBaseColorIndex( cmd_vk, green_color_index ) ;
-      axes_cylinder->drawVK( pipeline, context, cmd_vk ) ; // axis Y (green)
+      axes_cylinder->drawVK( p, context, cmd_vk ) ; // axis Y (green)
    p->popModelMatrix( cmd_vk );
 
    // draw X axis cylinder
    p->pushModelMatrix( cmd_vk, rot_90_y *scale_mat) ;
       p->setBaseColorIndex( cmd_vk, red_color_index ) ;
-      axes_cylinder->drawVK( pipeline, context, cmd_vk ) ; // axis X (red)
+      axes_cylinder->drawVK( p, context, cmd_vk ) ; // axis X (red)
    p->popModelMatrix( cmd_vk );
 
 
    // draw Z axis cone
    p->pushModelMatrix( cmd_vk, mat_cone ) ; 
       p->setBaseColorIndex( cmd_vk, blue_color_index ) ;
-      axes_cone->drawVK( pipeline, context, cmd_vk ) ; // axis Z (blue)
+      axes_cone->drawVK( p, context, cmd_vk ) ; // axis Z (blue)
    p->popModelMatrix( cmd_vk ) ;
 
    // draw Y axis cone
    p->pushModelMatrix( cmd_vk, rot_m90_x* mat_cone ) ;
       p->setBaseColorIndex( cmd_vk, green_color_index ) ;
-      axes_cone->drawVK( pipeline, context, cmd_vk ) ; // axis Y (green)
+      axes_cone->drawVK( p, context, cmd_vk ) ; // axis Y (green)
    p->popModelMatrix( cmd_vk );
 
    // draw X axis cone
    p->pushModelMatrix( cmd_vk, rot_90_y *mat_cone) ;
       p->setBaseColorIndex( cmd_vk, red_color_index ) ;
-      axes_cone->drawVK( pipeline, context, cmd_vk ) ; // axis X (red)
+      axes_cone->drawVK( p, context, cmd_vk ) ; // axis X (red)
    p->popModelMatrix( cmd_vk );
 
 
@@ -432,39 +426,58 @@ Assert( axes_cylinder != nullptr, "Axes cylinder not initialized" ) ;
    const mat4 lines_scale_mat = glm::translate(vec3{0.0f,0.0f,gstart})*glm::scale(glm::vec3( lines_radius, lines_radius, gend-gstart )) ;
    p->pushModelMatrix( cmd_vk, lines_scale_mat ) ; 
       p->setBaseColorIndex( cmd_vk, blue_color_index ) ;
-      axes_cylinder->drawVK( pipeline, context, cmd_vk ) ; // axis Z (blue)
+      axes_cylinder->drawVK( p, context, cmd_vk ) ; // axis Z (blue)
    p->popModelMatrix( cmd_vk ) ;
 
    // draw Y axis cylinder
    p->pushModelMatrix( cmd_vk, rot_m90_x* lines_scale_mat ) ;
       p->setBaseColorIndex( cmd_vk, green_color_index ) ;
-      axes_cylinder->drawVK( pipeline, context, cmd_vk ) ; // axis Y (green)
+      axes_cylinder->drawVK( p, context, cmd_vk ) ; // axis Y (green)
    p->popModelMatrix( cmd_vk );
 
    // draw X axis cylinder
    p->pushModelMatrix( cmd_vk, rot_90_y *lines_scale_mat) ;
       p->setBaseColorIndex( cmd_vk, red_color_index ) ;
-      axes_cylinder->drawVK( pipeline, context, cmd_vk ) ; // axis X (red)
+      axes_cylinder->drawVK( p, context, cmd_vk ) ; // axis X (red)
    p->popModelMatrix( cmd_vk );
 
    // -----------
    // draw Sphere
    p->setBaseColorIndex( cmd_vk, -1 ) ; // disable base color for next objects to be drawn
+   p->setEvalIllumination( cmd_vk, true ) ; // enable lighting for the sphere (just for testing its normals)
    p->pushModelMatrix( cmd_vk, sphere_scale_mat ) ;
-      sphere->drawVK( pipeline, context, cmd_vk ) ; // draw a sphere to test normals, lighting and relative scalings in X, Y, Z
+      sphere->drawVK( p, context, cmd_vk ) ; // draw a sphere to test normals, lighting and relative scalings in X, Y, Z
    p->popModelMatrix( cmd_vk ) ;
-
-   // restore previous colors in the pipeline
-   p->setBaseColorIndex( cmd_vk,  prev_base_color_index ) ; // restore previous base color index
-   p->setTextureIndex( cmd_vk, prev_texture_index ) ; // restore previous texture index
-
-
 }
+
+// ---------------------------------------------------------------------------------------
 
 void AxesObject::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk ) 
 {
+   using namespace vkhc ;
+
+   if ( !draw_axes && !draw_grid ) 
+      return ; // nothing to draw
+
+   Assert( pipeline != nullptr, "No pipeline binded when drawing axes object" ) ;
+   Pipeline3D * pipeline3d = static_cast<Pipeline3D*>( pipeline ) ;
+   Assert( pipeline3d != nullptr, "Current binded pipeline is not a 3D pipeline when drawing axes object" ) ;
+   
+   // save previous pipeline state
+   int prev_texture_index = pipeline3d->getTextureIndex() ; // save previous texture index
+   int prev_base_color_index = pipeline3d->getBaseColorIndex() ; // save previous base color index
+   int prev_eval_illumination = pipeline3d->getEvalIllumination() ; // save previous illumination evaluation mode
+
    if ( draw_grid ) 
-      drawGridVK( pipeline, context, cmd_vk ) ;
+      drawGridVK( pipeline3d, context, cmd_vk ) ;
    if ( draw_axes ) 
-      drawAxesVK( pipeline, context, cmd_vk ) ;
+      drawAxesVK( pipeline3d, context, cmd_vk ) ;
+
+   // restore previous colors and other settings in the pipeline
+   pipeline3d->setBaseColorIndex( cmd_vk,  prev_base_color_index ) ; // restore previous base color index
+   pipeline3d->setTextureIndex( cmd_vk, prev_texture_index ) ; // restore previous texture index
+   pipeline3d->setEvalIllumination( cmd_vk, prev_eval_illumination ) ; // restore previous illumination evaluation mode
 }
+
+// ---------------------------------------------------------------------------------------
+

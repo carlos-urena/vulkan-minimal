@@ -29,6 +29,7 @@ static const char* common_decls = R"glsl(
         int  base_color_index ;  // base color , -1 use either texture color (if texture_index>=0) or interpolated vertex color
         int  texture_index ;     // active texture index, -1 if no texture is active.
         int  material_index ;    // active material index, -1 if no material is active
+        int  eval_illumination ; // if not 0, evaluate illumination, if 0, use base color .
     } pc ;
 
     // Inputs: uniform buffer object (WIP):
@@ -47,8 +48,6 @@ static const char* common_decls = R"glsl(
         vec4 material_params[max_num_materials]; // array of materials parameters, indexed by 'material_index' push constant
         int  num_materials ; // current number of entries used in the 'material_params' and 'materials_colors' arrays (used?)
         
-        
-    
     } ubo ;
 
     // Inputs: array of texture samplers 
@@ -123,15 +122,40 @@ static const char* frag_shader_src = R"glsl(
     // --------------- 
     // Main function.
 
-    void main()
+    vec3 BaseColor()
     {
         if ( pc.texture_index >= 0 ) // if a texture is active, use it to determine the fragment color
-            out_color = texture( textures[ pc.texture_index ], in_tex_coords ) ;
+            return (texture( textures[ pc.texture_index ], in_tex_coords )).rgb ;
         else if ( pc.base_color_index >= 0 ) // if a base color is active, use it to determine the fragment color
-            out_color = ubo.base_colors[ int(pc.base_color_index) ] ; 
+            return (ubo.base_colors[ int(pc.base_color_index) ]).rgb ; 
         else // otherwise, use the interpolated vertex color
-            out_color = vec4( in_color, 1.0 );
+            return in_color ;
     }
+    // ----------------
+
+    vec3 EvalIllumination( const vec3 base_color )
+    {
+        vec3  nn        = normalize( in_normal ) ;
+        vec3  light_dir = normalize( vec3( 0.0, 1.0, 0.0 ) ) ;
+        float diffuse   = max( dot( nn, light_dir ), 0.0 ) ;
+
+        return base_color * diffuse ;
+    }
+    // ----------------
+
+    void main()
+    {
+        vec3 bc = BaseColor() ;
+
+        if ( pc.eval_illumination != 0 )
+            //out_color = vec4( 0.0, 1.0, 0.0, 1.0 ) ; // debug: always green
+            out_color = vec4( EvalIllumination( bc ), 1.0 ) ;
+        else
+            //out_color = vec4( 1.0, 0.0, 0.0, 1.0 ) ; // debug: always red
+            out_color = vec4( bc, 1.0 ) ;
+    }
+    //----------------- 
+
 )glsl";
 
 
@@ -165,6 +189,7 @@ Pipeline3D::Pipeline3D( VulkanContext & vulkan_context, const bool p_z_buffer_en
     addPushConstant( "base_color_index", sizeof(int) ); // base color index, -1 if no base color is active.
     addPushConstant( "texture_index", sizeof(int) ); // active texture index, -1 if no texture is active.
     addPushConstant( "material_index", sizeof(int) ); // active material index, -1 if no material is active
+    addPushConstant( "eval_illumination", sizeof(int) ); // if not 0, evaluate illumination, if 0, use base color .
     
     
     addUBOUniform( "view_mat",         VType::MAT4x4, 1 ); // view matrix
@@ -318,7 +343,7 @@ void Pipeline3D::setBaseColorsSet()
     setUBOUniform( "num_base_colors", & nc );
     setUBOUniform( "base_colors", value_ptr( BaseColorsSet::colors[0] ) );
 
-    // debug :
+    // Debug :
     // using namespace std ;
 
     // for ( unsigned i = 0 ; i < BaseColorsSet::colors.size() ; ++i )
@@ -331,6 +356,15 @@ void Pipeline3D::setBaseColorsSet()
 
     
     //cout << "Pipeline3D::setBaseColorsSet: sending " << nc << " base colors to the shaders." << endl ;
+}
+
+// ------------------------------------------------------------------------------
+
+void Pipeline3D::setEvalIllumination( VkCommandBuffer & vk_cmd, bool new_eval_illumination )
+{
+    eval_illumination = new_eval_illumination ;
+    int eval_illumination_int = eval_illumination ? 1 : 0 ;
+    setPushConstant( vk_cmd, "eval_illumination", & eval_illumination_int );
 }
 
 // ------------------------------------------------------------------------------
@@ -348,7 +382,7 @@ int BaseColorsSet::addBaseColor( const glm::vec3 & additional_color )
     return colors.size() - 1 ; // return the index of the added color
 }
 
-// ------------------------------------------------------------------------------
+
 
 } // end namespace 'vkhc' 
 

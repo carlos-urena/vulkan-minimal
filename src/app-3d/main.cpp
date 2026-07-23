@@ -143,8 +143,9 @@ class App3D : public ilc::Application
     bool draw_axes = true ;
 
     
-    // active texture index (-1 for none)
-    //int texture_index = -1 ;  
+    // eval illumination switch (true or false)
+    bool eval_illumination = true ; // default value, can be changed dynamically in command
+      
 
     // model, view and projection matrices
     glm::mat4 model_mat ;            // model matrix passed to the pipeline via a push constant
@@ -342,6 +343,10 @@ void App3D::drawIMGUIWidgets(  )
         Checkbox("Draw grid", &draw_grid);
         Checkbox("Draw axes", &draw_axes);
     }
+    if (CollapsingHeader("Illumination controls", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        Checkbox("Evaluate illumination", &eval_illumination);
+    }
     triangle->drawIMGUIWidgets() ; // draw the triangle object widgets
     
     if ( InputText("Input text (debug)", buffer, IM_ARRAYSIZE(buffer)) ) // debug
@@ -385,6 +390,7 @@ void App3D::drawFrame( VkCommandBuffer & cmd )
     pipeline->resetModelMatrix( cmd ) ; // sets the model matrix to identity and clears the model matrix stack
     pipeline->setTextureIndex( cmd, -1) ;   // no texture by default
     pipeline->setBaseColorIndex( cmd, -1 ) ;
+    pipeline->setEvalIllumination( cmd, eval_illumination ) ; // sets the illumination evaluation mode (true or false) in the shaders
 
     // draw the axes 
     axes3D->setActive( draw_axes, draw_grid );

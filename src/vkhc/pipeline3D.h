@@ -57,11 +57,15 @@ class Pipeline3D : public BasicPipeline
     glm::mat4 current_view_matrix = glm::mat4(1.0f) ;
     glm::mat4 current_projection_matrix = glm::mat4(1.0f) ;
 
+    // current value for the eval_illumination push constant (true or false)
+    bool eval_illumination = true ; // default value, can be changed dynamically in command
+
     public:
     Pipeline3D( VulkanContext & vulkan_context, const bool p_z_buffer_enabled );
     
     int getBaseColorIndex() { return current_base_color_index ; } // returns the index of the current base color, or -1 if no base color is active;
     int getTextureIndex()   { return current_texture_index ;    } // returns the index of the texture with the given name, or -1 if not found
+    bool getEvalIllumination() { return eval_illumination ; } // returns the current value of the 'eval_illumination' push constant
 
     // adds a base color to the set of base colors
 
@@ -93,6 +97,9 @@ class Pipeline3D : public BasicPipeline
 
     // send the current base colors set ('BaseColorsSet::colors') to the shaders   ()
     void setBaseColorsSet() ;
+
+    // sets the current illumination evaluation mode (true or false) in the shaders
+    void setEvalIllumination( VkCommandBuffer & vk_cmd, bool new_eval_illumination );
     
 } ; // end class 'Pipeline3D' 
 
