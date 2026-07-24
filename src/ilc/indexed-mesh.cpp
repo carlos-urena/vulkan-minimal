@@ -288,6 +288,9 @@ Cube24::Cube24()
 
       } ;
 
+   for ( glm::vec3 v : vertices )
+      vert_colors.push_back( glm::vec3( 0.5f*(v.x+1.0f), 0.5f*(v.y+1.0f), 0.5f*(v.z+1.0f) ) );
+
    triangles =
       {
          // Cara X-
@@ -396,7 +399,7 @@ Cube24::Cube24()
 
       } ;
 
-   computeNormals() ; 
+   //computeNormals() ; 
 }
 
 

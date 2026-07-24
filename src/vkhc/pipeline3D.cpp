@@ -136,10 +136,12 @@ static const char* frag_shader_src = R"glsl(
     vec3 EvalIllumination( const vec3 base_color )
     {
         vec3  n = normalize( in_normal_wcc ) ;
-        vec3  l = normalize( vec3( 0.0, 1.0, 0.0 ) ) ;
-        float d = max( dot( n, l ), 0.0 ) ;
+        // vec3  l = normalize( vec3( 0.0, 1.0, 0.0 ) ) ;
+        // float d = max( dot( n, l ), 0.0 ) ;
 
-        return d*base_color; 
+        // return d*base_color; 
+
+        return (0.5 + 0.5*n) ;
     }
     // ----------------
 
