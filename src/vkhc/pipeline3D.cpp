@@ -112,7 +112,7 @@ static const char* frag_shader_src = R"glsl(
 
     layout (location=0) in vec3 in_position_wcc;
     layout (location=1) in vec3 in_color;
-    layout (location=2) in vec3 in_normal;
+    layout (location=2) in vec3 in_normal_wcc;
     layout (location=3) in vec2 in_tex_coords ;
     
     // Output: fragment color 
@@ -135,11 +135,11 @@ static const char* frag_shader_src = R"glsl(
 
     vec3 EvalIllumination( const vec3 base_color )
     {
-        vec3  nn        = normalize( in_normal ) ;
-        vec3  light_dir = normalize( vec3( 0.0, 1.0, 0.0 ) ) ;
-        float diffuse   = max( dot( nn, light_dir ), 0.0 ) ;
+        vec3  n = normalize( in_normal_wcc ) ;
+        vec3  l = normalize( vec3( 0.0, 1.0, 0.0 ) ) ;
+        float d = max( dot( n, l ), 0.0 ) ;
 
-        return base_color * diffuse ;
+        return d*base_color; 
     }
     // ----------------
 
@@ -148,10 +148,8 @@ static const char* frag_shader_src = R"glsl(
         vec3 bc = BaseColor() ;
 
         if ( pc.eval_illumination != 0 )
-            //out_color = vec4( 0.0, 1.0, 0.0, 1.0 ) ; // debug: always green
             out_color = vec4( EvalIllumination( bc ), 1.0 ) ;
         else
-            //out_color = vec4( 1.0, 0.0, 0.0, 1.0 ) ; // debug: always red
             out_color = vec4( bc, 1.0 ) ;
     }
     //----------------- 
@@ -209,7 +207,8 @@ Pipeline3D::Pipeline3D( VulkanContext & vulkan_context, const bool p_z_buffer_en
     attributes_formats = 
     {   VK_FORMAT_R32G32B32_SFLOAT, // position (atrib 0) X,Y,Z
         VK_FORMAT_R32G32B32_SFLOAT, // color (atrib 1) R,G,B
-        VK_FORMAT_R32G32_SFLOAT     // texture coords (atrib 2) U,V
+        VK_FORMAT_R32G32B32_SFLOAT, // normal (atrib 2) X,Y,Z
+        VK_FORMAT_R32G32_SFLOAT     // texture coords (atrib 3) U,V
     }; // color
 
     // set default (initial) primitive topology (can be changed dynamically in command buffers)

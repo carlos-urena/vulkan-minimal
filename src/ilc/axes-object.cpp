@@ -1,5 +1,6 @@
 #include <axes-object.h>
 #include <pipeline3D.h>
+#include <cstdlib>
 
 // ---------------------------------------------------------------------------
 // crea una tabla de índices para una rejilla con topología cilindrica
@@ -9,8 +10,8 @@ void CreateCilindricalTopologyTriangles( std::vector<glm::uvec3> & indices,
 {
    indices.clear();
 
-   for( unsigned i = 0 ; i < na ; i++ )
-   for( unsigned j = 0 ; j < nb ; j++ )
+   for( unsigned i = 0 ; i < na-1 ; i++ )
+   for( unsigned j = 0 ; j < nb-1 ; j++ )
    {        
       const unsigned int
          i00 = (i  )*nb + j,
@@ -83,7 +84,9 @@ class IMSphere : public IndexedMesh
 IMSphere::IMSphere(  ) 
 {
    using namespace glm ;
-   constexpr unsigned int na = 16, nb = 32 ;  // number of rows and columns of vertexes 
+   constexpr unsigned int na = 32, nb = 64 ;  // number of rows and columns of vertexes 
+   setName( "axes sphere" ) ;
+
    
    CreateCilindricalTopologyTriangles( triangles, na, nb );  
 
@@ -99,13 +102,18 @@ IMSphere::IMSphere(  )
                   cb = cos(b),
                   sb = sin(b);
 
-      vec3 vert = { ca*cb, sb, sa*cb } ;
+      vec3 vert = { -ca*cb, -sb, -sa*cb } ;
       vertices.push_back( vert );   
-      vert_colors.push_back( { 0.1f, 0.8f, 0.8f } );
-      vert_normals.push_back( vert );
+      vert_colors.push_back({ 0.1f, 0.1f, 0.7f });
+      //vert_normals.push_back( vert );
       vert_tcc.push_back( { fs, fz } );
-      
    }
+
+   computeNormals() ; // compute normals for the sphere mesh
+
+   assert( vert_normals.size() == vertices.size() );
+   assert( vert_colors.size() == vertices.size() );
+   assert( vert_tcc.size() == vertices.size() );
 }
 // ---------------------------------------------------------------------------------------
 
@@ -138,11 +146,13 @@ CylinderZ01::CylinderZ01( const std::string & name, const unsigned num_slices )
                     sa = sin(a) ;
 
         vertices.push_back( { ca, sa, fz } );   
-        //vertices.push_back( { fs, +0.5f, fz } );
         vert_colors.push_back( { fs, fz, 0.0f } );
         vert_tcc.push_back( { fs, fz } );
-        vert_normals.push_back( { ca, sa, 0.0f } );
+        //vert_normals.push_back( { ca, sa, 0.0f } );
     }
+
+
+    computeNormals() ; // compute normals for the cylinder mesh
 }
 // ---------------------------------------------------------------------------------------
 
@@ -158,28 +168,29 @@ ConeZ01::ConeZ01( const std::string & name, const unsigned num_slices )
    
 :   IndexedMesh( )
 {
-    using namespace std ;
-    constexpr unsigned int na = 2 ;
-    const     unsigned     nb = num_slices ;  // number of rows and columns of vertexes 
-    
-    setName( name ) ;
-    CreateGridTopologyTriangles( triangles, na, nb );  
+   using namespace std ;
+   constexpr unsigned int na = 2 ;
+   const     unsigned     nb = num_slices ;  // number of rows and columns of vertexes 
+   
+   setName( name ) ;
+   CreateGridTopologyTriangles( triangles, na, nb );  
 
-    for( unsigned iz = 0 ; iz < na  ; iz++ )
-    for( unsigned is = 0 ; is < nb ; is++ )
-    {   
-        const float fz = float(iz)/float(na-1), 
-                    fs = float(is)/float(nb-1), 
-                    a  = 2.0f*M_PI*fs, 
-                    ca = cos(a), 
-                    sa = sin(a) ;
+   for( unsigned iz = 0 ; iz < na  ; iz++ )
+   for( unsigned is = 0 ; is < nb ; is++ )
+   {   
+      const float fz = float(iz)/float(na-1), 
+                  fs = float(is)/float(nb-1), 
+                  a  = 2.0f*M_PI*fs, 
+                  ca = cos(a), 
+                  sa = sin(a) ;
 
-        vertices.push_back( { fz*ca, fz*sa, fz } );   
-        //vertices.push_back( { fs, +0.5f, fz } );
-        vert_colors.push_back( { fs, fz, 0.0f } );
-        vert_tcc.push_back( { fs, fz } );
-        vert_normals.push_back( { ca, sa, 0.0f } );
+      vertices.push_back( { fz*ca, fz*sa, fz } );   
+      vert_colors.push_back( { fs, fz, 0.0f } );
+      vert_tcc.push_back( { fs, fz } );
+      //vert_normals.push_back( { ca, sa, 0.0f } );
     }
+
+   computeNormals() ; // compute normals for the cone mesh
 }
 
 // -----------------------------------------------------------------------------------------
@@ -234,19 +245,23 @@ constexpr float gstart = -4.0f, gend = 4.0f ;
 
 AxesObject::AxesObject( ) 
 {
+   using namespace std ;
    using namespace glm ; 
    using namespace vkhc ;
 
    setName( "axes object" ) ;
+
+   cout << "Creating axes object ..." << endl ;
+
    axes_cylinder = new CylinderZ01( "axes cylinder Z 01", 32 ) ; Assert( axes_cylinder != nullptr, "Cannot create axes cylinder" ) ;
    axes_cone = new ConeZ01( "axes cone Z 01", 32 ) ; Assert( axes_cone != nullptr, "Cannot create axes cone" ) ;
    
    red_color_index   = BaseColorsSet::addBaseColor( vec3( 1.0f, 0.0f, 0.0f ) ) ;
    green_color_index = BaseColorsSet::addBaseColor( vec3( 0.0f, 1.0f, 0.0f ) ) ;
-   blue_color_index  = BaseColorsSet::addBaseColor( vec3( 0.0f, 0.0f, 1.0f ) ) ;
+   blue_color_index  = BaseColorsSet::addBaseColor( vec3( 0.0f, 0.5f, 1.0f ) ) ;
 
    sphere = new IMSphere() ; Assert( sphere != nullptr, "Cannot create sphere" ) ;
-
+   
    //constexpr float start = -1.5f, end = 5.0f ;
 
    line_x = new Segment( vec3( gstart, 0.0f,   0.0f ),   vec3( gend, 0.0f, 0.0f ), vec3( 1.0f, 0.0f, 0.0f ) ) ;
@@ -254,34 +269,10 @@ AxesObject::AxesObject( )
    line_z = new Segment( vec3( 0.0f,   0.0f,   gstart ), vec3( 0.0f, 0.0f, gend ), vec3( 0.0f, 0.0f, 1.0f ) ) ;
    line01z = new Segment( vec3( 0.0f,  0.0f,   0.0f ),   vec3( 0.0f, 0.0f, 1.0f ), vec3( 0.5f, 0.5f, 0.5f ) ) ;
 
-   
-   // constexpr float d = 1.05, h = 0.15 ;
-
-   // xtri = new IMTriangle( {  
-   //       vec3( d,   0.0f, -h ), 
-   //       vec3( d,   0.0f, +h ), 
-   //       vec3( d+2*h, 0.0f, 0.0f ) 
-   //    }, 
-   //    vec3( 1.0f, 0.0f, 0.0f ) 
-   // ) ;   
-   // Assert( xtri != nullptr, "Cannot create X axis triangle" ) ;
-
-   // ytri = new IMTriangle( {  vec3(  -h,  d,   0.0f ), 
-   //       vec3(   h,  d,   0.0f ), 
-   //       vec3( 0.0f, d+2*h, 0.0f ) 
-   //    }, 
-   //    vec3( 0.0f, 1.0f, 0.0f ) 
-   // ) ;   
-   // Assert( ytri != nullptr, "Cannot create Y axis triangle" ) ;
-
-   // ztri = new IMTriangle( {  vec3(   -h, 0.0f, d ), 
-   //       vec3(    h, 0.0f, d ), 
-   //       vec3( 0.0f, 0.0f, d+2*h ) 
-   //    }, 
-   //    vec3( 0.0f, 0.0f, 1.0f ) 
-   // ) ;   
-   // Assert( ztri != nullptr, "Cannot create Z axis triangle" ) ;
+   cout << "Axes object created." << endl ;
 }
+
+// ---------------------------------------------------------------------------------------
 
 void AxesObject::setActive( bool p_draw_axes, bool p_draw_grid ) 
 {
@@ -299,11 +290,6 @@ AxesObject::~AxesObject()
    delete line_x ; line_x = nullptr ;
    delete line_y ; line_y = nullptr ;
    delete line_z ; line_z = nullptr ;
-
-   
-   //  delete xtri ; xtri = nullptr ;
-   //  delete ytri ; ytri = nullptr ;
-   //  delete ztri ; ztri = nullptr ;
 }
 
 // ---------------------------------------------------------------------------------------
@@ -359,7 +345,7 @@ void AxesObject::drawAxesVK( vkhc::Pipeline3D * p, vkhc::VulkanContext & context
       len_cyl = 0.85f ,
       len_cone = 1.0f - len_cyl ,
       rad_cone = radius*2.0f ,
-      rad_sphere = 1.3f ; // 0.05f ;
+      rad_sphere = 0.04f ; // 0.05f ;
 
    const mat4 
       scale_mat = glm::scale(glm::vec3( radius, radius, len_cyl )),
@@ -370,11 +356,9 @@ void AxesObject::drawAxesVK( vkhc::Pipeline3D * p, vkhc::VulkanContext & context
       rot_90_y  = glm::rotate( radians(90.0f),  glm::vec3(0.0,1.0,0.0) ),
       sphere_scale_mat = glm::scale(glm::vec3( rad_sphere, rad_sphere, rad_sphere )) ;
 
-   // disable use of textures
-   p->setTextureIndex( cmd_vk, -1 ) ; // disable use of textures
-
-   // disable lighting 
-   p->setEvalIllumination( cmd_vk, false ) ; // disable illumination evaluation in the shaders
+   
+   // debug 
+   //p->setEvalIllumination( cmd_vk, true ) ; // enable lighting for next objects to be drawn
 
    // draw Z axis cylinder
    p->pushModelMatrix( cmd_vk, scale_mat ) ; 
@@ -444,10 +428,12 @@ void AxesObject::drawAxesVK( vkhc::Pipeline3D * p, vkhc::VulkanContext & context
    // -----------
    // draw Sphere
    p->setBaseColorIndex( cmd_vk, -1 ) ; // disable base color for next objects to be drawn
-   p->setEvalIllumination( cmd_vk, true ) ; // enable lighting for the sphere (just for testing its normals)
    p->pushModelMatrix( cmd_vk, sphere_scale_mat ) ;
       sphere->drawVK( p, context, cmd_vk ) ; // draw a sphere to test normals, lighting and relative scalings in X, Y, Z
    p->popModelMatrix( cmd_vk ) ;
+
+   // restore 'eval ilum to false' 
+   p->setEvalIllumination( cmd_vk, false ) ; // disable lighting for next objects to be drawn
 }
 
 // ---------------------------------------------------------------------------------------
@@ -467,6 +453,12 @@ void AxesObject::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & c
    int prev_texture_index = pipeline3d->getTextureIndex() ; // save previous texture index
    int prev_base_color_index = pipeline3d->getBaseColorIndex() ; // save previous base color index
    int prev_eval_illumination = pipeline3d->getEvalIllumination() ; // save previous illumination evaluation mode
+
+   // disable use of textures
+   pipeline3d->setTextureIndex( cmd_vk, -1 ) ; // disable use of textures
+
+   // disable lighting 
+   pipeline3d->setEvalIllumination( cmd_vk, false ) ; // disable illumination evaluation in the shaders
 
    if ( draw_grid ) 
       drawGridVK( pipeline3d, context, cmd_vk ) ;

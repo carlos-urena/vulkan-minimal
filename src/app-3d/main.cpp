@@ -61,27 +61,31 @@ class Triangle : public DrawableObject
 } ;
 
 Triangle::Triangle( vkhc::VulkanContext & vulkan_context)
+{
+    using namespace glm ;
+    using namespace std ;
+
+    cout << "Creating test RGB triangle object ..." << endl ;
+    setName( "test RGB triangle" ) ;
+
+    vertex_array = new vkhc::VertexArray( vulkan_context, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, 3 ) ; // VK_PRIMITIVE_TOPOLOGY_PATCH_LIST ) 
+    Assert( vertex_array != nullptr, "cannot create vertex array for triangle" ) ;
+
+    vertex_array->setAttribData( 0, vector<vec3>{ 
+        vec3{ 0.7f, 0.0f, 0.0f },
+        vec3{ 0.0f, 0.7f, 0.0f},
+        vec3{ 0.0f, 0.0f, 0.7f }  
+    });
     
-    {
-        using namespace glm ;
-        using namespace std ;
+    // location 1: vertex colors
+    vertex_array->setAttribData( 1, vector<vec3>{ {1.0f,0.0f,0.0f}, {0.0f,1.0f,0.0f}, {0.0f,0.0f,1.0f} });
+    // location 2: vertex texture coordinates 
+    vertex_array->setAttribData( 2, vector<vec2>{ {0.0f,0.0f}, {0.5f,1.0f}, {1.0f,0.0f} });
+    // indexes 
+    vertex_array->setIndexData( vector<uvec3>{{ 0, 1, 2 }} ); 
 
-        vertex_array = new vkhc::VertexArray( vulkan_context, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, 3 ) ; // VK_PRIMITIVE_TOPOLOGY_PATCH_LIST ) 
-        Assert( vertex_array != nullptr, "cannot create vertex array for triangle" ) ;
-
-        vertex_array->setAttribData( 0, vector<vec3>{ 
-            vec3{ 0.7f, 0.0f, 0.0f },
-            vec3{ 0.0f, 0.7f, 0.0f},
-            vec3{ 0.0f, 0.0f, 0.7f }  
-        });
-        
-        // location 1: vertex colors
-        vertex_array->setAttribData( 1, vector<vec3>{ {1.0f,0.0f,0.0f}, {0.0f,1.0f,0.0f}, {0.0f,0.0f,1.0f} });
-        // location 2: vertex texture coordinates 
-        vertex_array->setAttribData( 2, vector<vec2>{ {0.0f,0.0f}, {0.5f,1.0f}, {1.0f,0.0f} });
-        // indexes 
-        vertex_array->setIndexData( vector<uvec3>{{ 0, 1, 2 }} ); 
-    }
+    cout << "Test RGB triangle object created." << endl ;
+}
 
 void Triangle::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk )
 {
@@ -115,10 +119,13 @@ class ExampleTexturesSet : public vkhc::TexturesSet
     public:
     ExampleTexturesSet( vkhc::VulkanContext * p_context ) : TexturesSet( p_context ) 
     {
+        using namespace std ;
+        cout << "Creating example textures set ..." << endl ;
         add( "../assets/wood-1.png" );
         add( "../assets/wood-2.png" );
         add( "../assets/wood-3.png" );
         add( new vkhc::ProceduralTexture1( context ) ) ;
+        cout << "Example textures set created." << endl ;
     }
 } ;
 
@@ -395,7 +402,6 @@ void App3D::drawFrame( VkCommandBuffer & cmd )
     // draw the axes 
     axes3D->setActive( draw_axes, draw_grid );
     axes3D->drawVK( pipeline, *context, cmd ) ;
-
 
     // draw the triangle and the widgets 
     triangle->drawVK( pipeline, *context, cmd );

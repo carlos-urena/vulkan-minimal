@@ -26,19 +26,6 @@ VertexArray::VertexArray( VulkanContext & p_vulkan_context, const VkPrimitiveTop
 }
 
 // -------------------------------------------------------------------------------
-// adds an already created vertex buffer, the caller is responsible to keep it alive 
-// and delete it  after this vertex array is deleted
-
-void VertexArray::setVertexBuffer( const uint32_t attribute_index, VertexBuffer * vertex_buffer ) 
-{
-    Assert( vertex_buffer != nullptr, "VertexArray::setVertexBuffer: vertex_buffer is null" );
-    Assert( attribute_index < num_attributes, "VertexArray::setVertexBuffer: attribute_index is out of bounds" );
-    clearVertexBuffer( attribute_index ) ; // clear the previous vertex buffer in this index if it is set and owned
-    vertex_buffers[attribute_index] = vertex_buffer ;
-    owner[attribute_index] = false ;
-}
-
-// -------------------------------------------------------------------------------
 // clears a vertex buffer if it is set and owned.
 
 void VertexArray::clearVertexBuffer( const uint32_t attribute_index ) 
@@ -52,6 +39,26 @@ void VertexArray::clearVertexBuffer( const uint32_t attribute_index )
         vertex_buffers[attribute_index] = nullptr ;
         owner[attribute_index] = false ;
     }
+}
+
+// -------------------------------------------------------------------------------
+// adds an already created vertex buffer, the caller is responsible to keep it alive 
+// and delete it  after this vertex array is deleted
+
+void VertexArray::setVertexBuffer( const uint32_t attribute_index, VertexBuffer * vertex_buffer ) 
+{
+    Assert( vertex_buffer != nullptr, "VertexArray::setVertexBuffer: vertex_buffer is null" );
+    Assert( attribute_index < num_attributes, "VertexArray::setVertexBuffer: attribute_index is out of bounds" );
+    clearVertexBuffer( attribute_index ) ; // clear the previous vertex buffer in this index if it is set and owned
+
+    // for vertex atributes, check that the binding 0 is first and that the others bindings match the number of attrs
+    if ( attribute_index > 0 ) 
+    { 
+        Assert( vertex_buffers[0] != nullptr, "VertexArray::setVertexBuffer: attribute_index > 0 but vertex_buffers[0] is null" );
+        Assert( vertex_buffers[0]->num_tuples == vertex_buffer->num_tuples, "VertexArray::setVertexBuffer: attribute_index > 0 but vertex_buffers[0] has a different number of tuples than the new vertex buffer" );       
+    }
+    vertex_buffers[attribute_index] = vertex_buffer ;
+    owner[attribute_index] = false ;
 }
 
 // -------------------------------------------------------------------------------

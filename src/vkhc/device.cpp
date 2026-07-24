@@ -137,11 +137,13 @@ void Device::initializeGPUProperties()
     likelyHasGeometryShader = (vk_available_feat.geometryShader == VK_TRUE);
     likelyHasWireframeRender = (vk_available_feat.fillModeNonSolid == VK_TRUE);
 
-    maxUBOSize = vk_gpu_props.limits.maxUniformBufferRange;
-    maxPCSize  = vk_gpu_props.limits.maxPushConstantsSize;
+    maxUBOSize             = vk_gpu_props.limits.maxUniformBufferRange;
+    maxPCSize              = vk_gpu_props.limits.maxPushConstantsSize;
+    maxVertexInputBindings = vk_gpu_props.limits.maxVertexInputBindings;
 
     Assert( maxUBOSize > 0, "Selected GPU has maxUniformBufferRange == 0" );
     Assert( maxPCSize >= 128, "Selected GPU has maxPushConstantsSize == "+std::to_string(maxPCSize) + " (less than 128)" );
+    Assert( maxVertexInputBindings > 3, "Selected GPU has maxVertexInputBindings < 4" );
     
     using namespace std ;
     cout
@@ -156,6 +158,7 @@ void Device::initializeGPUProperties()
             << VK_VERSION_PATCH(vk_gpu_props.driverVersion) << endl
         << "  Max size for push constants block            : " << maxPCSize << " bytes" << endl 
         << "  Max size for uniform buffer object (UBO)     : " << maxUBOSize << " bytes" << endl
+        << "  Max number of vertex input bindings          : " << maxVertexInputBindings << endl
         << "  Tessellation shader capability (guess)       : " << (likelyHasTessellation ? "likely yes" : "likely no") << endl 
         << "  Geometry shader capability (guess)           : " << (likelyHasGeometryShader ? "likely yes" : "likely no") << endl
         << "  Wireframe rendering capability (guess)       : " << (likelyHasWireframeRender ? "likely yes" : "likely no") << endl

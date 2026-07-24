@@ -40,6 +40,7 @@ class Device  // includes physical device, device and queue creation
 
     VkDeviceSize maxUBOSize = 0 ;
     VkDeviceSize maxPCSize  = 0 ;
+    uint32_t     maxVertexInputBindings = 0 ;
 
     float queuePriority = 1.0f;
 

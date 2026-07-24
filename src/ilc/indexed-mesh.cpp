@@ -48,7 +48,7 @@ IndexedMesh::~IndexedMesh()
 
 void IndexedMesh::computeTriangleNormals()
 {
-
+   using namespace std ;
    
    // si ya está creada la tabla de normales de triángulos, no es necesario volver a crearla
    const unsigned nt = triangles.size() ;
@@ -63,12 +63,23 @@ void IndexedMesh::computeTriangleNormals()
    tri_normals.resize( nt ) ;
    unsigned long nt_mal = 0 ;
 
+   cout << "IndexedMesh::computeTriangleNormals: computing triangle normals for mesh '" << getName() 
+        << "', nt == " << nt << ", nv = " << vertices.size() << " ......." << endl ;
+
    for( unsigned it = 0 ; it < nt ; it++ )
    {
+      uint32_t iv0 = triangles[it][0],
+               iv1 = triangles[it][1],
+               iv2 = triangles[it][2] ;
+
+      Assert( iv0 < vertices.size(), "IndexedMesh::computeTriangleNormals: vertex index 0 out of range: "+ to_string(iv0) ) ;
+      Assert( iv1 < vertices.size(), "IndexedMesh::computeTriangleNormals: vertex index 1 out of range: "+ to_string(iv1) ) ;
+      Assert( iv2 < vertices.size(), "IndexedMesh::computeTriangleNormals: vertex index 2 out of range: "+ to_string(iv2) ) ;
+
       const glm::vec3
-         & v0 = vertices[triangles[it][0]],
-         & v1 = vertices[triangles[it][1]],
-         & v2 = vertices[triangles[it][2]],
+         & v0 = vertices[iv0],
+         & v1 = vertices[iv1],
+         & v2 = vertices[iv2],
          e1   = v1-v0,
          e2   = v2-v0,
          n    = cross(e1,e2) ;
@@ -89,7 +100,10 @@ void IndexedMesh::computeTriangleNormals()
 
 void IndexedMesh::computeNormals()
 {
+   using namespace std ;
    using namespace glm ;
+
+   cout << "IndexedMesh::computeNormals: computing normals for mesh '" << getName() << "' ..." << endl ;
    
    // Calculo de las normales de la malla
    // se debe invocar en primer lugar 'computeTriangleNormals'
@@ -102,6 +116,7 @@ void IndexedMesh::computeNormals()
    if ( vert_normals.size() > 0 )
    {         
       assert( vert_normals.size() == vertices.size() );
+      cout << "IndexedMesh::computeNormals: normals already computed for mesh '" << getName() << "' (SHOULD NOT HAPPEN?)." << endl ;
       return ;
    }
    const unsigned nv = vertices.size(),
@@ -138,6 +153,8 @@ void IndexedMesh::computeNormals()
       else
          vert_normals[iv] = glm::vec3(0.0,1.0,0.0);
    }
+   Assert( vert_normals.size() == vertices.size(), "IndexedMesh::computeNormals: error in normals table size" ) ;
+   cout << "IndexedMesh::computeNormals: normals computed for mesh '" << getName() << "'." << endl ;
 }
 
 
@@ -154,6 +171,8 @@ void IndexedMesh::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & 
    
    if ( dvao == nullptr ) 
    {
+      using namespace std ;
+      cout << "IndexedMesh::drawVK: creating VAO for mesh '" << getName() << "' ..." << endl ;
       dvao = new vkhc::VertexArray( context, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, 4 );
       Assert( dvao != nullptr, "cannot create a VAO" );
 

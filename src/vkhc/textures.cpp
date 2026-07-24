@@ -171,16 +171,19 @@ void Texture::copyBufferToImage( VkBuffer buffer, VkImage image, uint32_t width,
 
     VkCommandBuffer vk_cmd = cpb->beginSingleTimeCommands();
 
-    VkBufferImageCopy region{};
-    region.bufferOffset = 0;
-    region.bufferRowLength = 0;
-    region.bufferImageHeight = 0;
-    region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    region.imageSubresource.mipLevel = 0;
-    region.imageSubresource.baseArrayLayer = 0;
-    region.imageSubresource.layerCount = 1;
-    region.imageOffset = {0, 0, 0};
-    region.imageExtent = {width, height, 1};
+    VkBufferImageCopy region{
+        .bufferOffset      = 0,
+        .bufferRowLength   = 0,
+        .bufferImageHeight = 0,
+        .imageSubresource  = {
+            .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
+            .mipLevel       = 0,
+            .baseArrayLayer = 0,
+            .layerCount     = 1
+        },
+        .imageOffset = {0, 0, 0},
+        .imageExtent = {width, height, 1},
+    } ;
 
     vkCmdCopyBufferToImage( vk_cmd, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
     
@@ -191,7 +194,8 @@ void Texture::copyBufferToImage( VkBuffer buffer, VkImage image, uint32_t width,
 
 void Texture::initialize() 
 {
-    //std::cout << "Texture::initialize() begins" << std::endl ;
+    using namespace std ;
+    cout << "Texture::initialize() begins" << std::endl ;
 
     assert( width > 0 );
     assert( height > 0 );
@@ -289,6 +293,8 @@ void Texture::initialize()
     if (vkCreateImageView( vk_device, &viewInfo, nullptr, &vk_image_view) != VK_SUCCESS) {
         throw std::runtime_error("failed to create texture image view!");
     }
+
+    cout << "Texture::initialize() ends" << std::endl ;
 } 
 
 // --------------------------------------------------------------------------------
@@ -369,18 +375,22 @@ TextureFromFile::TextureFromFile( VulkanContext * p_context, const std::string &
 
 :   Texture( p_context )
 {
+    using namespace std ;
+    cout << "Loading texture image from file: " << p_file_path << endl ;
     file_path = p_file_path ;
 
     int loaded_width = 0 ;
     int loaded_height = 0 ;
     int loaded_channels = 0 ;
 
+    cout << "TextureFromFile::TextureFromFile: running 'stbi_load' on " << file_path << endl ;
     stbi_uc * loaded_data = stbi_load( file_path.c_str(), &loaded_width, &loaded_height, &loaded_channels, STBI_rgb_alpha ) ;
     if ( loaded_data == nullptr )
     {
         std::cerr << "Error loading texture image file: " << file_path << std::endl ;
         throw std::runtime_error( "Failed to load texture image file: " + file_path ) ;
     }
+    cout << "TextureFromFile::TextureFromFile: texture data loaded successfully from file" << endl ;
     
     width = static_cast<uint32_t>( loaded_width ) ;
     height = static_cast<uint32_t>( loaded_height ) ;
@@ -403,6 +413,7 @@ TextureFromFile::TextureFromFile( VulkanContext * p_context, const std::string &
     cout << "Loaded texture image from file: " << file_path 
          << " (" << width << " x " << height << "), channels: " << loaded_channels << endl ;
 
+    cout << "TextureFromFile::TextureFromFile: texture loaded successfully from file" << endl ;
     // initialize vulkan stuff
     initialize() ;
 }
