@@ -11,7 +11,8 @@ namespace ilc
 
 // ---------------------------------------------------------------------
 
-MallaSupPar::MallaSupPar( const FuncionParam * p_fp, const unsigned p_ns, const unsigned p_nt  )
+MallaSupPar::MallaSupPar( const FuncionParam * p_fp, const unsigned p_ns, const unsigned p_nt,
+                         const bool p_promediar_normales_col   )
 {
    using namespace glm ;
 
@@ -31,8 +32,10 @@ MallaSupPar::MallaSupPar( const FuncionParam * p_fp, const unsigned p_ns, const 
    {
       const vec2 c = vec2( float(is)/float(ns-1), float(it)/float(nt-1) );
       
+      const vec3 vcol = vec3( float(it & 1), 1.0f, 1.0f );
+      
       vertices.push_back( fp->evaluarPosicion( c ));
-      vert_colors.push_back( vec3( c.s, 1.0-c.t, 0.0f ));
+      vert_colors.push_back( vcol );
       vert_tcc.push_back( vec2( c.s, 1.0-c.t ));
 
       if ( is < ns-1 && it < nt-1 )
@@ -54,6 +57,8 @@ MallaSupPar::MallaSupPar( const FuncionParam * p_fp, const unsigned p_ns, const 
    }
 
    computeNormals();
+   if ( p_promediar_normales_col )
+      promediarNormalesCol();
 }
 // ---------------------------------------------------------------------
 

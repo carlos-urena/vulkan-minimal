@@ -239,8 +239,8 @@ App3D::App3D( )
     // create drawable objects vector 
     drawable_objects.push_back( new Triangle( *context ) ) ; // index 0
     drawable_objects.push_back( new Cube24(  ) ) ; // index 1
-    drawable_objects.push_back( new MallaSupPar( new FPEsfera(), 64, 64 ) ) ; 
-    drawable_objects.push_back( new MallaSupPar( new FPColumna(), 128, 128 ) ) ;
+    drawable_objects.push_back( new MallaSupPar( new FPEsfera(), 64, 64, true ) ) ; 
+    drawable_objects.push_back( new MallaSupPar( new FPColumna(), 128, 128, true ) ) ;
 
     current_object_index = 0 ; // start with the first object in the vector
 

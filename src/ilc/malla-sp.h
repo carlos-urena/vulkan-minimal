@@ -28,7 +28,8 @@ class MallaSupPar : public IndexedMesh
    /// @param p_ns - número de muestras en la dirección 's' (primer parámetro de la función de parametrización)
    /// @param p_nt - número de muestras en la dirección 't' (segundo parámetro de la función de parametrización)
    ///
-   MallaSupPar( const FuncionParam * p_fp, const unsigned p_ns, const unsigned p_nt  );
+   MallaSupPar( const FuncionParam * p_fp, const unsigned p_ns, const unsigned p_nt, 
+                const bool p_promediar_normales_col = false );
 
    protected:
 
