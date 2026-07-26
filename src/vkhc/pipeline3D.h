@@ -15,7 +15,7 @@ namespace vkhc
 
 constexpr int max_num_materials   = 64 ; // must be less or equal to 'max_num_materials' in the shaders
 constexpr int max_num_base_colors = 64 ; // must be less or equal to 'max_num_base_colors' in the shaders
-
+constexpr int max_num_lights      = 8 ;
 // -------------------------------------------------------------------------------
 
 class BaseColorsSet

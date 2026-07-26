@@ -26,9 +26,9 @@ static const char* common_decls = R"glsl(
     layout( push_constant, std430 ) uniform push_constants_block {
         mat4 model_mat ;         // model matrix (object to world)
         mat4 model_mat_normals ; // model matrix for normals (object to world)
-        int  base_color_index ;  // base color , -1 use either texture color (if texture_index>=0) or interpolated vertex color
+        int  base_color_index ;  // base color , -1 use either texture color (if texture_index>=0) or interpolated vertex color (otherwise)
         int  texture_index ;     // active texture index, -1 if no texture is active.
-        int  material_index ;    // active material index, -1 if no material is active
+        int  material_params_index ;  // active material paramaters index, -1 if no material is active (do not evaluate illumination)
         int  eval_illumination ; // if not 0, evaluate illumination, if 0, use base color .
     } pc ;
 
@@ -36,7 +36,7 @@ static const char* common_decls = R"glsl(
 
     const int max_num_materials   = 64 ; // must be equal to 'MaterialsSet::max_materials'
     const int max_num_base_colors = 64 ; // must be equal to 'MaterialsSet::max_base_colors'
-
+    const int max_num_lights      = 8 ;
     layout( set=0, binding=0 ) uniform ubo_block {
         
         mat4 view_mat; // view matrix (world to camera)
@@ -47,6 +47,10 @@ static const char* common_decls = R"glsl(
         
         vec4 material_params[max_num_materials]; // array of materials parameters, indexed by 'material_index' push constant
         int  num_materials ; // current number of entries used in the 'material_params' and 'materials_colors' arrays (used?)
+
+        vec4 light_dir[max_num_lights] ;
+        vec4 light_color[max_num_lights] ;
+        int  num_lights ;
         
     } ubo ;
 
@@ -188,12 +192,12 @@ Pipeline3D::Pipeline3D( VulkanContext & vulkan_context, const bool p_z_buffer_en
     name = "Pipeline 3D" ;
 
     // set metadata about  push constants 
-    addPushConstant( "model_mat", sizeof(glm::mat4) ); // model matrix 
-    addPushConstant( "model_mat_normals", sizeof(glm::mat4) ); // model matrix for normals
-    addPushConstant( "base_color_index", sizeof(int) ); // base color index, -1 if no base color is active.
-    addPushConstant( "texture_index", sizeof(int) ); // active texture index, -1 if no texture is active.
-    addPushConstant( "material_index", sizeof(int) ); // active material index, -1 if no material is active
-    addPushConstant( "eval_illumination", sizeof(int) ); // if not 0, evaluate illumination, if 0, use base color .
+    addPushConstant( "model_mat",             sizeof(glm::mat4) ); // model matrix 
+    addPushConstant( "model_mat_normals",     sizeof(glm::mat4) ); // model matrix for normals
+    addPushConstant( "base_color_index",      sizeof(int) ); // base color index, -1 if no base color is active.
+    addPushConstant( "texture_index",         sizeof(int) ); // active texture index, -1 if no texture is active.
+    addPushConstant( "material_params_index", sizeof(int) ); // active material index, -1 if no material is active
+    addPushConstant( "eval_illumination",     sizeof(int) ); // if not 0, evaluate illumination, if 0, use base color .
     
     
     addUBOUniform( "view_mat",         VType::MAT4x4, 1 ); // view matrix
@@ -202,7 +206,10 @@ Pipeline3D::Pipeline3D( VulkanContext & vulkan_context, const bool p_z_buffer_en
     addUBOUniform( "num_base_colors",  VType::INT,    1 ); // current number of entries used in the 'base_colors' array
     addUBOUniform( "material_params",  VType::VEC4,   max_num_materials ); // array of materials parameters
     addUBOUniform( "num_materials",    VType::INT,    1 ); // current number of entries used in the 'material_params' and 'materials_colors' arrays
-   
+    addUBOUniform( "light_dir",        VType::VEC4,   max_num_lights ); // array of light directions
+    addUBOUniform( "light_color",      VType::VEC4,   max_num_lights ); // array of light colors
+    addUBOUniform( "num_lights",       VType::INT,    1 ); // current number of entries used in the 'light_dir' and 'light_color' arrays
+
     // set shaders sources 
     shaders_sources = 
     {   .vertex_shader_src   = & vertShaderSrc_string, 

@@ -4,6 +4,7 @@
 #include <limits>
 #include <set>
 
+#include <pipeline3D.h>
 #include <indexed-mesh.h> 
 
 // *****************************************************************************
@@ -158,11 +159,30 @@ void IndexedMesh::computeNormals()
 }
 
 
+// compute edges vertices ('edges_vertices')
+void IndexedMesh::computeEdgesVertices() 
+{
+   for( const glm::uvec3 & tri : triangles )
+   {
+      edges_vertices.push_back( vertices[tri[0]] );
+      edges_vertices.push_back( vertices[tri[1]] );
+
+      edges_vertices.push_back( vertices[tri[1]] );
+      edges_vertices.push_back( vertices[tri[2]] );
+
+      edges_vertices.push_back( vertices[tri[2]] );
+      edges_vertices.push_back( vertices[tri[0]] );
+   }
+}
+
+
 // --------------------------------------------------------------------------------------------
 
 void IndexedMesh::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & context, VkCommandBuffer & cmdb_vk )
 {
    using namespace std ;
+
+   
    
    
    // Crear el descriptor de VAO, si no está creado
@@ -185,6 +205,48 @@ void IndexedMesh::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & 
 
    }
    dvao->draw( cmdb_vk );
+
+
+   if ( true )
+   {
+      // draw edges in black red. 
+
+      vkhc::Pipeline3D * pipeline3d = static_cast<vkhc::Pipeline3D *>(pipeline) ;
+
+      Assert( pipeline3d != nullptr, "IndexedMesh::drawVK: pipeline is not a Pipeline3D, cannot draw edges" );
+
+      if ( edges_vertices.size() == 0 )
+         computeEdgesVertices();
+
+      Assert( edges_vertices.size() > 0, "IndexedMesh::drawVK: cannot draw edges, edges_vertices is empty" ) ;
+
+      if ( edges_va == nullptr )
+      {
+         edges_va = new vkhc::VertexArray( context, VK_PRIMITIVE_TOPOLOGY_LINE_LIST, 1 );
+         edges_va->setAttribData( 0, edges_vertices );
+      }
+
+      
+      
+      // save previous state
+      const bool ilum = pipeline3d->getEvalIllumination() ;
+      const int  itext = pipeline3d->getTextureIndex()  ;
+      const int  colorind = pipeline3d->getBaseColorIndex() ;
+
+      // set state
+      pipeline3d->setEvalIllumination( cmdb_vk, false );
+      pipeline3d->setTextureIndex( cmdb_vk, -1 );
+      pipeline3d->setBaseColorIndex( cmdb_vk, 0 ); // black ?? which ??
+      
+      // draw
+      edges_va->draw( cmdb_vk );
+
+      // restore previous state
+      pipeline3d->setEvalIllumination( cmdb_vk, ilum );
+      pipeline3d->setTextureIndex( cmdb_vk, itext );
+      pipeline3d->setBaseColorIndex( cmdb_vk, colorind );
+   }
+
 }
 
 

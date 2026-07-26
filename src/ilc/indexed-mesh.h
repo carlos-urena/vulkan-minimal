@@ -27,7 +27,9 @@ class IndexedMesh : public DrawableObject
       std::vector<glm::vec3> vert_normals ;   // normales de vértices
       std::vector<glm::vec3> tri_normals ;   // normales de triángulos
       std::vector<glm::vec2> vert_tcc ; // coordenadas de textura de los vértices
-      
+      std::vector<glm::vec3> edges_vertices ; // positions of vertices (2 consecutiver vertex for each edge) for visualizing edges of the mesh
+      std::vector<glm::vec3> normals_segments ; // guarda los segmentos de normales
+
       // descriptor del VAO con los vértices, triángulos y atributos de esta malla indexada
       // (se crea bajo demanda en 'visualizarGL')
       vkhc::VertexArray * dvao = nullptr  ;
@@ -36,7 +38,7 @@ class IndexedMesh : public DrawableObject
       // ( se crea bajo demanda en 'visualizarNormales')
       vkhc::VertexArray * dvao_normales = nullptr ;
 
-      std::vector<glm::vec3> normals_segments ; // guarda los segmentos de normales
+      vkhc::VertexArray * edges_va = nullptr ; // edges vertex array
       
 
       // normales de triángulos y vértices
@@ -44,6 +46,9 @@ class IndexedMesh : public DrawableObject
 
       // calculo de las normales de triángulos (solo si no están creadas ya)
       void computeTriangleNormals() ;
+
+      // compute edges vertices ('edges_vertices')
+      void computeEdgesVertices() ;
 
       
 
