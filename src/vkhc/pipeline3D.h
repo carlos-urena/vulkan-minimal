@@ -60,12 +60,21 @@ class Pipeline3D : public BasicPipeline
     // current value for the eval_illumination push constant (true or false)
     bool eval_illumination = true ; // default value, can be changed dynamically in command
 
+    bool draw_normals = false ; // draw normals of indexed triangle meshes 
+    bool draw_wireframe = false ; // draw wireframe (edges) of indexed triangle meshes
+
     public:
     Pipeline3D( VulkanContext & vulkan_context, const bool p_z_buffer_enabled );
     
     int getBaseColorIndex() { return current_base_color_index ; } // returns the index of the current base color, or -1 if no base color is active;
     int getTextureIndex()   { return current_texture_index ;    } // returns the index of the texture with the given name, or -1 if not found
     bool getEvalIllumination() { return eval_illumination ; } // returns the current value of the 'eval_illumination' push constant
+
+    bool getDrawNormals() { return draw_normals ; } // returns the current value of the 'draw_normals' bool
+    void setDrawNormals( bool new_draw_normals ) { draw_normals = new_draw_normals ; } // sets the current value of the 'draw_normals' bool
+    
+    bool getDrawWireframe() { return draw_wireframe ; } // returns the current value of the 'draw_wireframe' bool
+    void setDrawWireframe( bool new_draw_wireframe ) { draw_wireframe = new_draw_wireframe ; } // sets the current value of the 'draw_wireframe' bool
 
     // adds a base color to the set of base colors
 

@@ -207,14 +207,12 @@ void IndexedMesh::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & 
    dvao->draw( cmdb_vk );
 
 
-   if ( true )
+   vkhc::Pipeline3D * pipeline3d = static_cast<vkhc::Pipeline3D *>(pipeline) ;
+   
+   // draw edges if requested and if it is a 3D pipeline
+   if ( pipeline3d != nullptr )  
+   if ( pipeline3d->getDrawWireframe() )
    {
-      // draw edges in black red. 
-
-      vkhc::Pipeline3D * pipeline3d = static_cast<vkhc::Pipeline3D *>(pipeline) ;
-
-      Assert( pipeline3d != nullptr, "IndexedMesh::drawVK: pipeline is not a Pipeline3D, cannot draw edges" );
-
       if ( edges_vertices.size() == 0 )
          computeEdgesVertices();
 
@@ -226,8 +224,6 @@ void IndexedMesh::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & 
          edges_va->setAttribData( 0, edges_vertices );
       }
 
-      
-      
       // save previous state
       const bool ilum = pipeline3d->getEvalIllumination() ;
       const int  itext = pipeline3d->getTextureIndex()  ;

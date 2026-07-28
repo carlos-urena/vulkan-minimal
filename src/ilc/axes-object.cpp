@@ -453,11 +453,11 @@ void AxesObject::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & c
    int prev_texture_index = pipeline3d->getTextureIndex() ; // save previous texture index
    int prev_base_color_index = pipeline3d->getBaseColorIndex() ; // save previous base color index
    int prev_eval_illumination = pipeline3d->getEvalIllumination() ; // save previous illumination evaluation mode
+   int prev_draw_edges = pipeline3d->getDrawWireframe() ; // save previous draw edges mode
 
-   // disable use of textures
+   // set state of push constants and pipeline settings
+   pipeline3d->setDrawWireframe( false ) ; // disable draw wireframe mode
    pipeline3d->setTextureIndex( cmd_vk, -1 ) ; // disable use of textures
-
-   // disable lighting 
    pipeline3d->setEvalIllumination( cmd_vk, false ) ; // disable illumination evaluation in the shaders
 
    if ( draw_grid ) 
@@ -465,10 +465,11 @@ void AxesObject::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & c
    if ( draw_axes ) 
       drawAxesVK( pipeline3d, context, cmd_vk ) ;
 
-   // restore previous colors and other settings in the pipeline
+   // restore state of push constants and pipeline settings
    pipeline3d->setBaseColorIndex( cmd_vk,  prev_base_color_index ) ; // restore previous base color index
    pipeline3d->setTextureIndex( cmd_vk, prev_texture_index ) ; // restore previous texture index
    pipeline3d->setEvalIllumination( cmd_vk, prev_eval_illumination ) ; // restore previous illumination evaluation mode
+   pipeline3d->setDrawWireframe( prev_draw_edges ) ; // restore previous draw edges mode
 }
 
 // ---------------------------------------------------------------------------------------
