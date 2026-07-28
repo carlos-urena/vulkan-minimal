@@ -34,10 +34,11 @@ class IndexedMesh : public DrawableObject
       // (se crea bajo demanda en 'visualizarGL')
       vkhc::VertexArray * dvao = nullptr  ;
 
-      // VAO con los segmentos de las normales (vis. con GL_LINES)
-      // ( se crea bajo demanda en 'visualizarNormales')
-      vkhc::VertexArray * dvao_normales = nullptr ;
+      
+      // vertex array for normals visualization
+      vkhc::VertexArray * normals_va = nullptr ;
 
+      // vertex array for edges visualization
       vkhc::VertexArray * edges_va = nullptr ; // edges vertex array
       
 
@@ -50,12 +51,14 @@ class IndexedMesh : public DrawableObject
       // compute edges vertices ('edges_vertices')
       void computeEdgesVertices() ;
 
+      // compute segments for normals visualization 
+      void computeVisibleNormalsVertices() ;
       
 
    public:
       // crea una malla vacía (nombre: "malla indexada nueva vacía")
       IndexedMesh() ;
-      virtual ~IndexedMesh() ;
+      virtual ~IndexedMesh() override ;
 
       // crea una malla vacía con un nombre concreto:
       IndexedMesh( const std::string & nombreIni );

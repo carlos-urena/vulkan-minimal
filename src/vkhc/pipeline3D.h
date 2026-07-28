@@ -16,6 +16,7 @@ namespace vkhc
 constexpr int max_num_materials   = 64 ; // must be less or equal to 'max_num_materials' in the shaders
 constexpr int max_num_base_colors = 64 ; // must be less or equal to 'max_num_base_colors' in the shaders
 constexpr int max_num_lights      = 8 ;
+
 // -------------------------------------------------------------------------------
 
 class BaseColorsSet
@@ -30,7 +31,6 @@ class BaseColorsSet
 
     static int addBaseColor( const glm::vec3 & additional_color ) ;
 } ;
-
 
 // -------------------------------------------------------------------------------
 // Graphics pipeline state.
@@ -60,8 +60,15 @@ class Pipeline3D : public BasicPipeline
     // current value for the eval_illumination push constant (true or false)
     bool eval_illumination = true ; // default value, can be changed dynamically in command
 
-    bool draw_normals = false ; // draw normals of indexed triangle meshes 
+    // current value for the 'wireframe_mode' push constant (true or false)
+    bool wireframe_mode = false ; // default value, can be changed dynamically in command
+
+    // current values for various rendering parameters 
+    bool draw_normals = false ; // draw normals (as line segments) of indexed triangle meshes 
     bool draw_wireframe = false ; // draw wireframe (edges) of indexed triangle meshes
+
+
+
 
     public:
     Pipeline3D( VulkanContext & vulkan_context, const bool p_z_buffer_enabled );
@@ -69,6 +76,7 @@ class Pipeline3D : public BasicPipeline
     int getBaseColorIndex() { return current_base_color_index ; } // returns the index of the current base color, or -1 if no base color is active;
     int getTextureIndex()   { return current_texture_index ;    } // returns the index of the texture with the given name, or -1 if not found
     bool getEvalIllumination() { return eval_illumination ; } // returns the current value of the 'eval_illumination' push constant
+    bool getWireframeMode() { return wireframe_mode ; } // returns the current value of the 'wireframe_mode' push constant
 
     bool getDrawNormals() { return draw_normals ; } // returns the current value of the 'draw_normals' bool
     void setDrawNormals( bool new_draw_normals ) { draw_normals = new_draw_normals ; } // sets the current value of the 'draw_normals' bool
@@ -86,6 +94,7 @@ class Pipeline3D : public BasicPipeline
     void setModelMatrix( VkCommandBuffer & vk_cmd, const glm::mat4 & model_mat ) ;
     void setTextureIndex( VkCommandBuffer & vk_cmd, int index ) ;
     void setBaseColorIndex( VkCommandBuffer & vk_cmd, int index ) ;
+    void setWireframeMode( VkCommandBuffer & vk_cmd, bool new_wireframe_mode ) ;
 
     // saves the current model matrix on the stack, 
     // composes the current and new matrix and sets a new current model matrix in this pipeline

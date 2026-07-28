@@ -40,8 +40,10 @@ IndexedMesh::~IndexedMesh()
    vert_tcc.clear();
    normals_segments.clear();
    
-   delete dvao ;          dvao = nullptr ;
-   delete dvao_normales ; dvao_normales = nullptr ;
+   delete dvao ;          
+   delete normals_va ;
+   delete edges_va ;
+   
 }
 
 //-----------------------------------------------------------------------------
@@ -158,10 +160,13 @@ void IndexedMesh::computeNormals()
    cout << "IndexedMesh::computeNormals: normals computed for mesh '" << getName() << "'." << endl ;
 }
 
-
+// ------------------------------------------------------------------------
 // compute edges vertices ('edges_vertices')
 void IndexedMesh::computeEdgesVertices() 
 {
+   if ( edges_vertices.size() > 0 )
+      return ; // already computed
+
    for( const glm::uvec3 & tri : triangles )
    {
       edges_vertices.push_back( vertices[tri[0]] );
@@ -175,6 +180,25 @@ void IndexedMesh::computeEdgesVertices()
    }
 }
 
+// ------------------------------------------------------------------------
+// compute segments for normals visualization
+
+void IndexedMesh::computeVisibleNormalsVertices() 
+{
+   if ( normals_segments.size() > 0 )
+      return ; // already computed
+   
+   Assert( vert_normals.size() == vertices.size(), "IndexedMesh::computeVisibleNormalsVertices: vert_normals size does not match vertices size" ) ;
+
+   for( unsigned iv = 0 ; iv < vertices.size() ; iv++ )
+   {
+      const glm::vec3 & v = vertices[iv] ;
+      const glm::vec3 & n = vert_normals[iv] ;
+
+      normals_segments.push_back( v );
+      normals_segments.push_back( v + 0.2f*n );
+   }
+}
 
 // --------------------------------------------------------------------------------------------
 
@@ -182,9 +206,6 @@ void IndexedMesh::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & 
 {
    using namespace std ;
 
-   
-   
-   
    // Crear el descriptor de VAO, si no está creado
    //  Si el puntero 'dvao' es nulo, crear el descriptor de VAO (se usan las tablas de vértices, triángulos y atributos de la malla)
    //  Si el VAO ya está creado, (dvao no nulo), no hay que hacer nada.
@@ -204,12 +225,15 @@ void IndexedMesh::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & 
       dvao->setIndexData( triangles );
 
    }
+
+   // draw the VAO
    dvao->draw( cmdb_vk );
 
 
+   // Get the 3d pipeline or null 
    vkhc::Pipeline3D * pipeline3d = static_cast<vkhc::Pipeline3D *>(pipeline) ;
    
-   // draw edges if requested and if it is a 3D pipeline
+   // Draw edges if requested and if it is a 3D pipeline
    if ( pipeline3d != nullptr )  
    if ( pipeline3d->getDrawWireframe() )
    {
@@ -225,15 +249,17 @@ void IndexedMesh::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & 
       }
 
       // save previous state
-      const bool ilum = pipeline3d->getEvalIllumination() ;
-      const int  itext = pipeline3d->getTextureIndex()  ;
+      const bool ilum     = pipeline3d->getEvalIllumination() ;
+      const int  itext    = pipeline3d->getTextureIndex()  ;
       const int  colorind = pipeline3d->getBaseColorIndex() ;
+      const bool wiremode = pipeline3d->getWireframeMode() ;
 
       // set state
       pipeline3d->setEvalIllumination( cmdb_vk, false );
       pipeline3d->setTextureIndex( cmdb_vk, -1 );
       pipeline3d->setBaseColorIndex( cmdb_vk, 0 ); // black ?? which ??
-      
+      pipeline3d->setWireframeMode( cmdb_vk, true ); // draw edges as wireframe
+
       // draw
       edges_va->draw( cmdb_vk );
 
@@ -241,6 +267,45 @@ void IndexedMesh::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & 
       pipeline3d->setEvalIllumination( cmdb_vk, ilum );
       pipeline3d->setTextureIndex( cmdb_vk, itext );
       pipeline3d->setBaseColorIndex( cmdb_vk, colorind );
+      pipeline3d->setWireframeMode( cmdb_vk, wiremode );
+   }
+
+   // Draw the normals if requested and if it is a 3D pipeline
+   if ( pipeline3d != nullptr )
+   if ( pipeline3d->getDrawNormals() )
+   {
+     
+      if ( normals_segments.size() == 0 )
+         computeVisibleNormalsVertices();
+         
+      Assert( normals_segments.size() > 0, "IndexedMesh::drawVK: cannot draw normals, normals_segments is empty" ) ;
+
+      if ( normals_va == nullptr )
+      {
+         normals_va = new vkhc::VertexArray( context, VK_PRIMITIVE_TOPOLOGY_LINE_LIST, 1 );
+         Assert( normals_va != nullptr, "IndexedMesh::drawVK: cannot create normals VAO" ) ;
+         normals_va->setAttribData( 0, normals_segments );
+      }
+
+      // save previous state
+      const bool ilum     = pipeline3d->getEvalIllumination() ;
+      const int  itext    = pipeline3d->getTextureIndex()  ;
+      const int  colorind = pipeline3d->getBaseColorIndex() ;
+      
+      // set state
+      pipeline3d->setEvalIllumination( cmdb_vk, false );
+      pipeline3d->setTextureIndex( cmdb_vk, -1 );
+      pipeline3d->setBaseColorIndex( cmdb_vk, 0 ); // red ??
+      
+
+      // draw
+      normals_va->draw( cmdb_vk );
+
+      // restore previous state
+      pipeline3d->setEvalIllumination( cmdb_vk, ilum );
+      pipeline3d->setTextureIndex( cmdb_vk, itext );
+      pipeline3d->setBaseColorIndex( cmdb_vk, colorind );
+      
    }
 
 }

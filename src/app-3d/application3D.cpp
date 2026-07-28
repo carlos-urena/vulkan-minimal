@@ -15,6 +15,34 @@
 #include <axes-object.h>
 #include <malla-sp.h>
 
+#include <application3D.h>
+
+
+//  ------------------------------------------------------------------------------
+
+class ExampleTexturesSet : public vkhc::TexturesSet
+{
+    public:
+    ExampleTexturesSet( vkhc::VulkanContext * p_context ) ;
+    
+} ;
+
+//  ------------------------------------------------------------------------------
+
+
+ExampleTexturesSet::ExampleTexturesSet( vkhc::VulkanContext * p_context ) 
+
+:   TexturesSet( p_context ) 
+{
+    using namespace std ;
+    cout << "Creating example textures set ..." << endl ;
+    add( "../assets/wood-1.png" );
+    add( "../assets/wood-2.png" );
+    add( "../assets/wood-3.png" );
+    add( new vkhc::ProceduralTexture1( context ) ) ;
+    cout << "Example textures set created." << endl ;
+}
+
 // -------------------------------------------------------------------------------  
 // class 'Triangle' (a 'vertex-array' like object )
 
@@ -94,127 +122,8 @@ void Triangle::drawIMGUIWidgets()
     }
 }
 
-//  ------------------------------------------------------------------------------
-
-class ExampleTexturesSet : public vkhc::TexturesSet
-{
-    public:
-    ExampleTexturesSet( vkhc::VulkanContext * p_context ) : TexturesSet( p_context ) 
-    {
-        using namespace std ;
-        cout << "Creating example textures set ..." << endl ;
-        add( "../assets/wood-1.png" );
-        add( "../assets/wood-2.png" );
-        add( "../assets/wood-3.png" );
-        add( new vkhc::ProceduralTexture1( context ) ) ;
-        cout << "Example textures set created." << endl ;
-    }
-} ;
-
-// ----------------------------------------------------------------------------------
-
-class App3D : public ilc::Application
-{
-
-    private:
-
-    static constexpr bool debug_events = false ; 
-
-    // parameters for the triangle model matrix and animation
-    float curr_angle_rad = M_PI/2.0f ;  // current angle in radians
-    float rotation_speed = 0.0f ; // angular speed in cycles per second 
-    float triangle_scale = 0.8f ;
-
-    // draw grid 
-    bool draw_grid = true ;
-
-    // draw axes
-    bool draw_axes = true ;
-
-    
-    // eval illumination switch (true or false)
-    bool eval_illumination = true ; // default value, can be changed dynamically in command
-      
-
-    // model, view and projection matrices
-    glm::mat4 model_mat ;            // model matrix passed to the pipeline via a push constant
-    glm::mat4 view_mat = glm::mat4(1.0f); // view matrix passed via UBO
-    glm::mat4 proj_mat = glm::mat4(1.0f) ; // projection matrix passed via UBO
-
-    // drawable 3D object (triangle) with the axes.
-    AxesObject * axes3D = nullptr ;
-
-    // triangle object which is visualized
-    //Triangle * triangle = nullptr ; 
-
-    // array of drawable objects 
-    std::vector<DrawableObject*> drawable_objects ;
-
-    // index for current object being displayed (in the 'drawable_objects' vector)
-    uint32_t current_object_index = 0 ;
-
-    // basic 2D pipeline 
-    vkhc::Pipeline3D * pipeline = nullptr ; 
-
-
-    // textures set (used for testing textures).
-    ExampleTexturesSet * textures_set = nullptr ; 
-
-    // pointer to the current camera 
-    ilc::CamaraInteractiva * camera = nullptr ; 
-
-    // mouse position when draggin started 
-    double prev_posx = 0.0 ;
-    double prev_posy = 0.0 ;
-
-    // Draw IMGUIcurrent drawable object selection combo
-    void drawIMGUIObjectSelectionCombo() 
-    {
-        using namespace ImGui ;
-        if (CollapsingHeader("Drawable object selection", ImGuiTreeNodeFlags_DefaultOpen))
-        {       
-            std::vector<const char*> object_names ;
-            for (auto* obj : drawable_objects)
-                object_names.push_back( obj->getName().c_str() );
-            if ( Combo("Current object", reinterpret_cast<int*>(&current_object_index), object_names.data(), int(object_names.size()) ) )
-            {
-                std::cout << "App3D::drawIMGUIObjectSelectionCombo: new current_object_index == " << current_object_index << std::endl ;
-            }
-        }
-    }
-
-
-    // -----------------------------------------------------------------------------
-    // Methods:
-    
-    public:
-
-    App3D( ) ;
-    virtual ~App3D()  override ; 
-
-    // override methods
-    void initFrame( const vkhc::seconds_f  time_elapsed ) override ;
-    void drawFrame( VkCommandBuffer & cmd ) override ;
-    void drawIMGUIWidgets(  ) override ;
-
-    // specific methods for this application (not overrides)
-    void updateViewProjMats( vkhc::seconds_f frame_time_s ) ;
-
-    // Called when any mouse button is pressed or released 
-    virtual void mouseButtonEventCB( double xpos, double ypos, int button, int action, int mods ) override ;
-
-    // Called when mouse moved with any mouse button is pressed
-    // button is 0 for the right button and 1 for the left button...
-    virtual void mousePositionEventCB( double xpos, double ypos, int button ) override ; 
-
-    // scroll event callback (called when the mouse wheel is scrolled)
-    virtual void scrollEventCB( double xoffset, double yoffset ) override ;
-
-
-    // mouse position event CB 
-} ;
-
-// ----------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
+// class 'App3D' (the main application class)
 
 App3D::App3D( ) 
 
@@ -235,14 +144,16 @@ App3D::App3D( )
 
     textures_set->bindTo( *pipeline ) ; // bind the textures set to the pipeline, so that its textures can be used in the fragment shader.
 
-
     // create drawable objects vector 
     drawable_objects.push_back( new Triangle( *context ) ) ; // index 0
     drawable_objects.push_back( new Cube24(  ) ) ; // index 1
     drawable_objects.push_back( new MallaSupPar( new FPEsfera(), 64, 64, true ) ) ; 
     drawable_objects.push_back( new MallaSupPar( new FPColumna(), 128, 128, true ) ) ;
 
-    current_object_index = 0 ; // start with the first object in the vector
+    current_object_index = 2 ; // start with the sphere in the vector
+
+    Assert( current_object_index < drawable_objects.size(), "App3D constructor: current object index is out of range !!" ) ;
+    Assert( drawable_objects[current_object_index] != nullptr, "App3D constructor: current object is null !!" ) ;
 
     captureEvents( true, true, true, true );
     cout  << "App3D::App3D -- ends" << endl ;
@@ -356,10 +267,16 @@ void App3D::drawIMGUIWidgets(  )
     
     
     if ( Button("Close window" ) ) close_requested = true ;
-    if (CollapsingHeader("View config", ImGuiTreeNodeFlags_DefaultOpen))
+    if (CollapsingHeader("View and render config", ImGuiTreeNodeFlags_DefaultOpen))
     {
         Checkbox("Draw grid", &draw_grid);
         Checkbox("Draw axes", &draw_axes);
+        bool draw_wireframe = pipeline->getDrawWireframe() ;
+        if ( Checkbox("Draw wireframe", &draw_wireframe) )
+            pipeline->setDrawWireframe( draw_wireframe ) ; 
+        bool draw_normals = pipeline->getDrawNormals() ;
+        if ( Checkbox("Draw normals", &draw_normals) )
+            pipeline->setDrawNormals( draw_normals ) ; 
     }
     if (CollapsingHeader("Illumination controls", ImGuiTreeNodeFlags_DefaultOpen))
         Checkbox("Evaluate illumination", &eval_illumination);
@@ -420,13 +337,7 @@ void App3D::drawFrame( VkCommandBuffer & cmd )
 }
 
 
-// end of class 'Tess1App'
+// end of class 'App3D'
 // *********************************************************************************
 
-int main() 
-{
-    App3D app{  } ;
-    app.run() ;
-    return 0 ;
-}
 

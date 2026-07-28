@@ -42,7 +42,7 @@ class AxesObject : public DrawableObject
 
     public:
     AxesObject( ) ;
-    ~AxesObject() ;
+    virtual ~AxesObject() override;
     void setActive( bool p_draw_axes, bool p_draw_grid ) ;
     virtual void drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk ) override ;
 

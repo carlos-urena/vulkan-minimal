@@ -30,6 +30,7 @@ static const char* common_decls = R"glsl(
         int  texture_index ;     // active texture index, -1 if no texture is active.
         int  material_params_index ;  // active material paramaters index, -1 if no material is active (do not evaluate illumination)
         int  eval_illumination ; // if not 0, evaluate illumination, if 0, use base color .
+        int  wireframe_mode ; 
     } pc ;
 
     // Inputs: uniform buffer object (WIP):
@@ -91,10 +92,36 @@ static const char* vert_shader_src = R"glsl(
                                  0.0,  0.0,  1.0,  0.0,
                                  0.0,  0.0,  0.0,  1.0 ) ;
 
+    // const mat4 z_offset_mat = mat4( 1.0,  0.0,  0.0,   0.0,
+    //                                 0.0,  1.0,  0.0,   0.0,
+    //                                 0.0,  0.0,  1.0,   0.0,
+    //                                 0.0,  0.0,  0.001, 1.0 ) ;
+
+    const mat4 z_offset_mat = mat4( 1.0,  0.0,  0.0,   0.0,
+                                    0.0,  1.0,  0.0,   0.0,
+                                    0.0,  0.0,  1.0,   -0.001,
+                                    0.0,  0.0,  0.0, 1.0 ) ;
+
+
+    // ------------------------------------------------------------------------------------
+
+    mat4 GetProjectionMatrix()
+    {
+        if ( pc.wireframe_mode == 0 )
+            return ubo.proj_mat ;
+        else
+            // add a small offset to the projection matrix to avoid z-fighting when drawing wireframe over filled triangles
+            return ubo.proj_mat * z_offset_mat ;
+    }
+
+    // ---------------------------------------------------------------------------------------
+
     void main() 
     {
         vec4 out_position_wcc_4 = pc.model_mat * vec4( in_position_occ, 1.0 ) ;
-        gl_Position      = ubo.proj_mat * ubo.view_mat * flipy_mat  * out_position_wcc_4 ;
+        mat4 proj_mat_adjusted  = GetProjectionMatrix() ;
+
+        gl_Position      = proj_mat_adjusted * ubo.view_mat * flipy_mat  * out_position_wcc_4 ;
 
         out_position_wcc = out_position_wcc_4.xyz ; 
         out_color        = in_color ;
@@ -155,6 +182,12 @@ static const char* frag_shader_src = R"glsl(
 
     void main()
     {
+        if ( pc.wireframe_mode != 0 )
+        {
+            out_color = vec4( 1.0, 0.2, 0.2, 1.0 ) ; 
+            return ; 
+        }
+        
         vec3 bc = BaseColor() ;
 
         if ( pc.eval_illumination != 0 )
@@ -198,6 +231,8 @@ Pipeline3D::Pipeline3D( VulkanContext & vulkan_context, const bool p_z_buffer_en
     addPushConstant( "texture_index",         sizeof(int) ); // active texture index, -1 if no texture is active.
     addPushConstant( "material_params_index", sizeof(int) ); // active material index, -1 if no material is active
     addPushConstant( "eval_illumination",     sizeof(int) ); // if not 0, evaluate illumination, if 0, use base color .
+    addPushConstant( "wireframe_mode",        sizeof(int) ); // if not 0, we are drawing wireframe, if 0, we are drawing
+    
     
     
     addUBOUniform( "view_mat",         VType::MAT4x4, 1 ); // view matrix
@@ -262,6 +297,14 @@ void Pipeline3D::setBaseColorIndex( VkCommandBuffer & vk_cmd, int index )
     using namespace std ;
     //cout << "Pipeline3D::setBaseColorIndex: set base color index to " << index << endl ;
 }
+// ------------------------------------------------------------------------------
+
+void Pipeline3D::setWireframeMode( VkCommandBuffer & vk_cmd, bool new_wireframe_mode )
+{ 
+    wireframe_mode = new_wireframe_mode ; 
+    int wireframe_mode_int = wireframe_mode ? 1 : 0 ;
+    setPushConstant( vk_cmd, "wireframe_mode", &wireframe_mode_int ); 
+} ;
 // ------------------------------------------------------------------------------
 
 void Pipeline3D::setModelMatrix( VkCommandBuffer & vk_cmd, const glm::mat4 & model_mat ) 

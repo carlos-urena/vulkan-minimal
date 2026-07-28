@@ -25,7 +25,7 @@
     "C_Cpp.default.includePath"   : [ 
       "${workspaceFolder:SRC}/vkhc",
       "${workspaceFolder:SRC}/ilc",
-      "${workspaceFolder:SRC}/app-test-1", 
+      "${workspaceFolder:SRC}/app-3d", 
       "~/git-ct/otros/imgui.git",             // IMGUI (interface)
       "~/git-ct/otros/stb.git",               // STB (to load images)
       "${default}"
