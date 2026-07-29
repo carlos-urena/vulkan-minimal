@@ -3,13 +3,13 @@
 #include <cmath>
 #include <chrono>
 
-#include <vulkan-context.h>
-#include <pipeline2D.h>
-#include <vertex-array.h>
-#include <imgui-context.h>
-#include <textures.h>
+#include <vkhc/vulkan-context.h>
+#include <vkhc/pipeline2D.h>
+#include <vkhc/vertex-array.h>
+#include <vkhc/imgui-context.h>
+#include <vkhc/textures.h>
 
-#include <application.h>
+#include <ilc/application.h>
 
 // -------------------------------------------------------------------------------  
 // class 'Triangle' (a 'vertex-array' like object )
