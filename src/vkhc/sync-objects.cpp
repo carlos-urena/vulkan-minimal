@@ -1,8 +1,8 @@
 // Implementation for class SyncObjects 
 
-#include <common.h>
-#include <sync-objects.h>
-#include <device.h>
+#include <vkhc/common.h>
+#include <vkhc/sync-objects.h>
+#include <vkhc/device.h>
 
 namespace vkhc
 {

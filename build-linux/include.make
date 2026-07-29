@@ -14,6 +14,7 @@ compiler:=         g++
 compile_options:=  -std=c++20 -g -Wall -Wextra -Wno-missing-field-initializers -Wno-unused-parameter
 link_options:= 
 bin_folder:=  ./bin
+include_dir:=../src
 
 imgui_git   := ~/git-ct/otros/imgui.git## imgui repository clone folder
 stb_git     := ~/git-ct/otros/stb.git## folder with STB repository clone
@@ -40,14 +41,14 @@ app_include:=  -I $(app_src_folder)
 vkhc_sources:= $(wildcard $(vkhc_folder)/*.cpp)
 vkhc_headers:= $(wildcard $(vkhc_folder)/*.h)
 vkhc_objs:=    $(addprefix $(objs_dir)/vkhc/, $(notdir $(vkhc_sources:.cpp=.o)))
-vkhc_include:= -I $(vkhc_folder)
+##vkhc_include:= -I $(vkhc_folder)
 
 ## ILC objects variables
 
 ilc_sources:= $(wildcard $(ilc_folder)/*.cpp)
 ilc_headers:= $(wildcard $(ilc_folder)/*.h)
 ilc_objs:=    $(addprefix $(objs_dir)/ilc/, $(notdir $(ilc_sources:.cpp=.o)))
-ilc_include:= -I $(ilc_folder)
+##ilc_include:= -I $(ilc_folder)
 
 ## Vulkan related variables
 vulkan_libs:= -lshaderc -lvulkan 
@@ -68,7 +69,8 @@ imgui_objs_2:= $(addprefix $(objs_dir)/imguibe/, $(notdir $(imgui_src_names_2:.c
 imgui_objs:=  $(imgui_objs_1) $(imgui_objs_2)
 
 ## include options
-opcs_incl:= $(imgui_include) $(vkhc_include) $(ilc_include) $(app_include) $(stb_include)
+#opcs_incl:= $(imgui_include) $(vkhc_include) $(ilc_include) $(app_include) $(stb_include)
+opcs_incl:= $(imgui_include) -I $(include_dir) $(app_include) $(stb_include)
 
 ## objects to compile
 objs:= $(app_objs) $(vkhc_objs) $(ilc_objs) $(imgui_objs) 

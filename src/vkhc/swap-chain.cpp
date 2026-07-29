@@ -4,11 +4,11 @@
 // associated images (VkImage), images views (VkImageView), and framebuffers (VkFramebuffer)
 
 
-#include <swap-chain.h>
-#include <device.h>
-#include <surface.h>
-#include <render-pass.h>
-#include <vulkan-context.h>
+#include <vkhc/swap-chain.h>
+#include <vkhc/device.h>
+#include <vkhc/surface.h>
+#include <vkhc/render-pass.h>
+#include <vkhc/vulkan-context.h>
 
 namespace vkhc
 {

@@ -1,8 +1,10 @@
 #pragma once 
 
 #include <string>
+
 #include <glm/glm.hpp>
-#include <vulkan-context.h>
+
+#include <vkhc/vulkan-context.h>
 
 namespace ilc 
 {

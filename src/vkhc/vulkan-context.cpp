@@ -11,15 +11,15 @@
 // - the synchronization objects (semaphores and fences)
 // - the IMGUI state (IMGUI context, IMGUI render pass, etc.)
 
-#include <common.h>
-#include <vulkan-context.h>
-#include <device.h>
-#include <glfw-context.h>
-#include <surface.h>
-#include <render-pass.h>
-#include <swap-chain.h>
-#include <imgui-context.h>
-#include <command-pool-buffers.h>
+#include <vkhc/common.h>
+#include <vkhc/vulkan-context.h>
+#include <vkhc/device.h>
+#include <vkhc/glfw-context.h>
+#include <vkhc/surface.h>
+#include <vkhc/render-pass.h>
+#include <vkhc/swap-chain.h>
+#include <vkhc/imgui-context.h>
+#include <vkhc/command-pool-buffers.h>
 
 
 

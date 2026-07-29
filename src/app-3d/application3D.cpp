@@ -3,19 +3,19 @@
 #include <cmath>
 #include <chrono>
 
-#include <vulkan-context.h>
-#include <pipeline3D.h>
-#include <vertex-array.h>
-#include <imgui-context.h>
-#include <textures.h>
-#include <indexed-mesh.h>
+#include <vkhc/vulkan-context.h>
+#include <vkhc/pipeline3D.h>
+#include <vkhc/vertex-array.h>
+#include <vkhc/imgui-context.h>
+#include <vkhc/textures.h>
 
-#include <application.h>
-#include <camara.h>
-#include <axes-object.h>
-#include <malla-sp.h>
+#include <ilc/indexed-mesh.h>
+#include <ilc/application.h>
+#include <ilc/camara.h>
+#include <ilc/axes-object.h>
+#include <ilc/malla-sp.h>
 
-#include <application3D.h>
+#include <app-3d/application3D.h>
 
 
 //  ------------------------------------------------------------------------------

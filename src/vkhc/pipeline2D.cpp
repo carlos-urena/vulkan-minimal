@@ -5,11 +5,11 @@
 // fragment shaders, but not tesselation or vertex shaders.
 
 
-#include <pipeline2D.h>
-#include <device.h>
-#include <render-pass.h>
-#include <vulkan-context.h>
-#include <textures.h>
+#include <vkhc/pipeline2D.h>
+#include <vkhc/device.h>
+#include <vkhc/render-pass.h>
+#include <vkhc/vulkan-context.h>
+#include <vkhc/textures.h>
 
 // ***********************************************************************************
 // Basic shader sources (GLSL)

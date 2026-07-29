@@ -3,7 +3,8 @@
 #include <limits>
 #include <set>
 #include <glm/glm.hpp>
-#include <malla-sp.h>
+
+#include <ilc/malla-sp.h>
 
 
 namespace ilc 

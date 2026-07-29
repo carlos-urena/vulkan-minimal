@@ -13,12 +13,12 @@
 
 #pragma once 
 
-#include <common.h>
-#include <instance.h>
-#include <device.h>
-#include <glfw-context.h>
-#include <surface.h>
-#include <render-pass.h>
+#include <vkhc/common.h>
+#include <vkhc/instance.h>
+#include <vkhc/device.h>
+#include <vkhc/glfw-context.h>
+#include <vkhc/surface.h>
+#include <vkhc/render-pass.h>
 
 
 // ***********************************************************************************

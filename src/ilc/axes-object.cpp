@@ -1,6 +1,8 @@
-#include <axes-object.h>
-#include <pipeline3D.h>
+
 #include <cstdlib>
+
+#include <vkhc/pipeline3D.h>
+#include <ilc/axes-object.h>
 
 // ---------------------------------------------------------------------------
 // crea una tabla de índices para una rejilla con topología cilindrica

@@ -4,12 +4,13 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
-#include <common.h>
-#include <vulkan-context.h>
-#include <device.h>
-#include <pipeline.h>
-#include <command-pool-buffers.h>
-#include <textures.h>
+
+#include <vkhc/common.h>
+#include <vkhc/vulkan-context.h>
+#include <vkhc/device.h>
+#include <vkhc/pipeline.h>
+#include <vkhc/command-pool-buffers.h>
+#include <vkhc/textures.h>
 
 namespace vkhc
 {

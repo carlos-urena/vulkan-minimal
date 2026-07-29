@@ -4,9 +4,10 @@
 
 #include <vector>       // usar std::vector
 
-#include <vulkan-context.h>
-#include <drobject.h>
-#include <vertex-array.h>
+#include <vkhc/vulkan-context.h>
+#include <vkhc/vertex-array.h>
+#include <ilc/drobject.h>
+
 
 // ---------------------------------------------------------------------
 ///

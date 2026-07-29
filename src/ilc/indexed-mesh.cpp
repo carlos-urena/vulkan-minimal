@@ -4,8 +4,8 @@
 #include <limits>
 #include <set>
 
-#include <pipeline3D.h>
-#include <indexed-mesh.h> 
+#include <vkhc/pipeline3D.h>
+#include <ilc/indexed-mesh.h> 
 
 // *****************************************************************************
 // funciones auxiliares

@@ -3,8 +3,8 @@
 
 #include <vector>       // usar std::vector
 
-#include <sup-par.h>     // declaración de 'FuncionParam'
-#include <indexed-mesh.h>   // declaración de 'ObjetoVisu'
+#include <ilc/sup-par.h>     // declaración de 'FuncionParam'
+#include <ilc/indexed-mesh.h>   // declaración de 'ObjetoVisu'
 
 namespace ilc 
 {

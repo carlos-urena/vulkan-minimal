@@ -3,7 +3,7 @@
 #pragma once
 
 #include <string>
-#include <common.h>
+#include <vkhc/common.h>
 
 class DrawableObject 
 {

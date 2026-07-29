@@ -32,11 +32,11 @@
 #include <cmath>     // std::cos, std::sin
 #include <algorithm> // std::min, std::max
 
-#include <camara.h>
-
 #include <glm/glm.hpp>
 #include <glm/gtx/norm.hpp>
 #include <glm/geometric.hpp> // cross 
+
+#include <ilc/camara.h>
 
 namespace ilc
 {

@@ -1,9 +1,9 @@
 // Implementation of Device class 
 
-#include <device.h>
-#include <instance.h>
-#include <vulkan-context.h>
-#include <command-pool-buffers.h>
+#include <vkhc/device.h>
+#include <vkhc/instance.h>
+#include <vkhc/vulkan-context.h>
+#include <vkhc/command-pool-buffers.h>
 
 namespace vkhc
 {

@@ -3,9 +3,9 @@
 // Encapsulates a command pool and a vector of command buffers, one for each swap chain image. 
 
 
-#include <command-pool-buffers.h>
-#include <device.h>
-#include <swap-chain.h>
+#include <vkhc/command-pool-buffers.h>
+#include <vkhc/device.h>
+#include <vkhc/swap-chain.h>
 
 namespace vkhc
 {

@@ -4,9 +4,9 @@
 // set of vertex buffers (with their corresponding attributes) and an optional 
 // index buffer.
 
-#include <vertex-array.h>
-#include <vertex-buffer.h>
-#include <vulkan-context.h>
+#include <vkhc/vertex-array.h>
+#include <vkhc/vertex-buffer.h>
+#include <vkhc/vulkan-context.h>
 
 namespace vkhc
 {

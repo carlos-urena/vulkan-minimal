@@ -1,4 +1,4 @@
-#include <lights.h>
+#include <ilc/lights.h>
 
 
 LightSource::LightSource( const glm::vec4 & p_pos_dir, const glm::vec4 & p_color )

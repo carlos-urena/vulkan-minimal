@@ -3,8 +3,9 @@
 // Encapsulates all state data for a single window Vulkan App.
 
 
-#include <application.h>
-#include <common.h>
+#include <vkhc/common.h>
+#include <ilc/application.h>
+
 
 #include <backends/imgui_impl_glfw.h>
 ImGuiKey ImGui_ImplGlfw_KeyToImGuiKey(int keycode, int scancode); // not in imgui_impl_glfw.h, but it is defined in imgui_impl_glfw.cpp, so we declare it here to be able to use it in Application::stKeyboardEventCB

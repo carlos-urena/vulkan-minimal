@@ -3,7 +3,7 @@
 // Encapsulates a 'VkRenderPass' object and its creation, as well as 
 // commands to begin and end a render pass on a command buffer
 
-#include <render-pass.h>
+#include <vkhc/render-pass.h>
 
 namespace vkhc
 {

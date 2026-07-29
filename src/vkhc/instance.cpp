@@ -1,6 +1,6 @@
 // Implementation of Instance class
 
-#include "instance.h"
+#include <vkhc/instance.h>
 
 namespace vkhc
 {

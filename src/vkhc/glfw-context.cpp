@@ -1,6 +1,6 @@
 // Implementation of GLFWContext class
 
-#include <glfw-context.h>
+#include <vkhc/glfw-context.h>
 
 
 namespace vkhc

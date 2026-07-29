@@ -1,9 +1,9 @@
 // Implementation of class 'Surface'
 
-#include <surface.h>
-#include <instance.h>
-#include <device.h>
-#include <glfw-context.h>
+#include <vkhc/surface.h>
+#include <vkhc/instance.h>
+#include <vkhc/device.h>
+#include <vkhc/glfw-context.h>
 
 
 namespace vkhc

@@ -1,7 +1,7 @@
 #pragma once 
 
-#include <common.h>
-#include <sync-objects.h>
+#include <vkhc/common.h>
+#include <vkhc/sync-objects.h>
 
 
 namespace vkhc

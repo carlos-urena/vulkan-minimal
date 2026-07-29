@@ -5,11 +5,11 @@
 // descriptor set layout for UBOs.
 
 
-#include <pipeline2D_tess.h>
-#include <device.h>
-#include <render-pass.h>
-#include <vulkan-context.h>
-#include <textures.h>
+#include <vkhc/pipeline2D_tess.h>
+#include <vkhc/device.h>
+#include <vkhc/render-pass.h>
+#include <vkhc/vulkan-context.h>
+#include <vkhc/textures.h>
 
 // ***********************************************************************************
 // Basic shader sources (GLSL)

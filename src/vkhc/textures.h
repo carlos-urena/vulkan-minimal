@@ -4,8 +4,8 @@
 // TextureSet: a set of texture which can be bound to a descriptor set and accessed in shaders, 
 #pragma once 
 
-#include <common.h>
-#include <vulkan-context.h>
+#include <vkhc/common.h>
+#include <vkhc/vulkan-context.h>
 
 namespace vkhc
 {

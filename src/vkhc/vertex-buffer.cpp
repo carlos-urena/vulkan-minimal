@@ -3,8 +3,8 @@
 // Encapsulates a vertex buffer (vkVertexBuffer) and its memory (vkDeviceMemory),
 
 
-#include <vertex-buffer.h>
-#include <device.h>
+#include <vkhc/vertex-buffer.h>
+#include <vkhc/device.h>
 
 // ***********************************************************************************
 // vulkan helper classes, mainly related to vulkan but also GLFW and IMGUI

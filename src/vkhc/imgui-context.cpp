@@ -4,13 +4,13 @@
 // style settings and Vulkan initialization info.
 
 
-#include <common.h>
-#include <imgui-context.h>
-#include <instance.h>
-#include <device.h>
-#include <surface.h>
-#include <render-pass.h>
-#include <swap-chain.h>
+#include <vkhc/common.h>
+#include <vkhc/imgui-context.h>
+#include <vkhc/instance.h>
+#include <vkhc/device.h>
+#include <vkhc/surface.h>
+#include <vkhc/render-pass.h>
+#include <vkhc/swap-chain.h>
 
 namespace vkhc
 {

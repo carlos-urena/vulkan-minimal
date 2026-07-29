@@ -3,7 +3,7 @@
 // Encapsulates a vertex buffer (vkVertexBuffer) and its memory (vkDeviceMemory),
 
 #pragma once 
-#include <common.h>
+#include <vkhc/common.h>
 
 namespace vkhc
 {

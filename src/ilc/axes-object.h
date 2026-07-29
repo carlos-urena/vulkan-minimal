@@ -1,8 +1,8 @@
 #pragma once
 
 
-#include <pipeline3D.h>
-#include <indexed-mesh.h>
+#include <vkhc/pipeline3D.h>
+#include <ilc/indexed-mesh.h>
 
 
 // aux helper classes used to debug
