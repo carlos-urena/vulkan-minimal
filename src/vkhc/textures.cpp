@@ -24,9 +24,7 @@ TexturesSet::TexturesSet( VulkanContext * p_context )
     context = p_context ;
 
 
-    // create sampler for all the textures in the set. We use the same sampler 
-    // for all textures, but we could use different samplers for different textures 
-    // if we wanted to.
+    // A single sampler is used for all texture (we could taylor a sampler for each texture, but for now we just use one sampler for all textures)
 
     VkSamplerCreateInfo sci{ 
         .sType            = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO, 

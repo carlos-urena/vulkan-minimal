@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 
 #include <vkhc/vulkan-context.h>
+#include <vkhc/pipeline3D.h>
 
 namespace ilc 
 {
@@ -60,11 +61,16 @@ class MaterialsSet
     private:
         vkhc::VulkanContext * context = nullptr ;
         std::vector<Material> materials ;
-
+        vkhc::Pipeline3D * pipeline3D = nullptr ; // pointer to the pipeline to which this materials set is bound (nullptr if not bound to any pipeline)
+    
     public:
         MaterialsSet(  vkhc::VulkanContext * p_context )  ;
         uint32_t add( const Material & material ) ;
-        const Material & get( uint32_t index ) const ;
+        
+        // binds this material set to a pipeline, so the materials are sent to the GPU
+        // done only once for a single pipeline, before first frame, but 
+        // after all the materials have been added to the set.
+        void bindTo( vkhc::Pipeline3D * p_pipeline3D ) ;
 } ;
 
 // ----------------------------------------------------------------------------------------------

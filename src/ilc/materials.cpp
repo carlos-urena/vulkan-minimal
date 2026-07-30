@@ -56,4 +56,29 @@ MaterialsSet::MaterialsSet( vkhc::VulkanContext * p_context )
 }
 
 // ------------------------------------------------------------------------------
+
+uint32_t MaterialsSet::add( const Material & material ) 
+{
+    assert( context != nullptr );
+
+    materials.push_back( material ) ;
+    return static_cast<uint32_t>( materials.size() - 1 ) ; // return index of the added material
+}
+
+// ------------------------------------------------------------------------------
+
+void MaterialsSet::bindTo( vkhc::Pipeline3D * p_pipeline3D ) 
+{
+    
+    Assert( context != nullptr, "MaterialsSet::bindTo: 'context' instance is null !!" );
+    Assert( context->device != nullptr , "MaterialsSet::bindTo: 'context->device' instance is null !!" );
+    Assert( pipeline3D == nullptr , "MaterialsSet::bindTo: this materials set is already bound to a pipeline !!" );
+
+    pipeline3D = p_pipeline3D ;
+
+    .... seguir por aquí ....
+    .... crear indices de brdf_params, base_colors y textures, 
+    ... copiar los arrays de indices a los UBO uniforms de la GPU ....
+
+// ------------------------------------------------------------------------------
 } // end namespace ilc

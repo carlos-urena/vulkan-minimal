@@ -287,14 +287,15 @@ void SwapChain::presentDeviceQueue(  uint32_t * imageIndex_ptr, SyncObjects * sy
     assert( sync_objects != nullptr );
     
 
-    VkPresentInfoKHR present{VK_STRUCTURE_TYPE_PRESENT_INFO_KHR};
-    present.waitSemaphoreCount = 1;
-    present.pWaitSemaphores = &(sync_objects->renderFinishedSemaphore);
-    present.swapchainCount = 1;
-    present.pSwapchains = & vk_swap_chain ;
-    present.pImageIndices = imageIndex_ptr ;
-
-    VkResult presentResult = vkQueuePresentKHR( device->vk_queue, &present);
+    VkPresentInfoKHR present{
+        .sType              = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+        .waitSemaphoreCount = 1,
+        .pWaitSemaphores    = &(sync_objects->renderFinishedSemaphore),
+        .swapchainCount     = 1,
+        .pSwapchains        = & vk_swap_chain ,
+        .pImageIndices      = imageIndex_ptr ,
+    } ;
+    const VkResult presentResult = vkQueuePresentKHR( device->vk_queue, &present);
 
     if ( presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR || framebufferResized ) 
     {
