@@ -20,12 +20,12 @@
 
 //  ------------------------------------------------------------------------------
 
-class ExampleTexturesSet : public vkhc::TexturesSet
-{
-    public:
-    ExampleTexturesSet( vkhc::VulkanContext * p_context ) ;
+// class ExampleTexturesSet : public vkhc::TexturesSet
+// {
+//     public:
+//     ExampleTexturesSet( vkhc::VulkanContext * p_context ) ;
     
-} ;
+// } ;
 
 //  ------------------------------------------------------------------------------
 
@@ -122,6 +122,7 @@ App3D::App3D( )
     using namespace std ;
     using namespace vkhc ; 
     using namespace ilc ;
+    using namespace glm ;
 
     Assert( context != nullptr, "Tess1App constructor: 'context' instance is null !!" );
 
@@ -135,6 +136,11 @@ App3D::App3D( )
     materials_set->textures_set->add( "../assets/wood-2.png" );
     materials_set->textures_set->add( "../assets/wood-3.png" );
     materials_set->textures_set->add( new vkhc::ProceduralTexture1( context ) ) ;
+
+    default_material = new Material( vec3( 1.0, 1.0, 0.5 ), 
+                                     BrdfParams{ 0.0f, 1.0f, 0.0f, 32.0f } ) ; 
+    Assert( default_material != nullptr, "App3D::App3D: cannot create default material" ) ;
+    default_material_index = materials_set->add( *default_material ) ; // add the default material to the materials
 
     // create others things
     axes3D       = new AxesObject( materials_set->base_colors_set); assert( axes3D != nullptr ) ;
@@ -154,7 +160,7 @@ App3D::App3D( )
 
     // send colors, textures, materials, etc... to the corresponding UBO uniforms  
     // (only after all objects have been created !)
-    materials_set->textures_set->bindTo( *pipeline ) ; // bind the textures set to the pipeline, so that its textures can be used in the fragment shader.
+    materials_set->bindTo( pipeline ) ; 
 
     // capture all type of events (key, mouse button, mouse position and scroll)
     captureEvents( true, true, true, true );
@@ -304,10 +310,12 @@ void App3D::initFrame( const vkhc::seconds_f  time_elapsed )
     Assert( pipeline != nullptr, "Tess1App::drawFrame: 'pipeline' instance is null !!" );
     Assert( drawable_objects[current_object_index] != nullptr, "Tess1App::drawFrame: 'current_object' instance is null !!" );
 
-    // update UBO uniforms in the pipeline
+    // update UBO uniforms in the pipeline, by copying data from CPU memory to GPU memory
     updateViewProjMats( time_elapsed ) ; // updates 'view_mat' and 'proj_mat' 
     pipeline->setViewMatrix( view_mat ) ;
     pipeline->setProjectionMatrix( proj_mat ) ;
+    pipeline->setBaseColorsSet( *(materials_set->base_colors_set) ) ; //unnecessary if it didn't change 
+    pipeline->setBrdfParamsSet( *(materials_set->brdfs_params_set) ) ; // unnecessary if it didn't change
 
 }
 // ----------------------------------------------------------------------------------
@@ -321,12 +329,12 @@ void App3D::drawFrame( VkCommandBuffer & cmd )
     Assert( axes3D != nullptr, "Tess1App::drawFrame: 'axes3D' instance is null !!" );
     Assert( materials_set != nullptr, "Tess1App::drawFrame: 'materials_set' instance is null !!" );
     Assert( materials_set->base_colors_set != nullptr, "Tess1App::drawFrame: 'base_colors_set' instance is null !!" );
-    
+    Assert( default_material != nullptr, "Tess1App::drawFrame: 'default_material' instance is null !!" );
+
     // activate the pipeline and sets the viewport
     pipeline->bind( cmd );
     
-    // send the current base colors set to the shaders (via UBO)
-    pipeline->setBaseColorsSet( *(materials_set->base_colors_set) ) ;
+    .... falta: activar el default material (hacer método de activación) ....
 
     // give initial values to the push constants at the begining of 'cmd'
     pipeline->resetModelMatrix( cmd ) ; // sets the model matrix to identity and clears the model matrix stack

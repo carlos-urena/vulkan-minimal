@@ -58,7 +58,7 @@ class BrdfParamsSet
         std::vector<glm::vec4> brdfs_params_vec4 ; // BRDF parameters in this set, each with its index in the set (index in the vector)
 
         BrdfParamsSet(  ) ;
-        uint32_t add( const BrdfParams & brdf_params ) ; // adds a new BRDF params to the set. Returns the index of the added BRDF params in the set.
+        uint32_t add( const BrdfParams & brdf ) ; // adds a new BRDF params to the set. Returns the index of the added BRDF params in the set.
 } ;
 
 // -------------------------------------------------------------------------------
@@ -97,9 +97,8 @@ class Pipeline3D : public BasicPipeline
     bool draw_wireframe = false ; // draw wireframe (edges) of indexed triangle meshes
 
 
-
-
     public:
+
     Pipeline3D( VulkanContext & vulkan_context, const bool p_z_buffer_enabled );
     
     int getBaseColorIndex() { return current_base_color_index ; } // returns the index of the current base color, or -1 if no base color is active;

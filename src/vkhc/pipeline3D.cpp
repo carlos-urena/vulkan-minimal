@@ -156,9 +156,9 @@ static const char* frag_shader_src = R"glsl(
 
     vec3 BaseColor()
     {
-        if ( pc.texture_index >= 0 ) // if a texture is active, use it to determine the fragment color
+        if ( pc.texture_index >= 0 ) // if a texture is active, use it 
             return (texture( textures[ pc.texture_index ], in_tex_coords )).rgb ;
-        else if ( pc.base_color_index >= 0 ) // if a base color is active, use it to determine the fragment color
+        else if ( pc.base_color_index >= 0 ) // if a base color is active, use it 
             return (ubo.base_colors[ int(pc.base_color_index) ]).rgb ; 
         else // otherwise, use the interpolated vertex color
             return in_color ;
@@ -176,8 +176,14 @@ static const char* frag_shader_src = R"glsl(
         vec3  cl1 = vec3( 1.0, 0.4, 0.0 ) ;
         float d1 = max( dot( n, l1 ), 0.0 ) ;
 
-        float amb = 0.1 ; // ambient light factor
-        return base_color*(d0*cl0 + d1*cl1 + vec3(amb,amb,amb) ) ; 
+        vec4 brdf_params = ubo.brdf_params[ int(pc.brdf_params_index) ] ;
+        float ka = brdf_params[0] ; // ambient coefficient
+        float kd = brdf_params[1] ; // diffuse coefficient
+        float ks = brdf_params[2] ; // specular coefficient
+        float exp = brdf_params[3] ; // specular exponent
+
+        
+        return base_color*(kd*(d0*cl0+ d1*cl1) + vec3(ka,ka,ka) ) ; 
     }
     // ----------------
 
@@ -451,12 +457,18 @@ BrdfParamsSet::BrdfParamsSet(  )
 
 // ------------------------------------------------------------------------------
 
-uint32_t BrdfParamsSet::add( const BrdfParams & brdf_params ) 
+uint32_t BrdfParamsSet::add( const BrdfParams & brdf ) 
 {
-    glm::vec4 v4 = { brdf_params.ka, brdf_params.kd, brdf_params.ks, brdf_params.exp } ;
+    glm::vec4 v4 = { brdf.ka, brdf.kd, brdf.ks, brdf.exp } ;
+    using namespace std ;
+    cout << "Pipeline3D::BrdfParamsSet::add: adding BRDF params:" << endl ;
+    Assert( brdfs_params.size() < max_num_brdfs_params, "Error: cannot add a new BRDF params, size exceeded (increase max_num_brdfs_params )" );
 
-    brdfs_params.push_back( brdf_params ) ;
+    
+    cout << "    vec size == " << brdfs_params.size() << endl ;
+    brdfs_params.push_back( brdf ) ;
     brdfs_params_vec4.push_back( v4 ) ;
+    cout << "    done." << endl ;
 
     return static_cast<uint32_t>( brdfs_params.size() - 1 ) ;
 }

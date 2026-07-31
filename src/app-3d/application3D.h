@@ -65,6 +65,10 @@ class App3D : public ilc::Application
     // Materials set (includes base colors set and textures set)
     ilc::MaterialsSet * materials_set = nullptr;
 
+    // default material 
+    ilc::Material * default_material = nullptr ; // default material ...
+    uint32_t default_material_index = 0 ; // index of the default material in the materials set
+
     // pointer to the current camera 
     ilc::CamaraInteractiva * camera = nullptr ; 
 

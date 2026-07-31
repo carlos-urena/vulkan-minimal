@@ -47,8 +47,9 @@ MaterialsSet::MaterialsSet( vkhc::VulkanContext * p_context )
     assert( p_context->device->vk_device != VK_NULL_HANDLE );
     context = p_context ;
 
-    textures_set = new vkhc::TexturesSet( context ) ; Assert( textures_set != nullptr, "MaterialsSet::MaterialsSet: cannot create a TexturesSet" ) ;
-    base_colors_set = new vkhc::BaseColorsSet( ) ;    Assert( base_colors_set != nullptr, "MaterialsSet::MaterialsSet: cannot create a BaseColorsSet" ) ;
+    textures_set     = new vkhc::TexturesSet( context ) ; Assert( textures_set != nullptr, "MaterialsSet::MaterialsSet: cannot create a TexturesSet" ) ;
+    base_colors_set  = new vkhc::BaseColorsSet( ) ;       Assert( base_colors_set != nullptr, "MaterialsSet::MaterialsSet: cannot create a BaseColorsSet" ) ;
+    brdfs_params_set = new vkhc::BrdfParamsSet( ) ;       Assert( brdfs_params_set != nullptr, "MaterialsSet::MaterialsSet: cannot create a BrdfParamsSet" ) ;
 }
 
 // ------------------------------------------------------------------------------
@@ -72,6 +73,7 @@ void MaterialsSet::bindTo( vkhc::Pipeline3D * p_pipeline3D )
     Assert( pipeline3D == nullptr ,      "MaterialsSet::bindTo: this materials set is already bound to a pipeline !!" );
     Assert( textures_set != nullptr,     "MaterialsSet::bindTo: 'textures_set' instance is null !!" );
     Assert( base_colors_set != nullptr,  "MaterialsSet::bindTo: 'base_colors_set' instance is null !!" );
+    Assert( brdfs_params_set != nullptr,  "MaterialsSet::bindTo: 'brdfs_params_set' instance is null !!" );
     Assert( p_pipeline3D != nullptr,     "MaterialsSet::bindTo: 'p_pipeline3D' instance is null !!" );
 
     pipeline3D = p_pipeline3D ;
