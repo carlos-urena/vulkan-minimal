@@ -16,6 +16,9 @@ class Segment ;
 class AxesObject : public DrawableObject
 {
     private:
+
+    vkhc::BaseColorsSet * base_colors_set = nullptr ; // pointer to the base colors set used to visualize the axes
+
     CylinderZ01 
         * axes_cylinder = nullptr ;  // a solid cilinder in 01, used to visualize the axes of the 3D space.
     ConeZ01 
@@ -41,7 +44,7 @@ class AxesObject : public DrawableObject
 
 
     public:
-    AxesObject( ) ;
+    AxesObject( vkhc::BaseColorsSet * p_base_colors_set) ;
     virtual ~AxesObject() override;
     void setActive( bool p_draw_axes, bool p_draw_grid ) ;
     virtual void drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk ) override ;

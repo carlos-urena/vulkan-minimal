@@ -14,11 +14,11 @@
 #include <ilc/camara.h>
 #include <ilc/axes-object.h>
 #include <ilc/malla-sp.h>
+#include <ilc/materials.h>
 
 
 
 
-class ExampleTexturesSet ; // forward declaration
 
 // ------------------------------------------------------------------------------
 
@@ -62,9 +62,8 @@ class App3D : public ilc::Application
     // basic 2D pipeline 
     vkhc::Pipeline3D * pipeline = nullptr ; 
 
-
-    // textures set (used for testing textures).
-    ExampleTexturesSet * textures_set = nullptr ; 
+    // Materials set (includes base colors set and textures set)
+    ilc::MaterialsSet * materials_set = nullptr;
 
     // pointer to the current camera 
     ilc::CamaraInteractiva * camera = nullptr ; 

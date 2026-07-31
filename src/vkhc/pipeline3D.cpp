@@ -28,16 +28,17 @@ static const char* common_decls = R"glsl(
         mat4 model_mat_normals ; // model matrix for normals (object to world)
         int  base_color_index ;  // base color , -1 use either texture color (if texture_index>=0) or interpolated vertex color (otherwise)
         int  texture_index ;     // active texture index, -1 if no texture is active.
-        int  material_params_index ;  // active material paramaters index, -1 if no material is active (do not evaluate illumination)
+        int  brdf_params_index ;  // active material paramaters index, -1 if no material is active (do not evaluate illumination)
         int  eval_illumination ; // if not 0, evaluate illumination, if 0, use base color .
         int  wireframe_mode ; 
     } pc ;
 
     // Inputs: uniform buffer object (WIP):
 
-    const int max_num_materials   = 64 ; // must be equal to 'MaterialsSet::max_materials'
-    const int max_num_base_colors = 64 ; // must be equal to 'MaterialsSet::max_base_colors'
-    const int max_num_lights      = 8 ;
+    const int max_num_brdfs_params = 64 ; // must be equal to 'MaterialsSet::max_materials'
+    const int max_num_base_colors  = 64 ; // must be equal to 'MaterialsSet::max_base_colors'
+    const int max_num_lights       = 8 ;
+    
     layout( set=0, binding=0 ) uniform ubo_block {
         
         mat4 view_mat; // view matrix (world to camera)
@@ -46,11 +47,11 @@ static const char* common_decls = R"glsl(
         vec4 base_colors[max_num_base_colors]; // array of base colors, indexed by 'base_color_index' push constant
         int  num_base_colors ; // current number of entries used in the 'base_colors' array (used?)
         
-        vec4 material_params[max_num_materials]; // array of materials parameters, indexed by 'material_index' push constant
-        int  num_materials ; // current number of entries used in the 'material_params' and 'materials_colors' arrays (used?)
+        vec4 brdf_params[max_num_brdfs_params]; // array of brdf parameters, indexed by 'brdf_params_index' push constant
+        int  num_brdfs_params ; // current number of entries used in the 'brdf_params' and 'materials_colors' arrays (used?)
 
-        vec4 light_dir[max_num_lights] ;
-        vec4 light_color[max_num_lights] ;
+        vec4 lights_dir[max_num_lights] ;
+        vec4 lights_color[max_num_lights] ;
         int  num_lights ;
         
     } ubo ;
@@ -229,20 +230,18 @@ Pipeline3D::Pipeline3D( VulkanContext & vulkan_context, const bool p_z_buffer_en
     addPushConstant( "model_mat_normals",     sizeof(glm::mat4) ); // model matrix for normals
     addPushConstant( "base_color_index",      sizeof(int) ); // base color index, -1 if no base color is active.
     addPushConstant( "texture_index",         sizeof(int) ); // active texture index, -1 if no texture is active.
-    addPushConstant( "material_params_index", sizeof(int) ); // active material index, -1 if no material is active
+    addPushConstant( "brdf_params_index", sizeof(int) ); // active material index, -1 if no material is active
     addPushConstant( "eval_illumination",     sizeof(int) ); // if not 0, evaluate illumination, if 0, use base color .
     addPushConstant( "wireframe_mode",        sizeof(int) ); // if not 0, we are drawing wireframe, if 0, we are drawing
-    
-    
     
     addUBOUniform( "view_mat",         VType::MAT4x4, 1 ); // view matrix
     addUBOUniform( "proj_mat",         VType::MAT4x4, 1 ); // projection matrix
     addUBOUniform( "base_colors",      VType::VEC4,   max_num_base_colors ); // array of base colors
     addUBOUniform( "num_base_colors",  VType::INT,    1 ); // current number of entries used in the 'base_colors' array
-    addUBOUniform( "material_params",  VType::VEC4,   max_num_materials ); // array of materials parameters
-    addUBOUniform( "num_materials",    VType::INT,    1 ); // current number of entries used in the 'material_params' and 'materials_colors' arrays
-    addUBOUniform( "light_dir",        VType::VEC4,   max_num_lights ); // array of light directions
-    addUBOUniform( "light_color",      VType::VEC4,   max_num_lights ); // array of light colors
+    addUBOUniform( "brdfs_params",     VType::VEC4,   max_num_materials ); // array of materials parameters
+    addUBOUniform( "num_brdfs_params", VType::INT,    1 ); // current number of entries used in the 'material_params' and 'materials_colors' arrays
+    addUBOUniform( "lights_dir",       VType::VEC4,   max_num_lights ); // array of light directions
+    addUBOUniform( "lights_color",     VType::VEC4,   max_num_lights ); // array of light colors
     addUBOUniform( "num_lights",       VType::INT,    1 ); // current number of entries used in the 'light_dir' and 'light_color' arrays
 
     // set shaders sources 
@@ -391,26 +390,14 @@ void Pipeline3D::resetModelMatrix( VkCommandBuffer & vk_cmd )
 // ------------------------------------------------------------------------------
 // send all colors, even if not all entries have been used .... improve later.
 
-void Pipeline3D::setBaseColorsSet() 
+void Pipeline3D::setBaseColorsSet( const BaseColorsSet & bcs ) 
 {
-    int nc = BaseColorsSet::colors.size() ;
+    int nc = bcs.colors.size() ;
     Assert( nc <= max_num_base_colors, "Pipeline3D::setBaseColorsSet: number of base colors exceeds maximum allowed." ) ;
     setUBOUniform( "num_base_colors", & nc );
-    setUBOUniform( "base_colors", value_ptr( BaseColorsSet::colors[0] ) );
-
-    // Debug :
-    // using namespace std ;
-
-    // for ( unsigned i = 0 ; i < BaseColorsSet::colors.size() ; ++i )
-    // {
-    //     using namespace glm ;
-    //     vec3 c = BaseColorsSet::colors[i] ;
-    //     using namespace std ;
-    //     cout << "Pipeline3D::setBaseColorsSet: sending base color " << i << ": (" << c.r << ", " << c.g << ", " << c.b << ")" << endl ;
-    // }
+    setUBOUniform( "base_colors", value_ptr( bcs.colors[0] ) );
 
     
-    //cout << "Pipeline3D::setBaseColorsSet: sending " << nc << " base colors to the shaders." << endl ;
 }
 
 // ------------------------------------------------------------------------------
@@ -423,19 +410,45 @@ void Pipeline3D::setEvalIllumination( VkCommandBuffer & vk_cmd, bool new_eval_il
 }
 
 // ------------------------------------------------------------------------------
-// Base colors sets for the 3d pipeline 
-
-std::vector<glm::vec4> BaseColorsSet::colors{} ; 
+//std::vector<glm::vec4> BaseColorsSet::colors{} ; 
 
 // adds a base color to the set, returns its index 
 // if the set is already full, an error is raised 
 
-int BaseColorsSet::addBaseColor( const glm::vec3 & additional_color ) 
+uint32_t BaseColorsSet::add( const glm::vec3 & additional_color ) 
 {
     Assert( colors.size() < max_num_base_colors, "Error: cannot add a new base color, size exceeded (increase max_num_base_colors )" );  
     colors.push_back( glm::vec4( additional_color, 1.0f ) ) ;
     return colors.size() - 1 ; // return the index of the added color
 }
+
+// ------------------------------------------------------------------------------
+
+BrdfParams::BrdfParams( const float p_ka, const float p_kd, const float p_ks, const float p_exp ) 
+{
+    ka = p_ka ;
+    kd = p_kd ;
+    ks = p_ks ;
+    exp = p_exp ;
+}
+
+// ------------------------------------------------------------------------------
+// Class BrdfParamsSet
+
+BrdfParamsSet::BrdfParamsSet(  ) 
+{
+
+}
+
+// ------------------------------------------------------------------------------
+
+uint32_t BrdfParamsSet::add( const BrdfParams & brdf_params ) 
+{
+    brdfs_params.push_back( brdf_params ) ;
+    return static_cast<uint32_t>( brdfs_params.size() - 1 ) ;
+}
+
+
 
 
 

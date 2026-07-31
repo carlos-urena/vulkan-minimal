@@ -1,22 +1,15 @@
+#include <vkhc/textures.h>
 #include <ilc/materials.h>
 
 namespace ilc 
 {
 
-// ------------------------------------------------------------------------------
 
-BrdfParams::BrdfParams( const float p_ka, const float p_kd, const float p_ks, const float p_exp ) 
-{
-    ka = p_ka ;
-    kd = p_kd ;
-    ks = p_ks ;
-    exp = p_exp ;
-}
 
 // ------------------------------------------------------------------------------
 // builds a material from the base color and the coefficients of the Blinn-Phong model
 
-Material::Material( const glm::vec3 & p_base_color, const BrdfParams & p_brdf_params ) 
+Material::Material( const glm::vec3 & p_base_color, const vkhc::BrdfParams & p_brdf_params ) 
 {
     base_color     = p_base_color ;
     use_base_color = true ;
@@ -25,8 +18,8 @@ Material::Material( const glm::vec3 & p_base_color, const BrdfParams & p_brdf_pa
 }
 // ------------------------------------------------------------------------------
 // builds a material from a texture and the coefficients of the Blinn-Phong model
-
-Material::Material( const std::string & p_texture_path, const BrdfParams & p_brdf_params ) 
+    
+Material::Material( const std::string & p_texture_path, const vkhc::BrdfParams & p_brdf_params ) 
 {
     use_base_color = false ;
     texture_path   = p_texture_path ;
@@ -37,7 +30,7 @@ Material::Material( const std::string & p_texture_path, const BrdfParams & p_brd
 // ------------------------------------------------------------------------------
 // builds a material with no base color (uses vertex colors) and the coefficients of the Blinn-Phong model
 
-Material::Material( const BrdfParams & p_brdf_params ) 
+Material::Material( const vkhc::BrdfParams & p_brdf_params ) 
 {
     use_base_color = false ;
     use_texture    = false ;
@@ -53,13 +46,17 @@ MaterialsSet::MaterialsSet( vkhc::VulkanContext * p_context )
     assert( p_context->device != nullptr );
     assert( p_context->device->vk_device != VK_NULL_HANDLE );
     context = p_context ;
+
+    textures_set = new vkhc::TexturesSet( context ) ; Assert( textures_set != nullptr, "MaterialsSet::MaterialsSet: cannot create a TexturesSet" ) ;
+    base_colors_set = new vkhc::BaseColorsSet( ) ;    Assert( base_colors_set != nullptr, "MaterialsSet::MaterialsSet: cannot create a BaseColorsSet" ) ;
 }
 
 // ------------------------------------------------------------------------------
 
 uint32_t MaterialsSet::add( const Material & material ) 
 {
-    assert( context != nullptr );
+    Assert( context != nullptr, "MaterialsSet::add: 'context' instance is null !!" );
+    Assert( material.materials_set == nullptr, "Material::add: this material is already part of a materials set !!" );
 
     materials.push_back( material ) ;
     return static_cast<uint32_t>( materials.size() - 1 ) ; // return index of the added material
@@ -70,15 +67,41 @@ uint32_t MaterialsSet::add( const Material & material )
 void MaterialsSet::bindTo( vkhc::Pipeline3D * p_pipeline3D ) 
 {
     
-    Assert( context != nullptr, "MaterialsSet::bindTo: 'context' instance is null !!" );
+    Assert( context != nullptr,          "MaterialsSet::bindTo: 'context' instance is null !!" );
     Assert( context->device != nullptr , "MaterialsSet::bindTo: 'context->device' instance is null !!" );
-    Assert( pipeline3D == nullptr , "MaterialsSet::bindTo: this materials set is already bound to a pipeline !!" );
+    Assert( pipeline3D == nullptr ,      "MaterialsSet::bindTo: this materials set is already bound to a pipeline !!" );
+    Assert( textures_set != nullptr,     "MaterialsSet::bindTo: 'textures_set' instance is null !!" );
+    Assert( base_colors_set != nullptr,  "MaterialsSet::bindTo: 'base_colors_set' instance is null !!" );
+    Assert( p_pipeline3D != nullptr,     "MaterialsSet::bindTo: 'p_pipeline3D' instance is null !!" );
 
     pipeline3D = p_pipeline3D ;
+    
 
-    .... seguir por aquí ....
-    .... crear indices de brdf_params, base_colors y textures, 
-    ... copiar los arrays de indices a los UBO uniforms de la GPU ....
+    // Create the indexes for the base colors and textures for each material in the set.
+    
+    for( uint32_t i=0; i<materials.size(); i++ )
+    {
+        Material & m = materials[i] ;
+        m.materials_set = this ; // set the pointer to this materials set
+
+        m.color_base_index = -1 ; 
+        m.texture_index = -1 ;
+
+        m.brdf_params_index = brdfs_params_set->add( m.brdf_params ) ; // add the BRDF params to the set, and get its index in the set (the index is the last one, which is 'brdfs_params_set->size()-1')
+
+        if ( m.use_base_color )
+            m.color_base_index = base_colors_set->add( m.base_color ) ;
+        if ( m.use_texture )
+            m.texture_index = textures_set->add( m.texture_path ) ;
+    }
+
+    // Copy the arrays to the corresponding  UBO uniforms in the pipeline
+
+    textures_set->bindTo( *pipeline3D ) ;
+    pipeline3D->setBaseColorsSet( *base_colors_set ) ;
+}
+
+
 
 // ------------------------------------------------------------------------------
 } // end namespace ilc

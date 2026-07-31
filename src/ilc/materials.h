@@ -10,20 +10,9 @@
 namespace ilc 
 {
 
-// ----------------------------------------------------------------------------------------------
-// BRDF params struct
+class MaterialsSet ;
 
-class BrdfParams
-{
-    public:
-        float ka  = 0.1; // ambient coefficient
-        float kd  = 0.8; // diffuse coefficient
-        float ks  = 0.5; // specular coefficient
-        float exp = 32.0; // specular exponent
 
-        BrdfParams() = default ;
-        BrdfParams( const float p_ka, const float p_kd, const float p_ks, const float p_exp ) ;
-} ;
 
 // ----------------------------------------------------------------------------------------------
 // Materials
@@ -32,25 +21,29 @@ class Material
 {
 
     private:
-        glm::vec3   base_color;     // base color (RGB)
-        bool        use_base_color; // true for using base color, false for not using it (uses either texture or vertex colors).
-        std::string texture_path ;  // path to the texture file ("" for no texture)
-        bool        use_texture ;   // only whn 'use_base_color = false' : use texture (true) or use vertex colors (false)
-        BrdfParams  brdf_params ;   // coefficients of the Blinn-Phong model
+        glm::vec3        base_color;     // base color (RGB)
+        bool             use_base_color; // true for using base color, false for not using it (uses either texture or vertex colors).
+        std::string      texture_path ;  // path to the texture file ("" for no texture)
+        bool             use_texture ;   // only whn 'use_base_color = false' : use texture (true) or use vertex colors (false)
+        vkhc::BrdfParams brdf_params ;   // coefficients of the Blinn-Phong model
+
+        MaterialsSet * materials_set = nullptr ; // pointer to the materials set to which this material belongs (nullptr if still not added to any set)
 
         int color_base_index  = -1 ; // index of the base color in the UBO base color array (or -1 if no base color)
         int texture_index     = -1 ; // index of the texture in the shader (or -1 if no texture)
         int brdf_params_index = -1 ; // index of the BRDF parameters in the UBO BRDF parameters array (must be >=0 ??)
 
+        friend class MaterialsSet ; // MaterialsSet is a friend class, so it can access the private members of Material
+
     public:
         // builds a material from the base color and the coefficients of the given BRDF params
-        Material( const glm::vec3 & p_color_base, const BrdfParams & p_brdf_params ) ;
+        Material( const glm::vec3 & p_color_base, const vkhc::BrdfParams & p_brdf_params ) ;
 
         // builds a material from a texture and the coefficients of the given BRDF params
-        Material( const std::string & p_texture_path, const BrdfParams & p_brdf_params ) ;
+        Material( const std::string & p_texture_path, const vkhc::BrdfParams & p_brdf_params ) ;
 
         // builds a material with no base color (uses vertex colors) and the coefficients of the given BRDF params
-        Material( const BrdfParams & p_brdf_params ) ;
+        Material( const vkhc::BrdfParams & p_brdf_params ) ;
 } ;
 
 // ----------------------------------------------------------------------------------------------
@@ -59,11 +52,17 @@ class Material
 class MaterialsSet
 {
     private:
+
         vkhc::VulkanContext * context = nullptr ;
         std::vector<Material> materials ;
-        vkhc::Pipeline3D * pipeline3D = nullptr ; // pointer to the pipeline to which this materials set is bound (nullptr if not bound to any pipeline)
-    
+        vkhc::Pipeline3D *    pipeline3D = nullptr ; // pointer to the pipeline to which this materials set is bound (nullptr if not bound to any pipeline)
+
     public:
+
+        vkhc::BaseColorsSet * base_colors_set = nullptr; // set of base colors, to be sent to the GPU via UBO
+        vkhc::TexturesSet *   textures_set = nullptr ;    // set of textures, to be sent to the GPU via UBO
+        vkhc::BrdfParamsSet * brdfs_params_set = nullptr ; // set of BRDF parameters, to be sent to the GPU via UBO
+
         MaterialsSet(  vkhc::VulkanContext * p_context )  ;
         uint32_t add( const Material & material ) ;
         

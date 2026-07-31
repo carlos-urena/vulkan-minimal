@@ -30,18 +30,7 @@ class ExampleTexturesSet : public vkhc::TexturesSet
 //  ------------------------------------------------------------------------------
 
 
-ExampleTexturesSet::ExampleTexturesSet( vkhc::VulkanContext * p_context ) 
 
-:   TexturesSet( p_context ) 
-{
-    using namespace std ;
-    cout << "Creating example textures set ..." << endl ;
-    add( "../assets/wood-1.png" );
-    add( "../assets/wood-2.png" );
-    add( "../assets/wood-3.png" );
-    add( new vkhc::ProceduralTexture1( context ) ) ;
-    cout << "Example textures set created." << endl ;
-}
 
 // -------------------------------------------------------------------------------  
 // class 'Triangle' (a 'vertex-array' like object )
@@ -136,13 +125,21 @@ App3D::App3D( )
 
     Assert( context != nullptr, "Tess1App constructor: 'context' instance is null !!" );
 
-    // create ot
-    axes3D       = new AxesObject();                   assert( axes3D != nullptr ) ;
-    textures_set = new ExampleTexturesSet( context );  assert( textures_set != nullptr ) ;
+    // create and initialize the materials set  
+    materials_set = new MaterialsSet( context ) ; Assert( materials_set != nullptr, "App3D::App3D: cannot create materials set" ) ;
+
+    // initialize the textures set 
+
+    cout << "App3D::App3D: creating example textures set ..." << endl ;
+    materials_set->textures_set->add( "../assets/wood-1.png" );
+    materials_set->textures_set->add( "../assets/wood-2.png" );
+    materials_set->textures_set->add( "../assets/wood-3.png" );
+    materials_set->textures_set->add( new vkhc::ProceduralTexture1( context ) ) ;
+
+    // create others things
+    axes3D       = new AxesObject( materials_set->base_colors_set); assert( axes3D != nullptr ) ;
     pipeline     = new Pipeline3D( *context, true );   assert( pipeline != nullptr ) ;
     camera       = new CamaraOrbitalSimple();          assert( camera != nullptr ) ;
-
-    textures_set->bindTo( *pipeline ) ; // bind the textures set to the pipeline, so that its textures can be used in the fragment shader.
 
     // create drawable objects vector 
     drawable_objects.push_back( new Triangle( *context ) ) ; // index 0
@@ -151,11 +148,18 @@ App3D::App3D( )
     drawable_objects.push_back( new MallaSupPar( new FPColumna(), 128, 128, true ) ) ;
 
     current_object_index = 2 ; // start with the sphere in the vector
-
     Assert( current_object_index < drawable_objects.size(), "App3D constructor: current object index is out of range !!" ) ;
     Assert( drawable_objects[current_object_index] != nullptr, "App3D constructor: current object is null !!" ) ;
 
+
+    // send colors, textures, materials, etc... to the corresponding UBO uniforms  
+    // (only after all objects have been created !)
+    materials_set->textures_set->bindTo( *pipeline ) ; // bind the textures set to the pipeline, so that its textures can be used in the fragment shader.
+
+    // capture all type of events (key, mouse button, mouse position and scroll)
     captureEvents( true, true, true, true );
+
+    // done.
     cout  << "App3D::App3D -- ends" << endl ;
 } ;
 
@@ -170,7 +174,7 @@ App3D::~App3D()
     drawable_objects.clear();
 
     delete pipeline ; pipeline = nullptr ;
-    delete textures_set ; textures_set = nullptr ;
+    
 
     std::cout << "Deleted 'App3D' instance" << std::endl ;
 }
@@ -187,7 +191,7 @@ void App3D::mouseButtonEventCB( double xpos, double ypos, int button, int action
         prev_posx = xpos ;
         prev_posy = ypos ;
         if ( debug_events )
-        cout << "App3D::mouseButtonEventCB: DRAG STARTxpos=" << xpos << " ypos=" << ypos << " button=" << button << " action=" << action << " mods=" << mods << endl ;
+            cout << "App3D::mouseButtonEventCB: DRAG STARTxpos=" << xpos << " ypos=" << ypos << " button=" << button << " action=" << action << " mods=" << mods << endl ;
     }
 }
 // ----------------------------------------------------------------------------------
@@ -315,12 +319,14 @@ void App3D::drawFrame( VkCommandBuffer & cmd )
     Assert( current_object_index < drawable_objects.size(), "Tess1App::drawFrame: 'current_object_index' is out of bounds !!" );
     Assert( drawable_objects[current_object_index] != nullptr, "Tess1App::drawFrame: 'current_object' instance is null !!" );
     Assert( axes3D != nullptr, "Tess1App::drawFrame: 'axes3D' instance is null !!" );
-   
+    Assert( materials_set != nullptr, "Tess1App::drawFrame: 'materials_set' instance is null !!" );
+    Assert( materials_set->base_colors_set != nullptr, "Tess1App::drawFrame: 'base_colors_set' instance is null !!" );
+    
     // activate the pipeline and sets the viewport
     pipeline->bind( cmd );
     
     // send the current base colors set to the shaders (via UBO)
-    pipeline->setBaseColorsSet() ;
+    pipeline->setBaseColorsSet( *(materials_set->base_colors_set) ) ;
 
     // give initial values to the push constants at the begining of 'cmd'
     pipeline->resetModelMatrix( cmd ) ; // sets the model matrix to identity and clears the model matrix stack

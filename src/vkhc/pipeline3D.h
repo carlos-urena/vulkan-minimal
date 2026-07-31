@@ -24,12 +24,41 @@ class BaseColorsSet
     public:
     
     // vector of base colors, to be used by the shaders
-    static std::vector<glm::vec4> colors ; 
+    std::vector<glm::vec4> colors ; 
 
     // adds a base color to the set, returns its index 
     // if the set is already full, an error is raised 
 
-    static int addBaseColor( const glm::vec3 & additional_color ) ;
+    uint32_t add( const glm::vec3 & additional_color ) ;
+} ;
+
+// ----------------------------------------------------------------------------------------------
+// BRDF params struct
+
+class BrdfParams
+{
+    public:
+        float ka  = 0.1; // ambient coefficient
+        float kd  = 0.8; // diffuse coefficient
+        float ks  = 0.5; // specular coefficient
+        float exp = 32.0; // specular exponent
+
+        BrdfParams() = default ;
+        BrdfParams( const float p_ka, const float p_kd, const float p_ks, const float p_exp ) ;
+} ;
+
+// ----------------------------------------------------------------------------------------------
+// A set of BRDF parameters 
+
+class BrdfParamsSet
+{
+    private:
+        static constexpr uint32_t max_materials = 64 ; // max number of materials allowed.
+        std::vector<BrdfParams> brdfs_params ; // BRDF parameters in this set, each with its index in the set (index in the vector)
+
+    public:
+        BrdfParamsSet(  ) ;
+        uint32_t add( const BrdfParams & brdf_params ) ; // adds a new BRDF params to the set. Returns the index of the added BRDF params in the set.
 } ;
 
 // -------------------------------------------------------------------------------
@@ -113,8 +142,8 @@ class Pipeline3D : public BasicPipeline
     // if the stack was not empty, prints a warning message to the console.
     void resetModelMatrix( VkCommandBuffer & vk_cmd ) ;
 
-    // send the current base colors set ('BaseColorsSet::colors') to the shaders   ()
-    void setBaseColorsSet() ;
+    // send a set of base colors to the corresponding UBO uniform in the shaders   ()
+    void setBaseColorsSet( const BaseColorsSet & bcs ) ;
 
     // sets the current illumination evaluation mode (true or false) in the shaders
     void setEvalIllumination( VkCommandBuffer & vk_cmd, bool new_eval_illumination );

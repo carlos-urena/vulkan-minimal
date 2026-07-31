@@ -245,22 +245,24 @@ void Segment::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & cont
 
 constexpr float gstart = -4.0f, gend = 4.0f ;
 
-AxesObject::AxesObject( ) 
+AxesObject::AxesObject( vkhc::BaseColorsSet * p_base_colors_set ) 
 {
    using namespace std ;
    using namespace glm ; 
    using namespace vkhc ;
 
    setName( "axes object" ) ;
+   base_colors_set = p_base_colors_set ;
+   Assert( base_colors_set != nullptr, "AxesObject: base colors set is null" ) ;
 
    cout << "Creating axes object ..." << endl ;
 
    axes_cylinder = new CylinderZ01( "axes cylinder Z 01", 32 ) ; Assert( axes_cylinder != nullptr, "Cannot create axes cylinder" ) ;
    axes_cone = new ConeZ01( "axes cone Z 01", 32 ) ; Assert( axes_cone != nullptr, "Cannot create axes cone" ) ;
    
-   red_color_index   = BaseColorsSet::addBaseColor( vec3( 1.0f, 0.0f, 0.0f ) ) ;
-   green_color_index = BaseColorsSet::addBaseColor( vec3( 0.0f, 1.0f, 0.0f ) ) ;
-   blue_color_index  = BaseColorsSet::addBaseColor( vec3( 0.0f, 0.5f, 1.0f ) ) ;
+   red_color_index   = base_colors_set->add( vec3( 1.0f, 0.0f, 0.0f ) ) ;
+   green_color_index = base_colors_set->add( vec3( 0.0f, 1.0f, 0.0f ) ) ;
+   blue_color_index  = base_colors_set->add( vec3( 0.0f, 0.5f, 1.0f ) ) ;
 
    sphere = new IMSphere() ; Assert( sphere != nullptr, "Cannot create sphere" ) ;
    
