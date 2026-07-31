@@ -52,11 +52,11 @@ class BrdfParams
 
 class BrdfParamsSet
 {
-    private:
-        static constexpr uint32_t max_materials = 64 ; // max number of materials allowed.
-        std::vector<BrdfParams> brdfs_params ; // BRDF parameters in this set, each with its index in the set (index in the vector)
-
     public:
+        static constexpr uint32_t max_num_brdfs_params = 64 ; // max number of materials allowed.
+        std::vector<BrdfParams> brdfs_params ; // BRDF parameters in this set, each with its index in the set (index in the vector)
+        std::vector<glm::vec4> brdfs_params_vec4 ; // BRDF parameters in this set, each with its index in the set (index in the vector)
+
         BrdfParamsSet(  ) ;
         uint32_t add( const BrdfParams & brdf_params ) ; // adds a new BRDF params to the set. Returns the index of the added BRDF params in the set.
 } ;
@@ -144,6 +144,9 @@ class Pipeline3D : public BasicPipeline
 
     // send a set of base colors to the corresponding UBO uniform in the shaders   ()
     void setBaseColorsSet( const BaseColorsSet & bcs ) ;
+
+    // send a set of BRDF parameters to the corresponding UBO uniform in the shaders
+    void setBrdfParamsSet( const BrdfParamsSet & bps ) ;
 
     // sets the current illumination evaluation mode (true or false) in the shaders
     void setEvalIllumination( VkCommandBuffer & vk_cmd, bool new_eval_illumination );

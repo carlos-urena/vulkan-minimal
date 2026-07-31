@@ -388,16 +388,25 @@ void Pipeline3D::resetModelMatrix( VkCommandBuffer & vk_cmd )
 }
 
 // ------------------------------------------------------------------------------
-// send all colors, even if not all entries have been used .... improve later.
+// send all colors to the GPU UBO uniform block
 
 void Pipeline3D::setBaseColorsSet( const BaseColorsSet & bcs ) 
 {
     int nc = bcs.colors.size() ;
     Assert( nc <= max_num_base_colors, "Pipeline3D::setBaseColorsSet: number of base colors exceeds maximum allowed." ) ;
     setUBOUniform( "num_base_colors", & nc );
-    setUBOUniform( "base_colors", value_ptr( bcs.colors[0] ) );
+    setUBOUniform( "base_colors", value_ptr( bcs.colors[0] ) );    
+}
 
-    
+// ------------------------------------------------------------------------------
+// send all BRDF parameters to the UBO uniform block
+
+void Pipeline3D::setBrdfParamsSet( const BrdfParamsSet & bps ) 
+{
+    uint32_t nb = bps.brdfs_params.size() ;
+    Assert( nb <= BrdfParamsSet::max_num_brdfs_params, "Pipeline3D::setBrdfParamsSet: number of BRDF params exceeds maximum allowed." ) ;
+    setUBOUniform( "num_brdfs_params", & nb );
+    setUBOUniform( "brdfs_params", value_ptr( bps.brdfs_params_vec4[0]) );
 }
 
 // ------------------------------------------------------------------------------
@@ -444,12 +453,13 @@ BrdfParamsSet::BrdfParamsSet(  )
 
 uint32_t BrdfParamsSet::add( const BrdfParams & brdf_params ) 
 {
+    glm::vec4 v4 = { brdf_params.ka, brdf_params.kd, brdf_params.ks, brdf_params.exp } ;
+
     brdfs_params.push_back( brdf_params ) ;
+    brdfs_params_vec4.push_back( v4 ) ;
+
     return static_cast<uint32_t>( brdfs_params.size() - 1 ) ;
 }
-
-
-
 
 
 } // end namespace 'vkhc' 

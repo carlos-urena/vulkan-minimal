@@ -99,6 +99,7 @@ void MaterialsSet::bindTo( vkhc::Pipeline3D * p_pipeline3D )
 
     textures_set->bindTo( *pipeline3D ) ;
     pipeline3D->setBaseColorsSet( *base_colors_set ) ;
+    pipeline3D->setBrdfParamsSet( *brdfs_params_set ) ;
 }
 
 
