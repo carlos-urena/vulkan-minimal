@@ -44,6 +44,9 @@ class Material
 
         // builds a material with no base color (uses vertex colors) and the coefficients of the given BRDF params
         Material( const vkhc::BrdfParams & p_brdf_params ) ;
+
+        //void activate( VkCommandBuffer & vk_cmd, vkhc::Pipeline3D & pipeline ) ; // activates this material in the given pipeline, by setting the push constants and UBOs in the shaders
+        
 } ;
 
 // ----------------------------------------------------------------------------------------------
@@ -70,6 +73,11 @@ class MaterialsSet
         // done only once for a single pipeline, before first frame, but 
         // after all the materials have been added to the set.
         void bindTo( vkhc::Pipeline3D * p_pipeline3D ) ;
+
+        // activates a material with the given materials index
+        void activate( VkCommandBuffer & vk_cmd, 
+                       vkhc::Pipeline3D & pipeline, 
+                       const uint32_t material_index ); 
 } ;
 
 // ----------------------------------------------------------------------------------------------

@@ -82,6 +82,9 @@ class Pipeline3D : public BasicPipeline
     // current base color index 
     int current_base_color_index = -1 ; // -1 means no base color is active
 
+    // current BRDF params index 
+    int current_brdf_params_index = -1 ; // -1 means no BRDF params is active
+
     // current view and projection matrices
     glm::mat4 current_view_matrix = glm::mat4(1.0f) ;
     glm::mat4 current_projection_matrix = glm::mat4(1.0f) ;
@@ -101,10 +104,11 @@ class Pipeline3D : public BasicPipeline
 
     Pipeline3D( VulkanContext & vulkan_context, const bool p_z_buffer_enabled );
     
-    int getBaseColorIndex() { return current_base_color_index ; } // returns the index of the current base color, or -1 if no base color is active;
-    int getTextureIndex()   { return current_texture_index ;    } // returns the index of the texture with the given name, or -1 if not found
+    int getBaseColorIndex()    { return current_base_color_index ; } // returns the index of the current base color, or -1 if no base color is active;
+    int getTextureIndex()      { return current_texture_index ;    } // returns the index of the texture with the given name, or -1 if not found
+    int getBrdfParamsIndex()   { return current_brdf_params_index ; } // returns the index of the current BRDF params, or -1 if no BRDF params is active;
     bool getEvalIllumination() { return eval_illumination ; } // returns the current value of the 'eval_illumination' push constant
-    bool getWireframeMode() { return wireframe_mode ; } // returns the current value of the 'wireframe_mode' push constant
+    bool getWireframeMode()    { return wireframe_mode ; } // returns the current value of the 'wireframe_mode' push constant
 
     bool getDrawNormals() { return draw_normals ; } // returns the current value of the 'draw_normals' bool
     void setDrawNormals( bool new_draw_normals ) { draw_normals = new_draw_normals ; } // sets the current value of the 'draw_normals' bool
@@ -122,6 +126,7 @@ class Pipeline3D : public BasicPipeline
     void setModelMatrix( VkCommandBuffer & vk_cmd, const glm::mat4 & model_mat ) ;
     void setTextureIndex( VkCommandBuffer & vk_cmd, int index ) ;
     void setBaseColorIndex( VkCommandBuffer & vk_cmd, int index ) ;
+    void setBrdfParamsIndex( VkCommandBuffer & vk_cmd, int index ) ;
     void setWireframeMode( VkCommandBuffer & vk_cmd, bool new_wireframe_mode ) ;
 
     // saves the current model matrix on the stack, 

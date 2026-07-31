@@ -263,6 +263,7 @@ AxesObject::AxesObject( vkhc::BaseColorsSet * p_base_colors_set )
    red_color_index   = base_colors_set->add( vec3( 1.0f, 0.0f, 0.0f ) ) ;
    green_color_index = base_colors_set->add( vec3( 0.0f, 1.0f, 0.0f ) ) ;
    blue_color_index  = base_colors_set->add( vec3( 0.0f, 0.5f, 1.0f ) ) ;
+   grid_color_index  = base_colors_set->add( vec3( 0.5f, 0.5f, 0.5f ) ) ;
 
    sphere = new IMSphere() ; Assert( sphere != nullptr, "Cannot create sphere" ) ;
    
@@ -316,6 +317,8 @@ Assert( axes_cylinder != nullptr, "Axes cylinder not initialized" ) ;
    
    const mat4 sctr_mat = translate(vec3{ gstart, 0.0f, gstart })* scale(vec3{ gend-gstart, 1.0f, gend-gstart }) ;
    const mat4 rot_90y =  rotate(radians(90.0f), vec3( 0.0f, 1.0f, 0.0f ) ) ;
+
+   p->setBaseColorIndex( cmd_vk, grid_color_index ) ; // set the base color index for the grid lines
    
 
    for( int iz = 0 ; iz <= n ; iz++ )
@@ -456,6 +459,7 @@ void AxesObject::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & c
    // save previous pipeline state
    int prev_texture_index = pipeline3d->getTextureIndex() ; // save previous texture index
    int prev_base_color_index = pipeline3d->getBaseColorIndex() ; // save previous base color index
+   int prev_brdfs_params_index = pipeline3d->getBrdfParamsIndex() ; // save previous brdfs params index
    int prev_eval_illumination = pipeline3d->getEvalIllumination() ; // save previous illumination evaluation mode
    int prev_draw_edges = pipeline3d->getDrawWireframe() ; // save previous draw edges mode
 
@@ -471,6 +475,7 @@ void AxesObject::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & c
 
    // restore state of push constants and pipeline settings
    pipeline3d->setBaseColorIndex( cmd_vk,  prev_base_color_index ) ; // restore previous base color index
+   pipeline3d->setBrdfParamsIndex( cmd_vk, prev_brdfs_params_index ) ; // restore previous brdfs params index
    pipeline3d->setTextureIndex( cmd_vk, prev_texture_index ) ; // restore previous texture index
    pipeline3d->setEvalIllumination( cmd_vk, prev_eval_illumination ) ; // restore previous illumination evaluation mode
    pipeline3d->setDrawWireframe( prev_draw_edges ) ; // restore previous draw edges mode

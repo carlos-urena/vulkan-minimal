@@ -137,10 +137,10 @@ App3D::App3D( )
     materials_set->textures_set->add( "../assets/wood-3.png" );
     materials_set->textures_set->add( new vkhc::ProceduralTexture1( context ) ) ;
 
-    default_material = new Material( vec3( 1.0, 1.0, 0.5 ), 
+    Material default_material( vec3( 0.7, 1.0, 1.0 ),  // cyan-almost white base color
                                      BrdfParams{ 0.0f, 1.0f, 0.0f, 32.0f } ) ; 
-    Assert( default_material != nullptr, "App3D::App3D: cannot create default material" ) ;
-    default_material_index = materials_set->add( *default_material ) ; // add the default material to the materials
+                            
+    default_material_index = materials_set->add( default_material ) ; // add the default material to the materials
 
     // create others things
     axes3D       = new AxesObject( materials_set->base_colors_set); assert( axes3D != nullptr ) ;
@@ -316,12 +316,15 @@ void App3D::initFrame( const vkhc::seconds_f  time_elapsed )
     pipeline->setProjectionMatrix( proj_mat ) ;
     pipeline->setBaseColorsSet( *(materials_set->base_colors_set) ) ; //unnecessary if it didn't change 
     pipeline->setBrdfParamsSet( *(materials_set->brdfs_params_set) ) ; // unnecessary if it didn't change
-
 }
+
 // ----------------------------------------------------------------------------------
 
 void App3D::drawFrame( VkCommandBuffer & cmd ) 
 {
+    using namespace std ;
+    cout << "App3D::drawFrame: drawing frame with current_object_index == " << current_object_index << endl ;
+
     Assert( context != nullptr, "Tess1App::drawFrame: 'context' instance is null !!" );
     Assert( pipeline != nullptr, "Tess1App::drawFrame: 'pipeline' instance is null !!" );
     Assert( current_object_index < drawable_objects.size(), "Tess1App::drawFrame: 'current_object_index' is out of bounds !!" );
@@ -329,19 +332,22 @@ void App3D::drawFrame( VkCommandBuffer & cmd )
     Assert( axes3D != nullptr, "Tess1App::drawFrame: 'axes3D' instance is null !!" );
     Assert( materials_set != nullptr, "Tess1App::drawFrame: 'materials_set' instance is null !!" );
     Assert( materials_set->base_colors_set != nullptr, "Tess1App::drawFrame: 'base_colors_set' instance is null !!" );
-    Assert( default_material != nullptr, "Tess1App::drawFrame: 'default_material' instance is null !!" );
+    //Assert( default_material != nullptr, "Tess1App::drawFrame: 'default_material' instance is null !!" );
 
     // activate the pipeline and sets the viewport
     pipeline->bind( cmd );
     
-    .... falta: activar el default material (hacer método de activación) ....
+    
 
     // give initial values to the push constants at the begining of 'cmd'
     pipeline->resetModelMatrix( cmd ) ; // sets the model matrix to identity and clears the model matrix stack
     pipeline->setTextureIndex( cmd, -1) ;   // no texture by default
-    pipeline->setBaseColorIndex( cmd, -1 ) ;
+    pipeline->setBaseColorIndex( cmd, -1 ) ; 
     pipeline->setEvalIllumination( cmd, eval_illumination ) ; // sets the illumination evaluation mode (true or false) in the shaders
 
+    // activate the default material 
+    materials_set->activate( cmd, *pipeline, default_material_index );
+    
     // draw the axes 
     axes3D->setActive( draw_axes, draw_grid );
     axes3D->drawVK( pipeline, *context, cmd ) ;

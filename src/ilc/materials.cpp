@@ -104,7 +104,29 @@ void MaterialsSet::bindTo( vkhc::Pipeline3D * p_pipeline3D )
     pipeline3D->setBrdfParamsSet( *brdfs_params_set ) ;
 }
 
+void MaterialsSet::activate( VkCommandBuffer & vk_cmd, 
+                             vkhc::Pipeline3D & pipeline, 
+                             const uint32_t material_index ) 
+{
+    using namespace std ;
 
+    assert( material_index < materials.size() ) ;
+    Material & m = materials[ material_index ] ;
+    
+    cout << "Material::activate: activating material with index == " << material_index <<   endl 
+         << "  base color        " << m.base_color.r << ", " << m.base_color.g << ", " << m.base_color.b << endl
+         << "  use base color    " << m.use_base_color << endl
+         << "  texture path      " << m.texture_path << endl
+         << "  use texture       " << m.use_texture << endl
+         << "  BRDF params:      ka=" << m.brdf_params.ka << ", kd=" << m.brdf_params.kd << ", ks=" << m.brdf_params.ks << ", exp=" << m.brdf_params.exp << endl
+         << "  base color index  " << m.color_base_index << endl 
+         << "  texture index     " << m.texture_index << endl 
+         << "  BRDF params index " << m.brdf_params_index << endl ;
+
+    pipeline.setBaseColorIndex( vk_cmd, m.color_base_index ) ;
+    pipeline.setTextureIndex( vk_cmd, m.texture_index ) ;
+    pipeline.setBrdfParamsIndex( vk_cmd, m.brdf_params_index ) ;
+}
 
 // ------------------------------------------------------------------------------
 } // end namespace ilc

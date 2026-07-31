@@ -34,7 +34,8 @@ class AxesObject : public DrawableObject
     int 
         red_color_index = -1, 
         green_color_index = -1, 
-        blue_color_index = -1 ;  // indices of the base colors used to visualize the axes
+        blue_color_index = -1 ,  // indices of the base colors used to visualize the axes
+        grid_color_index = -1 ; // index of the base color used to visualize the grid
 
     bool draw_axes = true ;
     bool draw_grid = true ;

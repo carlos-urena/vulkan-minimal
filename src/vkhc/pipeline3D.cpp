@@ -302,6 +302,15 @@ void Pipeline3D::setBaseColorIndex( VkCommandBuffer & vk_cmd, int index )
     using namespace std ;
     //cout << "Pipeline3D::setBaseColorIndex: set base color index to " << index << endl ;
 }
+
+void Pipeline3D::setBrdfParamsIndex( VkCommandBuffer & vk_cmd, int index ) 
+{
+    current_brdf_params_index = index ;
+    setPushConstant( vk_cmd, "brdf_params_index", &index ); 
+    using namespace std ;
+    //cout << "Pipeline3D::setBrdfParamsIndex: set brdf params index to " << index << endl ;
+}
+
 // ------------------------------------------------------------------------------
 
 void Pipeline3D::setWireframeMode( VkCommandBuffer & vk_cmd, bool new_wireframe_mode )
