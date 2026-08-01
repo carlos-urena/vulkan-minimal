@@ -147,11 +147,20 @@ App3D::App3D( )
     pipeline     = new Pipeline3D( *context, true );   assert( pipeline != nullptr ) ;
     camera       = new CamaraOrbitalSimple();          assert( camera != nullptr ) ;
 
+    // create the "three spheres object" 
+    MallaSupPar * sphere_mesh = new MallaSupPar( new FPEsfera(), 64, 64, true ) ; Assert( sphere_mesh != nullptr, "App3D::App3D: cannot create sphere mesh" ) ;
+    CompositeObject * three_spheres = new CompositeObject() ; Assert( three_spheres != nullptr, "App3D::App3D: cannot create composite object" ) ;
+    three_spheres->add( new TransformedObject( translate( vec3(-1.0f, 0.0f, 0.0f) )*scale( vec3(0.5f) ), sphere_mesh ) ) ;
+    three_spheres->add( new TransformedObject( translate( vec3( 0.0f, 0.0f, 0.0f) )*scale( vec3(0.5f) ), sphere_mesh ) ) ;
+    three_spheres->add( new TransformedObject( translate( vec3( 1.0f, 0.0f, 0.0f) )*scale( vec3(0.5f) ), sphere_mesh ) ) ;
+    three_spheres->setName( "three spheres" ) ;
+
     // create drawable objects vector 
     drawable_objects.push_back( new Triangle( *context ) ) ; // index 0
     drawable_objects.push_back( new Cube24(  ) ) ; // index 1
     drawable_objects.push_back( new MallaSupPar( new FPEsfera(), 64, 64, true ) ) ; 
     drawable_objects.push_back( new MallaSupPar( new FPColumna(), 128, 128, true ) ) ;
+    drawable_objects.push_back( three_spheres ) ; // index 4
 
     current_object_index = 2 ; // start with the sphere in the vector
     Assert( current_object_index < drawable_objects.size(), "App3D constructor: current object index is out of range !!" ) ;
