@@ -150,9 +150,14 @@ App3D::App3D( )
     // create the "three spheres object" 
     MallaSupPar * sphere_mesh = new MallaSupPar( new FPEsfera(), 64, 64, true ) ; Assert( sphere_mesh != nullptr, "App3D::App3D: cannot create sphere mesh" ) ;
     CompositeObject * three_spheres = new CompositeObject() ; Assert( three_spheres != nullptr, "App3D::App3D: cannot create composite object" ) ;
-    three_spheres->add( new TransformedObject( translate( vec3(-1.0f, 0.0f, 0.0f) )*scale( vec3(0.5f) ), sphere_mesh ) ) ;
-    three_spheres->add( new TransformedObject( translate( vec3( 0.0f, 0.0f, 0.0f) )*scale( vec3(0.5f) ), sphere_mesh ) ) ;
-    three_spheres->add( new TransformedObject( translate( vec3( 1.0f, 0.0f, 0.0f) )*scale( vec3(0.5f) ), sphere_mesh ) ) ;
+
+    MaterialObject * mo1 = new MaterialObject( new Material( vec3( 1.0, 1.0, 0.0 ), BrdfParams{ 1.0f, 0.0f, 0.0f, 32.0f } ), materials_set, sphere_mesh ) ; Assert( mo1 != nullptr, "App3D::App3D: cannot create material object" ) ;
+    MaterialObject * mo2 = new MaterialObject( new Material( vec3( 0.0, 1.0, 1.0 ), BrdfParams{ 0.0f, 1.0f, 0.0f, 32.0f } ), materials_set, sphere_mesh ) ; Assert( mo2 != nullptr, "App3D::App3D: cannot create material object" ) ;
+    MaterialObject * mo3 = new MaterialObject( new Material( vec3( 1.0, 0.0, 1.0 ), BrdfParams{ 0.3f, 0.8f, 0.0f, 32.0f } ), materials_set, sphere_mesh ) ;
+
+    three_spheres->add( new TransformedObject( translate( vec3(-1.0f, 0.0f, 0.0f) )*scale( vec3(0.5f) ), mo1 ) ) ;
+    three_spheres->add( new TransformedObject( translate( vec3( 0.0f, 0.0f, 0.0f) )*scale( vec3(0.5f) ), mo2 ) ) ;
+    three_spheres->add( new TransformedObject( translate( vec3( 1.0f, 0.0f, 0.0f) )*scale( vec3(0.5f) ), mo3 ) ) ;
     three_spheres->setName( "three spheres" ) ;
 
     // create drawable objects vector 

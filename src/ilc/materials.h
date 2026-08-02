@@ -5,7 +5,9 @@
 #include <glm/glm.hpp>
 
 #include <vkhc/vulkan-context.h>
+#include <vkhc/textures.h>
 #include <vkhc/pipeline3D.h>
+
 
 namespace ilc 
 {

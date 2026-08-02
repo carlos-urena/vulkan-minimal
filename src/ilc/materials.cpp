@@ -56,6 +56,8 @@ MaterialsSet::MaterialsSet( vkhc::VulkanContext * p_context )
 
 uint32_t MaterialsSet::add( const Material & material ) 
 {
+    using namespace std ;
+    cout << "MaterialsSet::add: adding material with context == " << context << endl ;
     Assert( context != nullptr, "MaterialsSet::add: 'context' instance is null !!" );
     Assert( material.materials_set == nullptr, "Material::add: this material is already part of a materials set !!" );
 
