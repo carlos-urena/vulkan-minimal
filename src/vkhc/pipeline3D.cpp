@@ -42,6 +42,7 @@ static const char* common_decls = R"glsl(
     layout( set=0, binding=0 ) uniform ubo_block {
         
         mat4 view_mat; // view matrix (world to camera)
+        mat4 view_mat_inv ; // inverse view matrix (camera to world)
         mat4 proj_mat; // projection matrix (camera to clip)
 
         vec4 base_colors[max_num_base_colors]; // array of base colors, indexed by 'base_color_index' push constant
@@ -165,16 +166,33 @@ static const char* frag_shader_src = R"glsl(
     }
     // ----------------
 
+    vec3 ViewVectorWCC()
+    {
+        return normalize( ( ubo.view_mat_inv * vec4(0.0,0.0,0.0,1.0) ).xyz - in_position_wcc ) ;
+    }
+    // ---------------- 79
+  
+
     vec3 EvalIllumination( const vec3 base_color )
     {
+        vec3  v = ViewVectorWCC() ;
         vec3  n = normalize( in_normal_wcc ) ;
-        vec3  l0 = normalize( vec3( 1.0, 1.0, 1.0 ) ) ;
-        vec3  cl0 = vec3( 1.0, 1.0, 1.0 ) ;
-        float d0 = max( dot( n, l0 ), 0.0 ) ;
 
-        vec3  l1 = normalize( vec3( 1.0, -1.0, 0.0 ) ) ;
-        vec3  cl1 = vec3( 1.0, 0.4, 0.0 ) ;
-        float d1 = max( dot( n, l1 ), 0.0 ) ;
+        
+        
+        vec3  l0  = normalize( vec3( 0.0, 1.0, 0.0 ) ) ;
+        vec3  h0  = normalize( l0 + v ) ;
+        vec3  cl0 = vec3( 1.0, 1.0, 1.0 ) ;
+        float d0  = max( dot( n, l0 ), 0.0 ) ;
+        float h0n = max( dot( n, h0 ), 0.0 ) ;
+
+        return vec3( h0n, h0n, h0n ) ; // for debugging, return the half vector dot normal value as a color
+
+        vec3  l1  = normalize( vec3( 0.0, 1.0, 0.0 ) ) ;
+        vec3  h1  = normalize( l1 + v ) ;
+        vec3  cl1 = vec3( 0.0, 0.0, 0.0 ) ;  /// ANULADO
+        float d1  = max( dot( n, l1 ), 0.0 ) ;
+        float h1n = max( dot( n, h1 ), 0.0 ) ;
 
         vec4 brdf_params = ubo.brdf_params[ int(pc.brdf_params_index) ] ;
         float ka = brdf_params[0] ; // ambient coefficient
@@ -182,8 +200,11 @@ static const char* frag_shader_src = R"glsl(
         float ks = brdf_params[2] ; // specular coefficient
         float exp = brdf_params[3] ; // specular exponent
 
-        
-        return base_color*(kd*(d0*cl0+ d1*cl1) + vec3(ka,ka,ka) ) ; 
+        vec3 ambient  = vec3(ka,ka,ka) ;
+        vec3 diffuse  = kd*( d0*cl0 + d1*cl1 ) ;
+        vec3 specular = ks*( pow(h0n,exp)*cl0 + pow(h1n,exp)*cl1 ) ;
+
+        return base_color*(ambient + diffuse) + specular  ; 
     }
     // ----------------
 
@@ -212,16 +233,21 @@ static const char* frag_shader_src = R"glsl(
 namespace vkhc
 {
 
+// -----------------------------------------------------------------------------------
+
 static std::string processShaderSource( const std::string & shader_src ) 
 {
     std::string result = shader_src ;
     result =  insert_source( result, "common_inputs_declarations", common_decls ) ;
     return result ;
 }
+// -----------------------------------------------------------------------------------
 
 static std::string 
     vertShaderSrc_string = processShaderSource( std::string( vert_shader_src ) ),
     fragShaderSrc_string = processShaderSource( std::string( frag_shader_src ) );
+
+// -----------------------------------------------------------------------------------
 
 Pipeline3D::Pipeline3D( VulkanContext & vulkan_context, const bool p_z_buffer_enabled )
 
@@ -232,15 +258,16 @@ Pipeline3D::Pipeline3D( VulkanContext & vulkan_context, const bool p_z_buffer_en
     name = "Pipeline 3D" ;
 
     // set metadata about  push constants 
-    addPushConstant( "model_mat",             sizeof(glm::mat4) ); // model matrix 
-    addPushConstant( "model_mat_normals",     sizeof(glm::mat4) ); // model matrix for normals
-    addPushConstant( "base_color_index",      sizeof(int) ); // base color index, -1 if no base color is active.
-    addPushConstant( "texture_index",         sizeof(int) ); // active texture index, -1 if no texture is active.
+    addPushConstant( "model_mat",         sizeof(glm::mat4) ); // model matrix 
+    addPushConstant( "model_mat_normals", sizeof(glm::mat4) ); // model matrix for normals
+    addPushConstant( "base_color_index",  sizeof(int) ); // base color index, -1 if no base color is active.
+    addPushConstant( "texture_index",     sizeof(int) ); // active texture index, -1 if no texture is active.
     addPushConstant( "brdf_params_index", sizeof(int) ); // active material index, -1 if no material is active
-    addPushConstant( "eval_illumination",     sizeof(int) ); // if not 0, evaluate illumination, if 0, use base color .
-    addPushConstant( "wireframe_mode",        sizeof(int) ); // if not 0, we are drawing wireframe, if 0, we are drawing
+    addPushConstant( "eval_illumination", sizeof(int) ); // if not 0, evaluate illumination, if 0, use base color .
+    addPushConstant( "wireframe_mode",    sizeof(int) ); // if not 0, we are drawing wireframe, if 0, we are drawing
     
     addUBOUniform( "view_mat",         VType::MAT4x4, 1 ); // view matrix
+    addUBOUniform( "view_mat_inv",     VType::MAT4x4, 1 ); // inverse view matrix
     addUBOUniform( "proj_mat",         VType::MAT4x4, 1 ); // projection matrix
     addUBOUniform( "base_colors",      VType::VEC4,   max_num_base_colors ); // array of base colors
     addUBOUniform( "num_base_colors",  VType::INT,    1 ); // current number of entries used in the 'base_colors' array
@@ -274,10 +301,12 @@ Pipeline3D::Pipeline3D( VulkanContext & vulkan_context, const bool p_z_buffer_en
 }
 // ------------------------------------------------------------------------------
 
-void Pipeline3D::setViewMatrix( const glm::mat4 & new_view_matrix ) 
+void Pipeline3D::setViewMatrix( const glm::mat4 & new_view_matrix, const glm::mat4 & new_view_matrix_inv ) 
 {
     current_view_matrix = new_view_matrix ;
+    current_view_matrix_inv = new_view_matrix_inv ;
     setUBOUniform( "view_mat", value_ptr( current_view_matrix ) );
+    setUBOUniform( "view_mat_inv", value_ptr( current_view_matrix_inv ) );
 }
 // ------------------------------------------------------------------------------
 

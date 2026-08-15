@@ -48,6 +48,7 @@ class App3D : public ilc::Application
     // model, view and projection matrices
     glm::mat4 model_mat ;            // model matrix passed to the pipeline via a push constant
     glm::mat4 view_mat = glm::mat4(1.0f); // view matrix passed via UBO
+    glm::mat4 view_mat_inv = glm::mat4(1.0f); // inverse view matrix (camera to world) passed via UBO
     glm::mat4 proj_mat = glm::mat4(1.0f) ; // projection matrix passed via UBO
 
     // drawable 3D object (triangle) with the axes.
@@ -59,7 +60,7 @@ class App3D : public ilc::Application
     // index for current object being displayed (in the 'drawable_objects' vector)
     uint32_t current_object_index = 0 ;
 
-    // basic 2D pipeline 
+    // 3D pipeline 
     vkhc::Pipeline3D * pipeline = nullptr ; 
 
     // Materials set (includes base colors set and textures set)

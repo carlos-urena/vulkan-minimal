@@ -138,7 +138,7 @@ App3D::App3D( )
     materials_set->textures_set->add( new vkhc::ProceduralTexture1( context ) ) ;
 
     Material default_material( vec3( 0.7, 1.0, 1.0 ),  // cyan-almost white base color
-                                     BrdfParams{ 0.0f, 1.0f, 0.0f, 32.0f } ) ; 
+                                     BrdfParams{ 0.05f, 0.7f, 0.8f, 32.0f } ) ; 
                             
     default_material_index = materials_set->add( default_material ) ; // add the default material to the materials
 
@@ -153,7 +153,7 @@ App3D::App3D( )
 
     MaterialObject * mo1 = new MaterialObject( new Material( vec3( 1.0, 1.0, 0.0 ), BrdfParams{ 1.0f, 0.0f, 0.0f, 32.0f } ), materials_set, sphere_mesh ) ; Assert( mo1 != nullptr, "App3D::App3D: cannot create material object" ) ;
     MaterialObject * mo2 = new MaterialObject( new Material( vec3( 0.0, 1.0, 1.0 ), BrdfParams{ 0.0f, 1.0f, 0.0f, 32.0f } ), materials_set, sphere_mesh ) ; Assert( mo2 != nullptr, "App3D::App3D: cannot create material object" ) ;
-    MaterialObject * mo3 = new MaterialObject( new Material( vec3( 1.0, 0.0, 1.0 ), BrdfParams{ 0.3f, 0.8f, 0.0f, 32.0f } ), materials_set, sphere_mesh ) ;
+    MaterialObject * mo3 = new MaterialObject( new Material( vec3( 1.0, 0.0, 1.0 ), BrdfParams{ 0.3f, 0.2f, 0.9f, 64.0f } ), materials_set, sphere_mesh ) ;
 
     three_spheres->add( new TransformedObject( translate( vec3(-1.0f, 0.0f, 0.0f) )*scale( vec3(0.5f) ), mo1 ) ) ;
     three_spheres->add( new TransformedObject( translate( vec3( 0.0f, 0.0f, 0.0f) )*scale( vec3(0.5f) ), mo2 ) ) ;
@@ -272,8 +272,9 @@ void App3D::updateViewProjMats( vkhc::seconds_f frame_time_s )
     const uvec2 ra_ext = context->getRenderAreaExtent(); // render area extent (size of the render area left to GUI, in pixels)
     const float ayx    = float(ra_ext.y) / float(ra_ext.x) ; // aspect ratio (height/width) of the render area
     camera->fijarRatioViewport( ayx ) ; // set the camera aspect ratio to the current window aspect ratio
-    view_mat = camera->viewMatrix() ;
-    proj_mat = camera->projectionMatrix() ;
+    view_mat     = camera->viewMatrix() ;
+    view_mat_inv = glm::inverse( view_mat ) ; // inverse view matrix (camera to world)
+    proj_mat     = camera->projectionMatrix() ;
 
 }
 // ----------------------------------------------------------------------------------
@@ -326,7 +327,7 @@ void App3D::initFrame( const vkhc::seconds_f  time_elapsed )
 
     // update UBO uniforms in the pipeline, by copying data from CPU memory to GPU memory
     updateViewProjMats( time_elapsed ) ; // updates 'view_mat' and 'proj_mat' 
-    pipeline->setViewMatrix( view_mat ) ;
+    pipeline->setViewMatrix( view_mat, view_mat_inv ) ;
     pipeline->setProjectionMatrix( proj_mat ) ;
     pipeline->setBaseColorsSet( *(materials_set->base_colors_set) ) ; //unnecessary if it didn't change 
     pipeline->setBrdfParamsSet( *(materials_set->brdfs_params_set) ) ; // unnecessary if it didn't change

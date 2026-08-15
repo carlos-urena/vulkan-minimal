@@ -86,7 +86,8 @@ class Pipeline3D : public BasicPipeline
     int current_brdf_params_index = -1 ; // -1 means no BRDF params is active
 
     // current view and projection matrices
-    glm::mat4 current_view_matrix = glm::mat4(1.0f) ;
+    glm::mat4 current_view_matrix       = glm::mat4(1.0f) ;
+    glm::mat4 current_view_matrix_inv   = glm::mat4(1.0f) ;
     glm::mat4 current_projection_matrix = glm::mat4(1.0f) ;
 
     // current value for the eval_illumination push constant (true or false)
@@ -119,7 +120,7 @@ class Pipeline3D : public BasicPipeline
     // adds a base color to the set of base colors
 
     // state which can be changed before sending commands
-    void setViewMatrix( const glm::mat4 & new_view_matrix ) ;
+    void setViewMatrix( const glm::mat4 & new_view_matrix, const glm::mat4 & new_view_matrix_inv ) ;
     void setProjectionMatrix( const glm::mat4 & new_projection_matrix ) ;
 
     // dynamic state (can be changed dynamically in command buffers, without re-creating the pipeline)
