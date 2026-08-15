@@ -50,7 +50,7 @@ class FPEsfera : public FuncionParam
 {
    public:
 
-   FPEsfera() : FuncionParam( "Esfera" ) {}
+   FPEsfera() : FuncionParam( "Sphere" ) {}
 
    /// @brief Computes a point on the surface of a sphere
    /// @param st parametric coordinates of the point
@@ -66,7 +66,7 @@ class FPCilindro : public FuncionParam
 {
    public: 
 
-   FPCilindro() : FuncionParam( "Cilindro" ) {}
+   FPCilindro() : FuncionParam( "Cylinder" ) {}
 
    /// @brief Computes a point on the surface of a cylinder
    /// @param st parametric coordinates of the point
@@ -82,7 +82,7 @@ class FPCono : public FuncionParam
 {
    public:
 
-   FPCono() : FuncionParam( "Cono" ) {}
+   FPCono() : FuncionParam( "Cone" ) {}
 
    /// @brief Computes a point on the surface of a cone
    /// @param st parametric coordinates of the point
@@ -98,7 +98,7 @@ class FPColumna : public FuncionParam
 {
    public:
 
-   FPColumna() : FuncionParam( "Columna" ) {}
+   FPColumna() : FuncionParam( "Column" ) {}
 
    /// @brief Computes a point on the surface of a baroque column
    /// @param st parametric coordinates of the point

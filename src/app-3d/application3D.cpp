@@ -57,7 +57,7 @@ Triangle::Triangle( vkhc::VulkanContext & vulkan_context)
     using namespace std ;
 
     cout << "Creating test RGB triangle object ..." << endl ;
-    setName( "test RGB triangle" ) ;
+    setName( "Test RGB triangle" ) ;
 
     vertex_array = new vkhc::VertexArray( vulkan_context, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, 4 ) ; // VK_PRIMITIVE_TOPOLOGY_PATCH_LIST ) 
     Assert( vertex_array != nullptr, "cannot create vertex array for triangle" ) ;
@@ -158,7 +158,7 @@ App3D::App3D( )
     three_spheres->add( new TransformedObject( translate( vec3(-1.0f, 0.0f, 0.0f) )*scale( vec3(0.5f) ), mo1 ) ) ;
     three_spheres->add( new TransformedObject( translate( vec3( 0.0f, 0.0f, 0.0f) )*scale( vec3(0.5f) ), mo2 ) ) ;
     three_spheres->add( new TransformedObject( translate( vec3( 1.0f, 0.0f, 0.0f) )*scale( vec3(0.5f) ), mo3 ) ) ;
-    three_spheres->setName( "three spheres" ) ;
+    three_spheres->setName( "Three Spheres" ) ;
 
     // create drawable objects vector 
     drawable_objects.push_back( new Triangle( *context ) ) ; // index 0

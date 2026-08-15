@@ -24,7 +24,8 @@ MallaSupPar::MallaSupPar( const FuncionParam * p_fp, const unsigned p_ns, const 
    ns = p_ns ;
    nt = p_nt ;
 
-   setName( fp->leerNombre() + " generado como superf. parámetrica (" + std::to_string(ns) + " x " + std::to_string(nt) + ")");
+   //setName( fp->leerNombre() + " as a parametric surface (" + std::to_string(ns) + " x " + std::to_string(nt) + ")");
+   setName( fp->leerNombre() + " (parametric surface)");
    
    // agregar los vértices y triángulos, por filas
    
