@@ -337,7 +337,7 @@ void App3D::initFrame( const vkhc::seconds_f  time_elapsed )
 void App3D::drawFrame( VkCommandBuffer & cmd ) 
 {
     using namespace std ;
-    cout << "App3D::drawFrame: drawing frame with current_object_index == " << current_object_index << endl ;
+    //cout << "App3D::drawFrame: drawing frame with current_object_index == " << current_object_index << endl ;
 
     Assert( context != nullptr, "Tess1App::drawFrame: 'context' instance is null !!" );
     Assert( pipeline != nullptr, "Tess1App::drawFrame: 'pipeline' instance is null !!" );
