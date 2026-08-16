@@ -89,10 +89,10 @@ static const char* vert_shader_src = R"glsl(
     layout (location=2) out vec3 out_normal_wcc ;
     layout (location=3) out vec2 out_tex_coords ;
 
-    const mat4 flipy_mat = mat4( 1.0,  0.0,  0.0,  0.0,
-                                 0.0, -1.0,  0.0,  0.0,
-                                 0.0,  0.0,  1.0,  0.0,
-                                 0.0,  0.0,  0.0,  1.0 ) ;
+    // const mat4 flipy_mat = mat4( 1.0,  0.0,  0.0,  0.0,
+    //                              0.0, -1.0,  0.0,  0.0,
+    //                              0.0,  0.0,  1.0,  0.0,
+    //                              0.0,  0.0,  0.0,  1.0 ) ;
 
     // const mat4 z_offset_mat = mat4( 1.0,  0.0,  0.0,   0.0,
     //                                 0.0,  1.0,  0.0,   0.0,
@@ -123,7 +123,8 @@ static const char* vert_shader_src = R"glsl(
         vec4 out_position_wcc_4 = pc.model_mat * vec4( in_position_occ, 1.0 ) ;
         mat4 proj_mat_adjusted  = GetProjectionMatrix() ;
 
-        gl_Position      = proj_mat_adjusted * ubo.view_mat * flipy_mat  * out_position_wcc_4 ;
+        //gl_Position      = proj_mat_adjusted * ubo.view_mat * flipy_mat  * out_position_wcc_4 ;
+        gl_Position      = proj_mat_adjusted * ubo.view_mat * out_position_wcc_4 ;
 
         out_position_wcc = out_position_wcc_4.xyz ; 
         out_color        = in_color ;
@@ -152,10 +153,10 @@ static const char* frag_shader_src = R"glsl(
 
     layout (location=0) out vec4 out_color;
 
-     const mat4 flipy_mat = mat4( 1.0,  0.0,  0.0,  0.0,
-                                 0.0, -1.0,  0.0,  0.0,
-                                 0.0,  0.0,  1.0,  0.0,
-                                 0.0,  0.0,  0.0,  1.0 ) ;
+    //  const mat4 flipy_mat = mat4( 1.0,  0.0,  0.0,  0.0,
+    //                              0.0, -1.0,  0.0,  0.0,
+    //                              0.0,  0.0,  1.0,  0.0,
+    //                              0.0,  0.0,  0.0,  1.0 ) ;
 
     // --------------------------------------------------------------------
     // returns the base color: either the texture color, or the base color, or the color interpolated from the vertexes colors
@@ -175,7 +176,8 @@ static const char* frag_shader_src = R"glsl(
 
     vec3 ViewVectorWCC()
     {
-        return normalize( ( flipy_mat * ubo.view_mat_inv * vec4(0.0,0.0,0.0,1.0) ).xyz - in_position_wcc ) ;
+        //return normalize( ( flipy_mat * ubo.view_mat_inv * vec4(0.0,0.0,0.0,1.0) ).xyz - in_position_wcc ) ;
+        return normalize( ( ubo.view_mat_inv * vec4(0.0,0.0,0.0,1.0) ).xyz - in_position_wcc ) ;
     }
 
     // ---------------- 

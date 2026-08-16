@@ -43,6 +43,11 @@ namespace ilc
 
 constexpr int X = 0, Y = 1, Z = 2 ; // names for each axe index.
 
+const glm::mat4 flipy_mat = glm::mat4( 1.0,  0.0,  0.0,  0.0,
+                                       0.0, -1.0,  0.0,  0.0,
+                                       0.0,  0.0,  1.0,  0.0,
+                                       0.0,  0.0,  0.0,  1.0 ) ;
+
 // ---------------------------------------------------------------------
 // viewport matrix (keeps Z unchanged: between -1 and 1)
 
@@ -80,8 +85,9 @@ glm::mat4 MAT_Vista( const glm::vec3 eje[3], const glm::vec3 & origen )
       //rot[i][j] = eje[i][j] ;    // CUA: wrong in glm
       rot[i][j] = eje[j][i] ;      // CUA: ok in glm, because rot[i][j] is column 'i', row 'j' of 'rot'
 
-   return rot * translate( -origen );
+   return rot * translate( -origen ) *flipy_mat ; // flip-Y is needed because in Vulkan Y+ axis in world coordinates points down in NDC space.
 }
+// ---------------------------------------------------------------------
 
 glm::mat4 MAT_Vista_inv( const glm::vec3 eje[3], const glm::vec3 & origen )
 {
@@ -93,7 +99,7 @@ glm::mat4 MAT_Vista_inv( const glm::vec3 eje[3], const glm::vec3 & origen )
       //rot_inv[i][j] = eje[j][i] ;    // inverse == transpose, but this is wrong in glm
       rot_inv[i][j] = eje[i][j] ;    // inverse == transpose (we do it opposite to MAT_Vista)
 
-   return translate( origen ) * rot_inv ; 
+   return flipy_mat * translate( origen ) * rot_inv ; 
 }
 
 // ----------------------------------------------------------------------------
@@ -271,7 +277,8 @@ void CamaraOrbitalSimple::actualizarMatrices()
    using namespace glm ;
    matriz_vista = translate( vec3( 0.0, 0.0, -d) ) *          // MAT_Traslacion( { 0.0, 0.0, -d } ) *
                   rotate( radians(vert_angle_deg),  vec3( 1.0,0.0,0.0 )) * // MAT_Rotation( b,  { 1.0,0.0,0.0} ) *
-                  rotate( radians(-horz_angle_deg), vec3( 0.0,1.0,0.0 )) ; // MAT_Rotation( -a, { 0.0,1.0,0.0}  ) ;
+                  rotate( radians(-horz_angle_deg), vec3( 0.0,1.0,0.0 )) * // MAT_Rotation( -a, { 0.0,1.0,0.0}  ) ;
+                  flipy_mat ; // flip-Y is needed because in Vulkan Y+ axis in world coordinates points down in NDC space.
 
    constexpr float
       fovy_grad = 70.0,

@@ -160,7 +160,7 @@ App3D::App3D( )
     three_spheres->add( new TransformedObject( translate( vec3( 1.0f, 0.0f, 0.0f) )*scale( vec3(0.5f) ), mo3 ) ) ;
     three_spheres->setName( "Three Spheres" ) ;
 
-    // create drawable objects vector 
+    // populate drawable objects vector 
     drawable_objects.push_back( new Triangle( *context ) ) ; // index 0
     drawable_objects.push_back( new Cube24(  ) ) ; // index 1
     drawable_objects.push_back( new MallaSupPar( new FPEsfera(), 64, 64, true ) ) ; 
