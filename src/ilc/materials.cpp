@@ -47,19 +47,17 @@ bool Material::drawIMGUIWidgets( const std::string & title )
 
     bool changed = false ;
 
-    if (CollapsingHeader(title.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+    if (use_base_color)
     {
-        if (use_base_color)
-        {
-            ColorEdit3("Base color", value_ptr(base_color));
-            using namespace std ;
-            cout << "Material::drawIMGUIWidgets: base color = " << base_color.r << ", " << base_color.g << ", " << base_color.b << endl ;   
-            changed = true ;
-        }
-        else
-        {
-            Text("No base color (using vertex colors or texture)");
-        }
+        ColorEdit3("Base color", value_ptr(base_color));
+        using namespace std ;
+        cout << "Material::drawIMGUIWidgets: base color = " << base_color.r << ", " << base_color.g << ", " << base_color.b << endl ;   
+        changed = true ;
+    }
+    else
+    {
+        Text("No base color (using vertex colors or texture)");
+    }
 
         // if (use_texture)
         // {
@@ -74,7 +72,7 @@ bool Material::drawIMGUIWidgets( const std::string & title )
         // SliderFloat("kd (diffuse)", &brdf_params.kd, 0.0f, 1.0f);
         // SliderFloat("ks (specular)", &brdf_params.ks, 0.0f, 1.0f);
         // SliderFloat("exp (shininess)", &brdf_params.exp, 1.0f, 128.0f);
-    }
+    
     return changed ;
 }
 // ------------------------------------------------------------------------------
