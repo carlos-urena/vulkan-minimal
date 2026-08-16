@@ -41,15 +41,20 @@ Material::Material( const vkhc::BrdfParams & p_brdf_params )
     brdf_params    = p_brdf_params ;
 }
 
-void Material::drawIMGUIWidgets( const std::string & title ) 
+bool Material::drawIMGUIWidgets( const std::string & title ) 
 {
     using namespace ImGui ;
+
+    bool changed = false ;
 
     if (CollapsingHeader(title.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
     {
         if (use_base_color)
         {
             ColorEdit3("Base color", value_ptr(base_color));
+            using namespace std ;
+            cout << "Material::drawIMGUIWidgets: base color = " << base_color.r << ", " << base_color.g << ", " << base_color.b << endl ;   
+            changed = true ;
         }
         else
         {
@@ -70,6 +75,7 @@ void Material::drawIMGUIWidgets( const std::string & title )
         // SliderFloat("ks (specular)", &brdf_params.ks, 0.0f, 1.0f);
         // SliderFloat("exp (shininess)", &brdf_params.exp, 1.0f, 128.0f);
     }
+    return changed ;
 }
 // ------------------------------------------------------------------------------
 // Materials sets
@@ -105,6 +111,7 @@ void MaterialsSet::updateMaterial( const uint32_t material_index, const Material
 {
     Assert( newm.materials_set == this, "MaterialsSet::updateMaterial: the new material does not belong to this set !!" ) ; 
     Assert( material_index < materials.size(), "MaterialsSet::updateMaterial: the material index is out of bounds !!" ) ;
+    Assert( pipeline3D != nullptr, "MaterialsSet::updateMaterial: the materials set is not bound to a pipeline !!" ) ;
     
     Material & currm = materials[ material_index ] ; // get the current material 
 
@@ -115,11 +122,15 @@ void MaterialsSet::updateMaterial( const uint32_t material_index, const Material
         Assert( currm.color_base_index == newm.color_base_index, "MaterialsSet::updateMaterial: the base color index of the new material does not match the current material !!" ) ;
         Assert( newm.color_base_index >= 0, "MaterialsSet::updateMaterial: the new material has no base color index !!" ) ;
         
-        // PENDIENTE DE IMPLEMENTAR ESTO...
-        base_colors_set->updateBaseColor( newm.color_base_index, newm ) ; // update the UBO base color array in the GPU
-    }
-    
-    
+        glm::vec4 new_base_color = glm::vec4( newm.base_color, 1.0f ) ;
+        base_colors_set->colors[currm.color_base_index] = new_base_color; 
+        materials[ material_index ].base_color = newm.base_color ; 
+        pipeline3D->updateBaseColor( currm.color_base_index, new_base_color ) ;
+
+        using namespace std ;
+        cout << "MaterialsSet::updateMaterial: updated base color at index " << currm.color_base_index << " to new value: " 
+             << new_base_color.r << ", " << new_base_color.g << ", " << new_base_color.b << ", " << new_base_color.a << endl ;
+    }   
 }
 
 // ------------------------------------------------------------------------------

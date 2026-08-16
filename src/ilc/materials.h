@@ -47,7 +47,7 @@ class Material
         // builds a material with no base color (uses vertex colors) and the coefficients of the given BRDF params
         Material( const vkhc::BrdfParams & p_brdf_params ) ;
 
-        void drawIMGUIWidgets( const std::string & title )  ;
+        bool drawIMGUIWidgets( const std::string & title )  ;
 
         //void activate( VkCommandBuffer & vk_cmd, vkhc::Pipeline3D & pipeline ) ; // activates this material in the given pipeline, by setting the push constants and UBOs in the shaders
         

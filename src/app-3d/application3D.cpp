@@ -312,8 +312,10 @@ void App3D::drawIMGUIWidgets(  )
         Assert( materials_set != nullptr, "App3D::drawIMGUIWidgets: 'materials_set' instance is null !!" ) ;
 
         ilc::Material default_material = materials_set->getMaterial( default_material_index ) ; // get a copy of the default material from the materials set
-        default_material.drawIMGUIWidgets( "Default material" ) ;
-        materials_set->updateMaterial( default_material_index, default_material ) ; // update the material in the materials set
+        
+        if ( default_material.drawIMGUIWidgets( "Default material" ) )
+            materials_set->updateMaterial( default_material_index, default_material ) ; // update the material in the materials set
+        
     }
 
     drawIMGUIObjectSelectionCombo() ; // draw the current object selection combo
