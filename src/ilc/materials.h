@@ -47,6 +47,8 @@ class Material
         // builds a material with no base color (uses vertex colors) and the coefficients of the given BRDF params
         Material( const vkhc::BrdfParams & p_brdf_params ) ;
 
+        void drawIMGUIWidgets( const std::string & title )  ;
+
         //void activate( VkCommandBuffer & vk_cmd, vkhc::Pipeline3D & pipeline ) ; // activates this material in the given pipeline, by setting the push constants and UBOs in the shaders
         
 } ;
@@ -70,11 +72,22 @@ class MaterialsSet
 
         MaterialsSet(  vkhc::VulkanContext * p_context )  ;
         uint32_t add( const Material & material ) ;
+
+        // returns a copy of the material with the given index in the set
+        Material getMaterial( const uint32_t material_index ) 
+        {
+            Assert( material_index < materials.size(), "MaterialsSet::getMaterial: material index out of bounds" ) ;
+            return materials[material_index] ; 
+        } 
         
         // binds this material set to a pipeline, so the materials are sent to the GPU
         // done only once for a single pipeline, before first frame, but 
         // after all the materials have been added to the set.
         void bindTo( vkhc::Pipeline3D * p_pipeline3D ) ;
+
+        // updates one material already in the set.
+        // (the material set pointed by the material must be this material set).
+        void updateMaterial( const uint32_t material_index, const Material & new_material ) ;
 
         // activates a material with the given materials index
         void activate( VkCommandBuffer & vk_cmd, 

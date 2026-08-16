@@ -76,6 +76,9 @@ class Pipeline3D : public BasicPipeline
     glm::mat4 current_model_matrix = glm::mat4(1.0f) ; 
     glm::mat4 current_model_matrix_normals = glm::mat4(1.0f) ;
 
+    // current base colors set (initially nullptr, set in  'setBaseColorsSet' )
+    BaseColorsSet * base_colors_set = nullptr ;
+
     // current texture index 
     int current_texture_index = -1 ; // -1 means no texture is active
 
@@ -148,7 +151,10 @@ class Pipeline3D : public BasicPipeline
     void resetModelMatrix( VkCommandBuffer & vk_cmd ) ;
 
     // send a set of base colors to the corresponding UBO uniform in the shaders   ()
-    void setBaseColorsSet( const BaseColorsSet & bcs ) ;
+    void setBaseColorsSet( BaseColorsSet & bcs ) ;
+
+    // Updates a base color in the base colors set already binded to this pipeline
+    void updateBaseColor( const int index, const glm::vec4 & color ) ;
 
     // send a set of BRDF parameters to the corresponding UBO uniform in the shaders
     void setBrdfParamsSet( const BrdfParamsSet & bps ) ;

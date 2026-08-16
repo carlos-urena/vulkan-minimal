@@ -1,5 +1,9 @@
+#include <imgui.h>
+
 #include <vkhc/textures.h>
 #include <ilc/materials.h>
+
+
 
 namespace ilc 
 {
@@ -36,6 +40,37 @@ Material::Material( const vkhc::BrdfParams & p_brdf_params )
     use_texture    = false ;
     brdf_params    = p_brdf_params ;
 }
+
+void Material::drawIMGUIWidgets( const std::string & title ) 
+{
+    using namespace ImGui ;
+
+    if (CollapsingHeader(title.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        if (use_base_color)
+        {
+            ColorEdit3("Base color", value_ptr(base_color));
+        }
+        else
+        {
+            Text("No base color (using vertex colors or texture)");
+        }
+
+        // if (use_texture)
+        // {
+        //     Text("Texture path: %s", texture_path.c_str());
+        // }
+        // else
+        // {
+        //     Text("No texture");
+        // }
+
+        // SliderFloat("ka (ambient)", &brdf_params.ka, 0.0f, 1.0f);
+        // SliderFloat("kd (diffuse)", &brdf_params.kd, 0.0f, 1.0f);
+        // SliderFloat("ks (specular)", &brdf_params.ks, 0.0f, 1.0f);
+        // SliderFloat("exp (shininess)", &brdf_params.exp, 1.0f, 128.0f);
+    }
+}
 // ------------------------------------------------------------------------------
 // Materials sets
 
@@ -63,6 +98,28 @@ uint32_t MaterialsSet::add( const Material & material )
 
     materials.push_back( material ) ;
     return static_cast<uint32_t>( materials.size() - 1 ) ; // return index of the added material
+}
+// ------------------------------------------------------------------------------
+
+void MaterialsSet::updateMaterial( const uint32_t material_index, const Material & newm ) 
+{
+    Assert( newm.materials_set == this, "MaterialsSet::updateMaterial: the new material does not belong to this set !!" ) ; 
+    Assert( material_index < materials.size(), "MaterialsSet::updateMaterial: the material index is out of bounds !!" ) ;
+    
+    Material & currm = materials[ material_index ] ; // get the current material 
+
+    // if the material uses a base color, update it. 
+    if ( newm.use_base_color )
+    {
+        Assert( base_colors_set != nullptr, "MaterialsSet::updateMaterial: 'base_colors_set' instance is null !!" ) ;
+        Assert( currm.color_base_index == newm.color_base_index, "MaterialsSet::updateMaterial: the base color index of the new material does not match the current material !!" ) ;
+        Assert( newm.color_base_index >= 0, "MaterialsSet::updateMaterial: the new material has no base color index !!" ) ;
+        
+        // PENDIENTE DE IMPLEMENTAR ESTO...
+        base_colors_set->updateBaseColor( newm.color_base_index, newm ) ; // update the UBO base color array in the GPU
+    }
+    
+    
 }
 
 // ------------------------------------------------------------------------------

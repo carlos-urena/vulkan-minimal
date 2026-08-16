@@ -272,6 +272,7 @@ void App3D::updateViewProjMats( vkhc::seconds_f frame_time_s )
     const uvec2 ra_ext = context->getRenderAreaExtent(); // render area extent (size of the render area left to GUI, in pixels)
     const float ayx    = float(ra_ext.y) / float(ra_ext.x) ; // aspect ratio (height/width) of the render area
     camera->fijarRatioViewport( ayx ) ; // set the camera aspect ratio to the current window aspect ratio
+
     view_mat     = camera->viewMatrix() ;
     view_mat_inv = glm::inverse( view_mat ) ; // inverse view matrix (camera to world)
     proj_mat     = camera->projectionMatrix() ;
@@ -305,6 +306,15 @@ void App3D::drawIMGUIWidgets(  )
     }
     if (CollapsingHeader("Illumination controls", ImGuiTreeNodeFlags_DefaultOpen))
         Checkbox("Evaluate illumination", &eval_illumination);
+
+    if (CollapsingHeader("Default material controls", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        Assert( materials_set != nullptr, "App3D::drawIMGUIWidgets: 'materials_set' instance is null !!" ) ;
+
+        ilc::Material default_material = materials_set->getMaterial( default_material_index ) ; // get a copy of the default material from the materials set
+        default_material.drawIMGUIWidgets( "Default material" ) ;
+        materials_set->updateMaterial( default_material_index, default_material ) ; // update the material in the materials set
+    }
 
     drawIMGUIObjectSelectionCombo() ; // draw the current object selection combo
     drawable_objects[current_object_index]->drawIMGUIWidgets() ; // draw the current object widgets

@@ -206,6 +206,9 @@ class BasicPipeline
     
     // Gives a value to a an UBO uniform (pre-rendering).
     void setUBOUniform( const std::string & name, const void * data_ptr ) ;
+
+    // gives a value for an entry in a UBO uniform of type 'array' (pre-rendering).
+    void setUBOUniform( const std::string & name, const int index, const void * data_ptr ) ;
     
     // Initializes this pipeline object, starting from an undefined state
     // (should be called from derived classes constructors, after setting the configuration variables)

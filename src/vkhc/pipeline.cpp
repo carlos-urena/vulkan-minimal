@@ -21,7 +21,7 @@
 namespace vkhc
 {
 
-    std::string VTypeToString( const VType type ) 
+std::string VTypeToString( const VType type ) 
 {
     switch( type ) 
     {
@@ -34,6 +34,22 @@ namespace vkhc
         case VType::MAT4x4 : return "mat4x4" ;
         default: ErrorExit("Unsupported uniform type"); 
                  return "unknown var. type" ;
+    }
+}
+
+uint32_t VTypeSize( const VType type ) 
+{
+    switch( type ) 
+    {
+        case VType::FLOAT  : return 4u ;
+        case VType::INT    : return 4u ;
+        case VType::UINT   : return 4u ;
+        case VType::VEC2   : return 8u ;
+        case VType::VEC3   : return 12u ;
+        case VType::VEC4   : return 16u ;
+        case VType::MAT4x4 : return 64u ;
+        default: ErrorExit("Unsupported uniform type"); 
+                 return 0 ;
     }
 }
 
@@ -336,8 +352,8 @@ void BasicPipeline::setUBOUniform( const std::string & name, const void * data_p
 
     const uint32_t 
         offset = unif_data[index].offset,
-        size   = unif_data[index].size;
-
+        size   = unif_data[index].size ;
+    
     assert( vk_view_ubo_memory != VK_NULL_HANDLE );
 
     void * mapped = nullptr;
@@ -346,6 +362,39 @@ void BasicPipeline::setUBOUniform( const std::string & name, const void * data_p
     vkUnmapMemory( device->vk_device, vk_view_ubo_memory );
     using namespace std ;
     //cout << "Memory copied to UBO uniform '" << name << "' with size " << size << " bytes, offset " << offset << endl ;
+}
+
+// --------------------------------------------------------------------------------
+
+// gives a value for an entry in a UBO uniform of type 'array' (pre-rendering).
+void BasicPipeline::setUBOUniform( const std::string & name, const int index, const void * data_ptr ) 
+{
+    assert( initialized ); 
+
+    const int ubo_index = findUBOUniformIndex( name );
+    Assert( ubo_index != -1, "BasicPipeline::setUBOUniform: Error: UBO uniform with name '" + name + "' not found in the pipeline" ); 
+
+    const uint32_t 
+        offset = unif_data[ubo_index].offset,
+        size   = unif_data[ubo_index].size,
+        num_values = unif_data[ubo_index].num_values ;
+
+    const VType type = unif_data[index].type ;
+    
+    Assert( type != VType::VEC3, "BasicPipeline::setUBOUniform (array version): error: cannot handle VEC3 type" );
+
+    Assert( num_values > 1, "BasicPipeline::setUBOUniform: Error: UBO uniform '" + name + "' is not an array (has a single value)" );
+    Assert( index >= 0 && index < (int)num_values, "BasicPipeline::setUBOUniform: Error: index out of bounds for UBO uniform '" + name + "'" );
+
+    const uint32_t value_size = VTypeSize( type ) ; // size of each value in the array
+    const uint32_t value_offset = offset + index * value_size ; // offset of the value in the array (does it worksin general for any type size ans alignment ?)
+
+    assert( vk_view_ubo_memory != VK_NULL_HANDLE );
+
+    void * mapped = nullptr;
+    vkMapMemory( device->vk_device, vk_view_ubo_memory, value_offset, value_size, 0, &mapped );
+    memcpy( mapped, data_ptr, value_size );
+    vkUnmapMemory( device->vk_device, vk_view_ubo_memory );
 }
 // -----------------------------------------------------------------------------
 

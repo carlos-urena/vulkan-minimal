@@ -440,12 +440,26 @@ void Pipeline3D::resetModelMatrix( VkCommandBuffer & vk_cmd )
 // ------------------------------------------------------------------------------
 // send all colors to the GPU UBO uniform block
 
-void Pipeline3D::setBaseColorsSet( const BaseColorsSet & bcs ) 
+void Pipeline3D::setBaseColorsSet( BaseColorsSet & bcs ) 
 {
     int nc = bcs.colors.size() ;
     Assert( nc <= max_num_base_colors, "Pipeline3D::setBaseColorsSet: number of base colors exceeds maximum allowed." ) ;
+    base_colors_set = &bcs ; // store the pointer to the base colors set (to be able to update it later)
     setUBOUniform( "num_base_colors", & nc );
     setUBOUniform( "base_colors", value_ptr( bcs.colors[0] ) );    
+}
+
+// ------------------------------------------------------------------------------
+// Updates a base color in the base colors set already binded to this pipeline
+
+void Pipeline3D::updateBaseColor( const int index, const glm::vec4 & color ) 
+{
+    Assert( base_colors_set != nullptr, "Pipeline3D::setBaseColor: base colors set is not initialized." ) ;
+    Assert( index >= 0 && index < (int)base_colors_set->colors.size(), "Pipeline3D::setBaseColor: base color index out of range." ) ;
+    base_colors_set->colors[index] = color ;
+
+    Assert( index >= 0 && index < max_num_base_colors, "Pipeline3D::setBaseColor: base color index out of range." ) ;
+    setUBOUniform( "base_colors", index, value_ptr( color ) );
 }
 
 // ------------------------------------------------------------------------------
