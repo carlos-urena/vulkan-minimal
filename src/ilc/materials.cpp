@@ -44,34 +44,43 @@ Material::Material( const vkhc::BrdfParams & p_brdf_params )
 bool Material::drawIMGUIWidgets( const std::string & title ) 
 {
     using namespace ImGui ;
+    using namespace std ;
 
     bool changed = false ;
 
-    if (use_base_color)
+    // draw sliders for the BRDF params 
+    if ( DragFloat("Ka", &brdf_params.ka, 0.01f, 0.0f, 1.0f) ) 
     {
-        ColorEdit3("Base color", value_ptr(base_color));
-        using namespace std ;
-        cout << "Material::drawIMGUIWidgets: base color = " << base_color.r << ", " << base_color.g << ", " << base_color.b << endl ;   
+        cout << "Material::drawIMGUIWidgets: new Ka = " << brdf_params.ka << endl ;
         changed = true ;
     }
-    else
+    if ( DragFloat("Kd", &brdf_params.kd, 0.01f, 0.0f, 1.0f) ) 
     {
-        Text("No base color (using vertex colors or texture)");
+        cout << "Material::drawIMGUIWidgets: new Kd = " << brdf_params.kd << endl ;
+        changed = true ;
+    }
+    if ( DragFloat("Ks", &brdf_params.ks, 0.01f, 0.0f, 1.0f) ) 
+    {
+        cout << "Material::drawIMGUIWidgets: new Ks = " << brdf_params.ks << endl ;
+        changed = true ;
+    }
+    if ( DragFloat("Exp", &brdf_params.exp, 1.0f, 1.0f, 128.0f) ) 
+    {
+        cout << "Material::drawIMGUIWidgets: new Exp = " << brdf_params.exp << endl ;
+        changed = true ;
     }
 
-        // if (use_texture)
-        // {
-        //     Text("Texture path: %s", texture_path.c_str());
-        // }
-        // else
-        // {
-        //     Text("No texture");
-        // }
+    // draw widget for the base color, if it has one 
+    if (use_base_color)
+    {
+        if ( ColorEdit3("Base color", value_ptr(base_color)) )
+        {
+            cout << "Material::drawIMGUIWidgets: base color = " << base_color.r << ", " << base_color.g << ", " << base_color.b << endl ;   
+            changed = true ;
+        }
+    }
+    
 
-        // SliderFloat("ka (ambient)", &brdf_params.ka, 0.0f, 1.0f);
-        // SliderFloat("kd (diffuse)", &brdf_params.kd, 0.0f, 1.0f);
-        // SliderFloat("ks (specular)", &brdf_params.ks, 0.0f, 1.0f);
-        // SliderFloat("exp (shininess)", &brdf_params.exp, 1.0f, 128.0f);
     
     return changed ;
 }
@@ -107,27 +116,55 @@ uint32_t MaterialsSet::add( const Material & material )
 
 void MaterialsSet::updateMaterial( const uint32_t material_index, const Material & newm ) 
 {
+    using namespace std ;
+
     Assert( newm.materials_set == this, "MaterialsSet::updateMaterial: the new material does not belong to this set !!" ) ; 
     Assert( material_index < materials.size(), "MaterialsSet::updateMaterial: the material index is out of bounds !!" ) ;
     Assert( pipeline3D != nullptr, "MaterialsSet::updateMaterial: the materials set is not bound to a pipeline !!" ) ;
     
     Material & currm = materials[ material_index ] ; // get the current material 
 
+    Assert( brdfs_params_set != nullptr, 
+            "MaterialsSet::updateMaterial: 'brdf_params_set' instance is null !!" ) ;
+
+    Assert( currm.brdf_params_index == newm.brdf_params_index, 
+            "MaterialsSet::updateMaterial: the BRDF params index has changed !" ) ;
+
+    Assert( 0 <= currm.brdf_params_index && currm.brdf_params_index < (int) brdfs_params_set->brdfs_params.size(), 
+            "MaterialsSet::updateMaterial: the new material BRDF params index is out of range" ) ;
+
+    // update the BRDF params of the material in the set, and in the pipeline
+    brdfs_params_set->brdfs_params[ currm.brdf_params_index ] = newm.brdf_params ; // update the BRDF params in the set
+    currm.brdf_params = newm.brdf_params ; // update the BRDF params in the materials vector
+    
+
+    cout << "MaterialsSet::updateMaterial: updating BRDF params at index " << currm.brdf_params_index << " to new value: "
+         << "ka=" << newm.brdf_params.ka << ", kd=" << newm.brdf_params.kd << ", ks=" << newm.brdf_params.ks << ", exp=" << newm.brdf_params.exp << endl ;
+
+    pipeline3D->updateBrdfParams( currm.brdf_params_index, newm.brdf_params ) ;
+
     // if the material uses a base color, update it. 
+
     if ( newm.use_base_color )
     {
-        Assert( base_colors_set != nullptr, "MaterialsSet::updateMaterial: 'base_colors_set' instance is null !!" ) ;
-        Assert( currm.color_base_index == newm.color_base_index, "MaterialsSet::updateMaterial: the base color index of the new material does not match the current material !!" ) ;
-        Assert( newm.color_base_index >= 0, "MaterialsSet::updateMaterial: the new material has no base color index !!" ) ;
+        Assert( base_colors_set != nullptr, 
+                "MaterialsSet::updateMaterial: 'base_colors_set' instance is null !!" ) ;
+
+        Assert( currm.color_base_index == newm.color_base_index, 
+                "MaterialsSet::updateMaterial: the base color index of the new material does not match the current material !!" ) ;
+
+        Assert( 0 <= newm.color_base_index && newm.color_base_index < (int) base_colors_set->colors.size(), 
+                "MaterialsSet::updateMaterial: the new material base color index is out of range !!" ) ;
         
         glm::vec4 new_base_color = glm::vec4( newm.base_color, 1.0f ) ;
         base_colors_set->colors[currm.color_base_index] = new_base_color; 
-        materials[ material_index ].base_color = newm.base_color ; 
-        pipeline3D->updateBaseColor( currm.color_base_index, new_base_color ) ;
+        currm.base_color = newm.base_color ; // update the base color in the materials vector
+        
 
-        using namespace std ;
-        cout << "MaterialsSet::updateMaterial: updated base color at index " << currm.color_base_index << " to new value: " 
+        cout << "MaterialsSet::updateMaterial: updating base color at index " << currm.color_base_index << " to new value: " 
              << new_base_color.r << ", " << new_base_color.g << ", " << new_base_color.b << ", " << new_base_color.a << endl ;
+
+        pipeline3D->updateBaseColor( currm.color_base_index, new_base_color ) ;
     }   
 }
 

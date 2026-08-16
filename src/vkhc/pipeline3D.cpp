@@ -48,7 +48,7 @@ static const char* common_decls = R"glsl(
         vec4 base_colors[max_num_base_colors]; // array of base colors, indexed by 'base_color_index' push constant
         int  num_base_colors ; // current number of entries used in the 'base_colors' array (used?)
         
-        vec4 brdf_params[max_num_brdfs_params]; // array of brdf parameters, indexed by 'brdf_params_index' push constant
+        vec4 brdfs_params[max_num_brdfs_params]; // array of brdf parameters, indexed by 'brdf_params_index' push constant
         int  num_brdfs_params ; // current number of entries used in the 'brdf_params' and 'materials_colors' arrays (used?)
 
         vec4 lights_dir[max_num_lights] ;
@@ -200,7 +200,7 @@ static const char* frag_shader_src = R"glsl(
         float d1  = max( dot( n, l1 ), 0.0 ) ;
         float h1n = max( dot( n, h1 ), 0.0 ) ;
 
-        vec4 brdf_params = ubo.brdf_params[ int(pc.brdf_params_index) ] ;
+        vec4 brdf_params = ubo.brdfs_params[ int(pc.brdf_params_index) ] ;
         float ka = brdf_params[0] ; // ambient coefficient
         float kd = brdf_params[1] ; // diffuse coefficient
         float ks = brdf_params[2] ; // specular coefficient
@@ -442,10 +442,11 @@ void Pipeline3D::resetModelMatrix( VkCommandBuffer & vk_cmd )
 
 void Pipeline3D::setBaseColorsSet( BaseColorsSet & bcs ) 
 {
-    int nc = bcs.colors.size() ;
-    Assert( nc <= max_num_base_colors, "Pipeline3D::setBaseColorsSet: number of base colors exceeds maximum allowed." ) ;
-    base_colors_set = &bcs ; // store the pointer to the base colors set (to be able to update it later)
-    setUBOUniform( "num_base_colors", & nc );
+    num_base_colors = bcs.colors.size() ;
+    Assert( num_base_colors <= max_num_base_colors, "Pipeline3D::setBaseColorsSet: number of base colors exceeds maximum allowed." ) ;
+    //base_colors_set = &bcs ; // store the pointer to the base colors set (to be able to update it later)
+    
+    setUBOUniform( "num_base_colors", & num_base_colors ); 
     setUBOUniform( "base_colors", value_ptr( bcs.colors[0] ) );    
 }
 
@@ -454,23 +455,42 @@ void Pipeline3D::setBaseColorsSet( BaseColorsSet & bcs )
 
 void Pipeline3D::updateBaseColor( const int index, const glm::vec4 & color ) 
 {
-    Assert( base_colors_set != nullptr, "Pipeline3D::setBaseColor: base colors set is not initialized." ) ;
-    Assert( index >= 0 && index < (int)base_colors_set->colors.size(), "Pipeline3D::setBaseColor: base color index out of range." ) ;
-    base_colors_set->colors[index] = color ;
-
-    Assert( index >= 0 && index < max_num_base_colors, "Pipeline3D::setBaseColor: base color index out of range." ) ;
+    //Assert( base_colors_set != nullptr, "Pipeline3D::setBaseColor: base colors set is not initialized." ) ;
+    //Assert( 0<= index && index < (int)base_colors_set->colors.size(), "Pipeline3D::setBaseColor: base color index out of range." ) ;
+    //base_colors_set->colors[index] = color ;
+    Assert( 0 <= index && index < max_num_base_colors, "Pipeline3D::updateBaseColor: base color index out of range." ) ;
     setUBOUniform( "base_colors", index, value_ptr( color ) );
 }
 
 // ------------------------------------------------------------------------------
 // send all BRDF parameters to the UBO uniform block
 
-void Pipeline3D::setBrdfParamsSet( const BrdfParamsSet & bps ) 
+void Pipeline3D::setBrdfParamsSet( BrdfParamsSet & bps ) 
 {
-    uint32_t nb = bps.brdfs_params.size() ;
-    Assert( nb <= BrdfParamsSet::max_num_brdfs_params, "Pipeline3D::setBrdfParamsSet: number of BRDF params exceeds maximum allowed." ) ;
-    setUBOUniform( "num_brdfs_params", & nb );
+    num_brdfs_params = bps.brdfs_params.size() ;
+    Assert( num_brdfs_params <= BrdfParamsSet::max_num_brdfs_params, "Pipeline3D::setBrdfParamsSet: number of BRDF params exceeds maximum allowed." ) ;
+
+    //brdf_params_set = &bps ; // store the pointer to the BRDF params set (to be able to update it later)
+
+    setUBOUniform( "num_brdfs_params", & num_brdfs_params );
     setUBOUniform( "brdfs_params", value_ptr( bps.brdfs_params_vec4[0]) );
+}
+// ------------------------------------------------------------------------------
+
+void Pipeline3D::updateBrdfParams( const int index, const BrdfParams & brdf_params ) 
+{
+    //Assert( brdf_params_set != nullptr, "Pipeline3D::updateBrdfParams: BRDF params set is not initialized." ) ;
+    //uint32_t nb = brdf_params_set->brdfs_params.size() ;
+    //Assert( 0 <= index  && index < nb, "Pipeline3D::updateBrdfParams: BRDF params index out of range." ) ;
+
+    Assert( 0 <= index && index < num_brdfs_params, "Pipeline3D::updateBrdfParams: BRDF params index out of range." ) ;
+    glm::vec4 params_v4 = glm::vec4( brdf_params.ka, brdf_params.kd, brdf_params.ks, brdf_params.exp ) ;
+    setUBOUniform( "brdfs_params", index, value_ptr( params_v4 ) ) ;
+
+    using namespace std ;
+    // cout << "---> Pipeline3D::updateBrdfParams: updated BRDF params at index " << index 
+    // << ": ka=" << brdf_params.ka << ", kd=" << brdf_params.kd << ", ks=" << brdf_params.ks << ", exp=" << brdf_params.exp 
+    // << endl ;
 }
 
 // ------------------------------------------------------------------------------

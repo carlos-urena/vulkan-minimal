@@ -77,7 +77,12 @@ class Pipeline3D : public BasicPipeline
     glm::mat4 current_model_matrix_normals = glm::mat4(1.0f) ;
 
     // current base colors set (initially nullptr, set in  'setBaseColorsSet' )
-    BaseColorsSet * base_colors_set = nullptr ;
+    //BaseColorsSet * base_colors_set = nullptr ;
+    uint32_t num_base_colors = 0 ; // number of base colors in the current base colors set (set in setBaseColorsSet)
+
+    // current BRDF params set (initially nullptr, set in  'setBrdfParamsSet' )
+    //BrdfParamsSet * brdf_params_set = nullptr ;
+    uint32_t num_brdfs_params = 0 ; // number of BRDF params in the current BRDF params set (set in setBrdfParamsSet)
 
     // current texture index 
     int current_texture_index = -1 ; // -1 means no texture is active
@@ -157,7 +162,11 @@ class Pipeline3D : public BasicPipeline
     void updateBaseColor( const int index, const glm::vec4 & color ) ;
 
     // send a set of BRDF parameters to the corresponding UBO uniform in the shaders
-    void setBrdfParamsSet( const BrdfParamsSet & bps ) ;
+    void setBrdfParamsSet( BrdfParamsSet & bps ) ;
+
+    // Updates a BRDF params in the BRDF params set already binded to this pipeline
+    void updateBrdfParams( const int index, const BrdfParams & brdf_params )  ;
+
 
     // sets the current illumination evaluation mode (true or false) in the shaders
     void setEvalIllumination( VkCommandBuffer & vk_cmd, bool new_eval_illumination );

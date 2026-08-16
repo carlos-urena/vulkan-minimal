@@ -319,6 +319,8 @@ void BasicPipeline::addUBOUniform( const std::string & name, const VType type, c
     // ubou_sizes.push_back( padded_size );
     // ubou_alignments.push_back( base_alignment );
     std::cout << "Added UBO uniform '" << name << "', " 
+              << "at ubo index " << unif_data.size()-1 << ", "
+              << "type " << VTypeToString(type) << ", "
               << "with (padded) size " << padded_size << " bytes, " 
               << "base alignment " << base_alignment << ", "
               << "offset " << aligned_offset 
@@ -369,22 +371,23 @@ void BasicPipeline::setUBOUniform( const std::string & name, const void * data_p
 // gives a value for an entry in a UBO uniform of type 'array' (pre-rendering).
 void BasicPipeline::setUBOUniform( const std::string & name, const int index, const void * data_ptr ) 
 {
+    using namespace std ;
     assert( initialized ); 
 
     const int ubo_index = findUBOUniformIndex( name );
-    Assert( ubo_index != -1, "BasicPipeline::setUBOUniform: Error: UBO uniform with name '" + name + "' not found in the pipeline" ); 
+    Assert( ubo_index != -1, "BasicPipeline::setUBOUniform (array element version): Error: UBO uniform with name '" + name + "' not found in the pipeline" ); 
 
     const uint32_t 
         offset = unif_data[ubo_index].offset,
         size   = unif_data[ubo_index].size,
         num_values = unif_data[ubo_index].num_values ;
 
-    const VType type = unif_data[index].type ;
+    const VType type = unif_data[ubo_index].type ;
     
-    Assert( type != VType::VEC3, "BasicPipeline::setUBOUniform (array version): error: cannot handle VEC3 type" );
+    Assert( type != VType::VEC3, "BasicPipeline::setUBOUniform (array element version): error: cannot handle VEC3 type" );
 
-    Assert( num_values > 1, "BasicPipeline::setUBOUniform: Error: UBO uniform '" + name + "' is not an array (has a single value)" );
-    Assert( index >= 0 && index < (int)num_values, "BasicPipeline::setUBOUniform: Error: index out of bounds for UBO uniform '" + name + "'" );
+    Assert( num_values > 1, "BasicPipeline::setUBOUniform (array element version): Error: UBO uniform '" + name + "' is not an array (has a single value)" );
+    Assert( index >= 0 && index < (int)num_values, "BasicPipeline::setUBOUniform (array element version): Error: index out of bounds for UBO uniform '" + name + "'" );
 
     const uint32_t value_size = VTypeSize( type ) ; // size of each value in the array
     const uint32_t value_offset = offset + index * value_size ; // offset of the value in the array (does it worksin general for any type size ans alignment ?)
@@ -392,7 +395,12 @@ void BasicPipeline::setUBOUniform( const std::string & name, const int index, co
     assert( vk_view_ubo_memory != VK_NULL_HANDLE );
 
     void * mapped = nullptr;
-    vkMapMemory( device->vk_device, vk_view_ubo_memory, value_offset, value_size, 0, &mapped );
+    const VkResult res_map =vkMapMemory( device->vk_device, vk_view_ubo_memory, value_offset, value_size, 0, &mapped );
+    if ( res_map != VK_SUCCESS )
+        ErrorExit("vkMapMemory failed in BasicPipeline::setUBOUniform (array version)");
+    cout << "  -----> BasicPipeline::setUBOUniform (array element version): updating UBO uniform '" << name  << "' " 
+         << "ubo index " << ubo_index << ", "
+         << "at array index " << index << ", values type == " << VTypeToString(type) << ", values size == " << value_size << endl ;
     memcpy( mapped, data_ptr, value_size );
     vkUnmapMemory( device->vk_device, vk_view_ubo_memory );
 }
