@@ -137,8 +137,8 @@ App3D::App3D( )
     materials_set->textures_set->add( "../assets/wood-3.png" );
     materials_set->textures_set->add( new vkhc::ProceduralTexture1( context ) ) ;
 
-    Material default_material( vec3( 0.7, 1.0, 1.0 ),  // cyan-almost white base color
-                                     BrdfParams{ 0.05f, 0.7f, 0.8f, 32.0f } ) ; 
+    Material default_material( vec3( 1.0, 1.0, 1.0 ),  // white base color
+                                     BrdfParams{ 0.05f, 0.5f, 0.8f, 32.0f } ) ; 
                             
     default_material_index = materials_set->add( default_material ) ; // add the default material to the materials
 

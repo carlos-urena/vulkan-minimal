@@ -152,8 +152,13 @@ static const char* frag_shader_src = R"glsl(
 
     layout (location=0) out vec4 out_color;
 
-    // --------------- 
-    // Main function.
+     const mat4 flipy_mat = mat4( 1.0,  0.0,  0.0,  0.0,
+                                 0.0, -1.0,  0.0,  0.0,
+                                 0.0,  0.0,  1.0,  0.0,
+                                 0.0,  0.0,  0.0,  1.0 ) ;
+
+    // --------------------------------------------------------------------
+    // returns the base color: either the texture color, or the base color, or the color interpolated from the vertexes colors
 
     vec3 BaseColor()
     {
@@ -164,33 +169,32 @@ static const char* frag_shader_src = R"glsl(
         else // otherwise, use the interpolated vertex color
             return in_color ;
     }
-    // ----------------
+
+    // -----------------------------------------------------------------------------
+    // returns the view vector 
 
     vec3 ViewVectorWCC()
     {
-        return normalize( ( ubo.view_mat_inv * vec4(0.0,0.0,0.0,1.0) ).xyz - in_position_wcc ) ;
+        return normalize( ( flipy_mat * ubo.view_mat_inv * vec4(0.0,0.0,0.0,1.0) ).xyz - in_position_wcc ) ;
     }
-    // ---------------- 79
-  
+
+    // ---------------- 
+    // Evaluates the illumination at the current fragment, using the Blinn-Phong reflection model, with multiple lights and materials.
 
     vec3 EvalIllumination( const vec3 base_color )
     {
         vec3  v = ViewVectorWCC() ;
         vec3  n = normalize( in_normal_wcc ) ;
-
         
-        
-        vec3  l0  = normalize( vec3( 0.0, 1.0, 0.0 ) ) ;
+        vec3  l0  = normalize( vec3( 0.5, 1.0, 0.5 ) ) ;
         vec3  h0  = normalize( l0 + v ) ;
         vec3  cl0 = vec3( 1.0, 1.0, 1.0 ) ;
         float d0  = max( dot( n, l0 ), 0.0 ) ;
         float h0n = max( dot( n, h0 ), 0.0 ) ;
 
-        return vec3( h0n, h0n, h0n ) ; // for debugging, return the half vector dot normal value as a color
-
-        vec3  l1  = normalize( vec3( 0.0, 1.0, 0.0 ) ) ;
+        vec3  l1  = normalize( vec3( -0.5, -1.0, 0.2 ) ) ;
         vec3  h1  = normalize( l1 + v ) ;
-        vec3  cl1 = vec3( 0.0, 0.0, 0.0 ) ;  /// ANULADO
+        vec3  cl1 = vec3( 0.6, 0.3, 0.2 ) ;  
         float d1  = max( dot( n, l1 ), 0.0 ) ;
         float h1n = max( dot( n, h1 ), 0.0 ) ;
 
