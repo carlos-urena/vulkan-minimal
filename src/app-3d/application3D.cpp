@@ -151,7 +151,43 @@ SpheresObject::SpheresObject( ilc::MaterialsSet * materials_set )
     add( new TransformedObject( translate( vec3(-1.0f, 0.0f, 0.0f) )*scale( vec3(0.5f) ), mo1 ) ) ;
     add( new TransformedObject( translate( vec3( 0.0f, 0.0f, 0.0f) )*scale( vec3(0.5f) ), mo2 ) ) ;
     add( new TransformedObject( translate( vec3( 1.0f, 0.0f, 0.0f) )*scale( vec3(0.5f) ), mo3 ) ) ;
+
+   
 }
+
+// ------------------------------------------------------------------------------
+
+class Earth : public CompositeObject 
+{
+    private:
+        ilc::MallaSupPar * sphere_mesh = nullptr ; // pointer to the sphere mesh (to be shared by all spheres)
+
+    public:
+        Earth( ilc::MaterialsSet * materials_set );
+        virtual ~Earth() ; 
+};
+
+Earth::Earth( ilc::MaterialsSet * materials_set )
+{
+    using namespace ilc ;
+    using namespace glm ;
+    using namespace vkhc ;
+
+    setName("Earth");
+
+    sphere_mesh = new MallaSupPar( new FPEsfera(), 64, 64, true ) ; Assert( sphere_mesh != nullptr, "App3D::App3D: cannot create sphere mesh" ) ;
+
+
+    Material texture_mat { "../assets/earth-v2.jpg", BrdfParams{ 0.3, 0.8, 1.0, 64.0 } } ;
+    MaterialObject * mo4 = new MaterialObject( &texture_mat, materials_set, sphere_mesh ) ;
+    add( new TransformedObject( scale( vec3(1.5f)), mo4 ) );
+}
+
+Earth::~Earth()
+{
+    delete sphere_mesh ;
+}
+
 // ------------------------------------------------------------------------------
 
 SpheresObject::~SpheresObject() 
@@ -203,6 +239,7 @@ App3D::App3D( )
     drawable_objects.push_back( new MallaSupPar( new FPEsfera(), 64, 64, true ) ) ; 
     drawable_objects.push_back( new MallaSupPar( new FPColumna(), 128, 128, true ) ) ;
     drawable_objects.push_back( new SpheresObject( materials_set ) ) ;
+    drawable_objects.push_back( new Earth( materials_set ) );
 
     current_object_index = 2 ; // start with the sphere in the vector
     Assert( current_object_index < drawable_objects.size(), "App3D constructor: current object index is out of range !!" ) ;
