@@ -77,11 +77,9 @@ class Pipeline3D : public BasicPipeline
     glm::mat4 current_model_matrix_normals = glm::mat4(1.0f) ;
 
     // current base colors set (initially nullptr, set in  'setBaseColorsSet' )
-    //BaseColorsSet * base_colors_set = nullptr ;
     uint32_t num_base_colors = 0 ; // number of base colors in the current base colors set (set in setBaseColorsSet)
 
     // current BRDF params set (initially nullptr, set in  'setBrdfParamsSet' )
-    //BrdfParamsSet * brdf_params_set = nullptr ;
     uint32_t num_brdfs_params = 0 ; // number of BRDF params in the current BRDF params set (set in setBrdfParamsSet)
 
     // current texture index 

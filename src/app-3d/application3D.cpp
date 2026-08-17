@@ -290,8 +290,6 @@ void App3D::drawIMGUIWidgets(  )
     Assert( drawable_objects[current_object_index] != nullptr, "App3D::drawIMGUIWidgets: current object is null !!" ) ;
     //cout << "App3D::drawIMGUIWidgets: drawing IMGUI widgets -- close_requested:" << close_requested << endl ;
 
-    
-    
     if ( Button("Close window" ) ) close_requested = true ;
     if (CollapsingHeader("View and render config", ImGuiTreeNodeFlags_DefaultOpen))
     {
@@ -341,8 +339,8 @@ void App3D::initFrame( const vkhc::seconds_f  time_elapsed )
     updateViewProjMats( time_elapsed ) ; // updates 'view_mat' and 'proj_mat' 
     pipeline->setViewMatrix( view_mat, view_mat_inv ) ;
     pipeline->setProjectionMatrix( proj_mat ) ;
-    pipeline->setBaseColorsSet( *(materials_set->base_colors_set) ) ; //unnecessary if it didn't change 
-    pipeline->setBrdfParamsSet( *(materials_set->brdfs_params_set) ) ; // unnecessary if it didn't change
+    //pipeline->setBaseColorsSet( *(materials_set->base_colors_set) ) ; //unnecessary if it didn't change 
+    //pipeline->setBrdfParamsSet( *(materials_set->brdfs_params_set) ) ; // unnecessary if it didn't change
 }
 
 // ----------------------------------------------------------------------------------

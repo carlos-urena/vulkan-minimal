@@ -49,22 +49,22 @@ bool Material::drawIMGUIWidgets( const std::string & title )
     bool changed = false ;
 
     // draw sliders for the BRDF params 
-    if ( DragFloat("Ka", &brdf_params.ka, 0.01f, 0.0f, 1.0f) ) 
+    if ( SliderFloat("Ka", &brdf_params.ka, 0.0f, 1.0f ) ) 
     {
         cout << "Material::drawIMGUIWidgets: new Ka = " << brdf_params.ka << endl ;
         changed = true ;
     }
-    if ( DragFloat("Kd", &brdf_params.kd, 0.01f, 0.0f, 1.0f) ) 
+    if ( SliderFloat("Kd", &brdf_params.kd, 0.00f, 1.0f ) ) 
     {
         cout << "Material::drawIMGUIWidgets: new Kd = " << brdf_params.kd << endl ;
         changed = true ;
     }
-    if ( DragFloat("Ks", &brdf_params.ks, 0.01f, 0.0f, 1.0f) ) 
+    if ( SliderFloat("Ks", &brdf_params.ks, 0.0f, 1.0f ) ) 
     {
         cout << "Material::drawIMGUIWidgets: new Ks = " << brdf_params.ks << endl ;
         changed = true ;
     }
-    if ( DragFloat("Exp", &brdf_params.exp, 1.0f, 1.0f, 128.0f) ) 
+    if ( SliderFloat("Exp", &brdf_params.exp, 1.0f, 128.0f, "%.1f") ) 
     {
         cout << "Material::drawIMGUIWidgets: new Exp = " << brdf_params.exp << endl ;
         changed = true ;
