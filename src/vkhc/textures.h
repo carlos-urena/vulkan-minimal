@@ -16,6 +16,8 @@ class Texture
 {
     public:
 
+    std::string name ;
+
     uint32_t        width = 0 ;
     uint32_t        height = 0 ;
     VkDeviceMemory  vk_memory ;    // memory in the GPU used to store image pixels 
@@ -33,6 +35,7 @@ class Texture
     void initialize() ;
     Texture( VulkanContext * p_context ) ;
     ~Texture() ;
+    std::string getName() const { return name ; }
 
     void copyBufferToImage( VkBuffer buffer, VkImage image, uint32_t width, uint32_t height ) ;
 } ;
@@ -42,6 +45,11 @@ class Texture
 
 class TexturesSet 
 {
+    private: 
+    static constexpr size_t names_buffer_capacity = 2*1024 ;
+    char names_buffer[names_buffer_capacity] ;         
+    unsigned names_len = 0 ; 
+
     public:
 
     // max number of textures allowed.
@@ -59,6 +67,7 @@ class TexturesSet
 
     void bindTo( BasicPipeline & pipeline ) ; // binds the textures set to a pipeline, by binding a descriptor set with an array of texture samplers, one for each texture in the set. The 'texture_index' push constant is used to select the active texture in the fragment shader, by indexing into this array of samplers.void TexturesSet::bindToPipeline( BasicPipeline & pipeline ) 
 
+    char * getNamesBuffer() ; // returns a pointer to the 'pnb' buffer, which holds a 0 ended strings with the path-names of the textures already in the set
 } ;
 
 // --------------------------------------------------------------------------------

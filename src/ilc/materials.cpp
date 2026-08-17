@@ -124,6 +124,8 @@ void MaterialsSet::updateMaterial( const uint32_t material_index, const Material
     
     Material & currm = materials[ material_index ] ; // get the current material 
 
+    // Copy the new material BRDF params to its index in the BRDFs params array.
+
     Assert( brdfs_params_set != nullptr, 
             "MaterialsSet::updateMaterial: 'brdf_params_set' instance is null !!" ) ;
 
@@ -132,6 +134,11 @@ void MaterialsSet::updateMaterial( const uint32_t material_index, const Material
 
     Assert( 0 <= currm.brdf_params_index && currm.brdf_params_index < (int) brdfs_params_set->brdfs_params.size(), 
             "MaterialsSet::updateMaterial: the new material BRDF params index is out of range" ) ;
+
+    Assert( currm.use_base_color == newm.use_base_color, 
+            "MaterialsSet::updateMaterial: the new material 'use_base_color' flag has changed !" ) ;
+    Assert( currm.use_texture == newm.use_texture, 
+            "MaterialsSet::updateMaterial: the new material 'use_texture' flag has changed !" ) ;
 
     // update the BRDF params of the material in the set, and in the pipeline
     brdfs_params_set->brdfs_params[ currm.brdf_params_index ] = newm.brdf_params ; // update the BRDF params in the set
@@ -144,19 +151,20 @@ void MaterialsSet::updateMaterial( const uint32_t material_index, const Material
 
     pipeline3D->updateBrdfParams( currm.brdf_params_index, newm.brdf_params ) ;
 
-    // if the material uses a base color, update it. 
+    // Handle a material which uses a base color: copy the new base color to the array of base colors
 
     if ( newm.use_base_color )
     {
         Assert( base_colors_set != nullptr, 
                 "MaterialsSet::updateMaterial: 'base_colors_set' instance is null !!" ) ;
 
+        Assert( currm.use_base_color , "MaterialsSet::updateMaterial: the current material does not use a base color, but the new material does !!" ) ;
         Assert( currm.color_base_index == newm.color_base_index, 
                 "MaterialsSet::updateMaterial: the base color index of the new material does not match the current material !!" ) ;
 
         Assert( 0 <= newm.color_base_index && newm.color_base_index < (int) base_colors_set->colors.size(), 
                 "MaterialsSet::updateMaterial: the new material base color index is out of range !!" ) ;
-        
+
         glm::vec4 new_base_color = glm::vec4( newm.base_color, 1.0f ) ;
         base_colors_set->colors[currm.color_base_index] = new_base_color; 
         currm.base_color = newm.base_color ; // update the base color in the materials vector
@@ -166,7 +174,26 @@ void MaterialsSet::updateMaterial( const uint32_t material_index, const Material
              << new_base_color.r << ", " << new_base_color.g << ", " << new_base_color.b << ", " << new_base_color.a << endl ;
 
         pipeline3D->updateBaseColor( currm.color_base_index, new_base_color ) ;
-    }   
+    }
+
+    // Handle a material which uses a texture: copy the new textura index to the array of textures
+
+    if ( newm.use_texture )
+    {
+        Assert( textures_set != nullptr, 
+                "MaterialsSet::updateMaterial: 'textures_set' instance is null !!" ) ;
+
+        Assert( currm.use_texture , "MaterialsSet::updateMaterial: the current material does not use a texture, but the new material does !!" ) ;
+        Assert( 0 <= newm.texture_index && newm.texture_index < (int) textures_set->textures.size(), 
+                "MaterialsSet::updateMaterial: the new material texture index is out of range !!" ) ;
+        
+        
+        currm.texture_path = newm.texture_path ; // update the texture path in the materials vector
+        currm.texture_index = newm.texture_index ; // update the texture index in the materials vector
+
+        cout << "MaterialsSet::updateMaterial: updating texture at index " << currm.texture_index << " to new value: " 
+             << newm.texture_path << endl ;
+    }
 }
 
 // ------------------------------------------------------------------------------
@@ -209,6 +236,8 @@ void MaterialsSet::bindTo( vkhc::Pipeline3D * p_pipeline3D )
     pipeline3D->setBaseColorsSet( *base_colors_set ) ;
     pipeline3D->setBrdfParamsSet( *brdfs_params_set ) ;
 }
+
+// ------------------------------------------------------------------------------
 
 void MaterialsSet::activate( VkCommandBuffer & vk_cmd, 
                              vkhc::Pipeline3D & pipeline, 

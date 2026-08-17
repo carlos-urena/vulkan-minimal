@@ -33,7 +33,7 @@
 
 
 // -------------------------------------------------------------------------------  
-// class 'Triangle' (a 'vertex-array' like object )
+// class 'Triangle' (a 'vertex-array' like object ) - the unavoidable "hello triangle" example.
 
 class Triangle : public DrawableObject
 {
@@ -41,23 +41,27 @@ class Triangle : public DrawableObject
     
     int texture_index = -1 ;
     vkhc::VertexArray * vertex_array = nullptr ;
+    vkhc::TexturesSet * textures_set = nullptr ; // pointer to the textures set (to be shared with other objects)
 
     public: 
     
-    Triangle( vkhc::VulkanContext & vulkan_context) ;
+    Triangle( vkhc::VulkanContext & vulkan_context, vkhc::TexturesSet * p_textures_set ) ;
     virtual void drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk ) override ;
     void drawIMGUIWidgets() override ;
     virtual ~Triangle()  {} ;   
 } ;
 // -------------------------------------------------------------------------------  
 
-Triangle::Triangle( vkhc::VulkanContext & vulkan_context)
+Triangle::Triangle( vkhc::VulkanContext & vulkan_context, vkhc::TexturesSet * p_textures_set )
 {
     using namespace glm ;
     using namespace std ;
 
     cout << "Creating test RGB triangle object ..." << endl ;
     setName( "Test RGB triangle" ) ;
+
+    textures_set = p_textures_set ;
+    Assert( textures_set != nullptr, "Triangle::Triangle: 'textures_set' pointer is null !!" ) ;
 
     vertex_array = new vkhc::VertexArray( vulkan_context, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, 4 ) ; // VK_PRIMITIVE_TOPOLOGY_PATCH_LIST ) 
     Assert( vertex_array != nullptr, "cannot create vertex array for triangle" ) ;
@@ -103,12 +107,57 @@ void Triangle::drawIMGUIWidgets()
     {       
         
         int texture_combo_index = texture_index + 1 ; // map -1..3 to 0..4 for ImGui combo
-        if ( Combo("Texture", &texture_combo_index, "No texture (vert. colors)\0Wood 1\0Wood 2\0Wood 3\0Procedural texture\0") )
+        
+        if ( Combo("Texture", &texture_combo_index, textures_set->getNamesBuffer() ) )
         {
             texture_index = texture_combo_index - 1 ;
             std::cout << "Triangle::drawIMGUIWidgets: new texture_index == " << texture_index << std::endl ;
         }
     }
+}
+
+// ------------------------------------------------------------------------------
+// A class for an object with various spheres with different materials (just for texting)
+
+class SpheresObject : public CompositeObject
+{
+    private: 
+    ilc::MallaSupPar * sphere_mesh = nullptr ; // pointer to the sphere mesh (to be shared by all spheres)
+
+    public: 
+    SpheresObject( ilc::MaterialsSet * materials_set ) ;
+    virtual ~SpheresObject() ;   
+} ;
+// ------------------------------------------------------------------------------
+
+SpheresObject::SpheresObject( ilc::MaterialsSet * materials_set ) 
+{
+    setName( "Various spheres object" ) ;
+    using namespace ilc ;
+    using namespace glm ;
+    using namespace vkhc ;
+
+
+    sphere_mesh = new MallaSupPar( new FPEsfera(), 64, 64, true ) ; Assert( sphere_mesh != nullptr, "App3D::App3D: cannot create sphere mesh" ) ;
+
+    Material ma1( vec3( 1.0, 1.0, 0.0 ), BrdfParams{ 1.0f, 0.0f, 0.0f, 32.0f } ) ;
+    Material ma2( vec3( 0.0, 1.0, 1.0 ), BrdfParams{ 0.0f, 1.0f, 0.0f, 32.0f } ) ;
+    Material ma3( vec3( 1.0, 0.0, 1.0 ), BrdfParams{ 0.3f, 0.2f, 0.9f, 64.0f } ) ;
+
+    MaterialObject * mo1 = new MaterialObject( &ma1, materials_set, sphere_mesh ) ; Assert( mo1 != nullptr, "App3D::App3D: cannot create material object" ) ;
+    MaterialObject * mo2 = new MaterialObject( &ma2,  materials_set, sphere_mesh ) ; Assert( mo2 != nullptr, "App3D::App3D: cannot create material object" ) ;
+    MaterialObject * mo3 = new MaterialObject( &ma3,  materials_set, sphere_mesh ) ;
+
+    add( new TransformedObject( translate( vec3(-1.0f, 0.0f, 0.0f) )*scale( vec3(0.5f) ), mo1 ) ) ;
+    add( new TransformedObject( translate( vec3( 0.0f, 0.0f, 0.0f) )*scale( vec3(0.5f) ), mo2 ) ) ;
+    add( new TransformedObject( translate( vec3( 1.0f, 0.0f, 0.0f) )*scale( vec3(0.5f) ), mo3 ) ) ;
+}
+// ------------------------------------------------------------------------------
+
+SpheresObject::~SpheresObject() 
+{
+    delete sphere_mesh ;
+    sphere_mesh = nullptr ;
 }
 
 // ------------------------------------------------------------------------------
@@ -135,6 +184,7 @@ App3D::App3D( )
     materials_set->textures_set->add( "../assets/wood-1.png" );
     materials_set->textures_set->add( "../assets/wood-2.png" );
     materials_set->textures_set->add( "../assets/wood-3.png" );
+    materials_set->textures_set->add( "../assets/earth.jpg" );
     materials_set->textures_set->add( new vkhc::ProceduralTexture1( context ) ) ;
 
     Material default_material( vec3( 1.0, 1.0, 1.0 ),  // white base color
@@ -147,25 +197,12 @@ App3D::App3D( )
     pipeline     = new Pipeline3D( *context, true );   assert( pipeline != nullptr ) ;
     camera       = new CamaraOrbitalSimple();          assert( camera != nullptr ) ;
 
-    // create the "three spheres object" 
-    MallaSupPar * sphere_mesh = new MallaSupPar( new FPEsfera(), 64, 64, true ) ; Assert( sphere_mesh != nullptr, "App3D::App3D: cannot create sphere mesh" ) ;
-    CompositeObject * three_spheres = new CompositeObject() ; Assert( three_spheres != nullptr, "App3D::App3D: cannot create composite object" ) ;
-
-    MaterialObject * mo1 = new MaterialObject( new Material( vec3( 1.0, 1.0, 0.0 ), BrdfParams{ 1.0f, 0.0f, 0.0f, 32.0f } ), materials_set, sphere_mesh ) ; Assert( mo1 != nullptr, "App3D::App3D: cannot create material object" ) ;
-    MaterialObject * mo2 = new MaterialObject( new Material( vec3( 0.0, 1.0, 1.0 ), BrdfParams{ 0.0f, 1.0f, 0.0f, 32.0f } ), materials_set, sphere_mesh ) ; Assert( mo2 != nullptr, "App3D::App3D: cannot create material object" ) ;
-    MaterialObject * mo3 = new MaterialObject( new Material( vec3( 1.0, 0.0, 1.0 ), BrdfParams{ 0.3f, 0.2f, 0.9f, 64.0f } ), materials_set, sphere_mesh ) ;
-
-    three_spheres->add( new TransformedObject( translate( vec3(-1.0f, 0.0f, 0.0f) )*scale( vec3(0.5f) ), mo1 ) ) ;
-    three_spheres->add( new TransformedObject( translate( vec3( 0.0f, 0.0f, 0.0f) )*scale( vec3(0.5f) ), mo2 ) ) ;
-    three_spheres->add( new TransformedObject( translate( vec3( 1.0f, 0.0f, 0.0f) )*scale( vec3(0.5f) ), mo3 ) ) ;
-    three_spheres->setName( "Three Spheres" ) ;
-
     // populate drawable objects vector 
-    drawable_objects.push_back( new Triangle( *context ) ) ; // index 0
+    drawable_objects.push_back( new Triangle( *context, materials_set->textures_set ) ) ; // index 0
     drawable_objects.push_back( new Cube24(  ) ) ; // index 1
     drawable_objects.push_back( new MallaSupPar( new FPEsfera(), 64, 64, true ) ) ; 
     drawable_objects.push_back( new MallaSupPar( new FPColumna(), 128, 128, true ) ) ;
-    drawable_objects.push_back( three_spheres ) ; // index 4
+    drawable_objects.push_back( new SpheresObject( materials_set ) ) ;
 
     current_object_index = 2 ; // start with the sphere in the vector
     Assert( current_object_index < drawable_objects.size(), "App3D constructor: current object index is out of range !!" ) ;
@@ -340,7 +377,7 @@ void App3D::initFrame( const vkhc::seconds_f  time_elapsed )
     pipeline->setViewMatrix( view_mat, view_mat_inv ) ;
     pipeline->setProjectionMatrix( proj_mat ) ;
 
-    // no need to send all colors and BRDF params each frame
+    // no need to send all colors and BRDF params each frame, just the modified material (if any) is sent 
     //pipeline->setBaseColorsSet( *(materials_set->base_colors_set) ) ; //unnecessary if it didn't change 
     //pipeline->setBrdfParamsSet( *(materials_set->brdfs_params_set) ) ; // unnecessary if it didn't change
 }

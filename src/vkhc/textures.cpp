@@ -68,7 +68,38 @@ uint32_t TexturesSet::add( const std::string & file_path )
     TextureFromFile * texture = new TextureFromFile( context, file_path ) ;
     return add( texture ) ;
 }
+// returns a pointer to the 'pnb' buffer, which holds a 0 ended strings with the path-names of the textures already in the set
 
+char * TexturesSet::getNamesBuffer() 
+{
+    if ( names_len == 0 ) 
+    {
+
+        strcpy( names_buffer, "No texture" ) ;
+        names_len = static_cast<unsigned>( strlen( names_buffer ) ) + 1 ; // +1 for null terminator
+
+        for ( Texture * texture : textures ) 
+        {
+                std::string name_str = texture->getName() ;
+                const char * name = name_str.c_str() ;
+
+                size_t name_len = strlen( name ) ;
+                if ( names_len + name_len + 1 >= names_buffer_capacity ) {
+                    throw std::runtime_error( "Exceeded names buffer capacity" );
+                }
+                memcpy( names_buffer + names_len, name, name_len );
+                names_len += static_cast<unsigned>( name_len );
+                names_buffer[names_len] = '\0' ; // null terminator
+                names_len++ ;
+            
+        }
+        if ( names_len == 0 ) {
+            names_buffer[0] = '\0' ; // empty string
+            names_len = 1 ;
+        }
+    }
+    return names_buffer ;
+}
 // --------------------------------------------------------------------------------
 
 void TexturesSet::bindTo( BasicPipeline & pipeline ) 
@@ -334,6 +365,8 @@ ProceduralTexture1::ProceduralTexture1( VulkanContext * p_context )
 {
     width = 513 ;   // non power of two, just for testing, see: https://stackoverflow.com/questions/36028497/loading-non-power-of-two-textures-in-vulkan
     height = 517 ;
+
+    name = "Procedural texture 1" ;
     
     // create a sample source data:
 
@@ -377,6 +410,8 @@ TextureFromFile::TextureFromFile( VulkanContext * p_context, const std::string &
     using namespace std ;
     cout << "Loading texture image from file: " << p_file_path << endl ;
     file_path = p_file_path ;
+
+    name = file_path ; // for now we just use the file path as the name of the texture
 
     int loaded_width = 0 ;
     int loaded_height = 0 ;
