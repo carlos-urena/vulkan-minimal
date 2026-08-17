@@ -178,7 +178,7 @@ Earth::Earth( ilc::MaterialsSet * materials_set )
     sphere_mesh = new MallaSupPar( new FPEsfera(), 64, 64, true ) ; Assert( sphere_mesh != nullptr, "App3D::App3D: cannot create sphere mesh" ) ;
 
 
-    Material texture_mat { "../assets/earth-v2.jpg", BrdfParams{ 0.3, 0.8, 1.0, 64.0 } } ;
+    Material texture_mat { "../assets/earth-clouds-hires.jpg", BrdfParams{ 0.3, 0.8, 1.0, 64.0 } } ;
     MaterialObject * mo4 = new MaterialObject( &texture_mat, materials_set, sphere_mesh ) ;
     add( new TransformedObject( scale( vec3(1.5f)), mo4 ) );
 }
