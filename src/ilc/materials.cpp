@@ -135,6 +135,7 @@ void MaterialsSet::updateMaterial( const uint32_t material_index, const Material
 
     // update the BRDF params of the material in the set, and in the pipeline
     brdfs_params_set->brdfs_params[ currm.brdf_params_index ] = newm.brdf_params ; // update the BRDF params in the set
+    brdfs_params_set->brdfs_params_vec4[ currm.brdf_params_index ] = glm::vec4( newm.brdf_params.ka, newm.brdf_params.kd, newm.brdf_params.ks, newm.brdf_params.exp ) ; // update the BRDF params in the set
     currm.brdf_params = newm.brdf_params ; // update the BRDF params in the materials vector
     
 

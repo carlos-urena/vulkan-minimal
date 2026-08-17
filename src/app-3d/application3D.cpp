@@ -339,6 +339,8 @@ void App3D::initFrame( const vkhc::seconds_f  time_elapsed )
     updateViewProjMats( time_elapsed ) ; // updates 'view_mat' and 'proj_mat' 
     pipeline->setViewMatrix( view_mat, view_mat_inv ) ;
     pipeline->setProjectionMatrix( proj_mat ) ;
+
+    // no need to send all colors and BRDF params each frame
     //pipeline->setBaseColorsSet( *(materials_set->base_colors_set) ) ; //unnecessary if it didn't change 
     //pipeline->setBrdfParamsSet( *(materials_set->brdfs_params_set) ) ; // unnecessary if it didn't change
 }
