@@ -177,6 +177,7 @@ void MaterialsSet::updateMaterial( const uint32_t material_index, const Material
     }
 
     // Handle a material which uses a texture: copy the new textura index to the array of textures
+    ///// This isn't quite right designed and less tested !!!!
 
     if ( newm.use_texture )
     {
