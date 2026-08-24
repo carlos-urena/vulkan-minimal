@@ -215,6 +215,12 @@ void IndexedMesh::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & 
    {
       using namespace std ;
       cout << "IndexedMesh::drawVK: creating VAO for mesh '" << getName() << "' ..." << endl ;
+      cout << "IndexedMesh::drawVK: vertices.size() = " << vertices.size() 
+           << ", vert_colors.size() = " << vert_colors.size()
+           << ", vert_normals.size() = " << vert_normals.size()
+           << ", vert_tcc.size() = " << vert_tcc.size()
+           << ", triangles.size() = " << triangles.size()
+           << endl ;
       dvao = new vkhc::VertexArray( context, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, 4 );
       Assert( dvao != nullptr, "cannot create a VAO" );
 
@@ -317,9 +323,22 @@ void IndexedMesh::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & 
 
 PLYMesh::PLYMesh( const std::string & nombre_arch )
 {
-   setName( std::string("PLY mesh in ") + nombre_arch  );
+   setName( std::string("PLY mesh in '") + nombre_arch + "'" );
    ilc::ReadPLY( nombre_arch, vertices, triangles );
    computeNormals(); // calcular la tabla de normales
+
+   // add vertex colors and texture coordinates (invent)
+
+   for( glm::vec3 v : vertices )
+   {
+      vert_colors.push_back( glm::vec3( 0.5f*(v.x+1.0f), 0.5f*(v.y+1.0f), 0.5f*(v.z+1.0f) ) );
+      vert_tcc.push_back( glm::vec2( 0.5f*(v.x+1.0f), 0.5f*(v.y+1.0f) ) );
+   }
+
+   using namespace std ;
+   cout << "PLYMesh::PLYMesh: mesh '" << getName() << "' created." 
+        << "nv = " << vertices.size() << endl  
+        << "nt = " << triangles.size() << endl ;
 }
 
 // ****************************************************************************

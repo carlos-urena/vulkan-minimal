@@ -9,6 +9,7 @@
 #include <vkhc/imgui-context.h>
 #include <vkhc/textures.h>
 
+#include <ilc/utils.h>
 #include <ilc/indexed-mesh.h>
 #include <ilc/application.h>
 #include <ilc/camara.h>
@@ -217,10 +218,10 @@ App3D::App3D( )
     // initialize the textures set 
 
     cout << "App3D::App3D: creating example textures set ..." << endl ;
-    materials_set->textures_set->add( "../assets/wood-1.png" );
-    materials_set->textures_set->add( "../assets/wood-2.png" );
-    materials_set->textures_set->add( "../assets/wood-3.png" );
-    materials_set->textures_set->add( "../assets/earth.jpg" );
+    materials_set->textures_set->add( SearchFile( "wood-1.png", "assets" ) );
+    materials_set->textures_set->add( SearchFile( "wood-2.png", "assets" ) );
+    materials_set->textures_set->add( SearchFile( "wood-3.png", "assets" ) );
+    materials_set->textures_set->add( SearchFile( "earth.jpg", "assets" ) );
     materials_set->textures_set->add( new vkhc::ProceduralTexture1( context ) ) ;
 
     Material default_material( vec3( 1.0, 1.0, 1.0 ),  // white base color
@@ -236,10 +237,14 @@ App3D::App3D( )
     // populate drawable objects vector 
     drawable_objects.push_back( new Triangle( *context, materials_set->textures_set ) ) ; // index 0
     drawable_objects.push_back( new Cube24(  ) ) ; // index 1
+    
     drawable_objects.push_back( new MallaSupPar( new FPEsfera(), 64, 64, true ) ) ; 
     drawable_objects.push_back( new MallaSupPar( new FPColumna(), 128, 128, true ) ) ;
+    drawable_objects.push_back( new PLYMesh( "beethoven.ply" ) ) ; 
+    drawable_objects.push_back( new PLYMesh( "big_dodge.ply" ) ) ;
     drawable_objects.push_back( new SpheresObject( materials_set ) ) ;
     drawable_objects.push_back( new Earth( materials_set ) );
+    
 
     current_object_index = 2 ; // start with the sphere in the vector
     Assert( current_object_index < drawable_objects.size(), "App3D constructor: current object index is out of range !!" ) ;

@@ -153,6 +153,50 @@ static const char* frag_shader_src = R"glsl(
 
     layout (location=0) out vec4 out_color;
 
+    // --------------------------------------------  
+    // increase luminosity of a color 
+
+    vec3 increaseV( vec3 color, float exp)
+    {
+        // RGB -> HSV
+        float maxC = max(color.r, max(color.g, color.b));
+        float minC = min(color.r, min(color.g, color.b));
+        float delta = maxC - minC;
+
+        float h = 0.0;
+        float s = maxC > 0.0 ? delta / maxC : 0.0;
+        float v = maxC;
+
+        if (delta > 0.0) {
+            if (maxC == color.r)
+                h = mod((color.g - color.b) / delta, 6.0);
+            else if (maxC == color.g)
+                h = (color.b - color.r) / delta + 2.0;
+            else
+                h = (color.r - color.g) / delta + 4.0;
+
+            h /= 6.0;
+            if (h < 0.0) h += 1.0;
+        }
+
+        // Increase V
+        float new_v = pow( v, 1.0f/exp );
+
+        // HSV -> RGB
+        float hh = h * 6.0;
+        float x = 1.0 - abs(mod(hh, 2.0) - 1.0);
+
+        vec3 rgb;
+        if (hh < 1.0)      rgb = vec3(1.0, x, 0.0);
+        else if (hh < 2.0) rgb = vec3(x, 1.0, 0.0);
+        else if (hh < 3.0) rgb = vec3(0.0, 1.0, x);
+        else if (hh < 4.0) rgb = vec3(0.0, x, 1.0);
+        else if (hh < 5.0) rgb = vec3(x, 0.0, 1.0);
+        else               rgb = vec3(1.0, 0.0, x);
+
+        return ((rgb - 1.0) * s + 1.0) * new_v;
+    }
+
     //  const mat4 flipy_mat = mat4( 1.0,  0.0,  0.0,  0.0,
     //                              0.0, -1.0,  0.0,  0.0,
     //                              0.0,  0.0,  1.0,  0.0,
@@ -163,12 +207,18 @@ static const char* frag_shader_src = R"glsl(
 
     vec3 BaseColor()
     {
+        vec3 c ; 
         if ( pc.texture_index >= 0 ) // if a texture is active, use it 
-            return (texture( textures[ pc.texture_index ], in_tex_coords )).rgb ;
+        {   
+            vec3 tc = (texture( textures[ pc.texture_index ], in_tex_coords )).rgb  ;
+            c = increaseV( tc, 4.0 ) ;
+        }
         else if ( pc.base_color_index >= 0 ) // if a base color is active, use it 
-            return (ubo.base_colors[ int(pc.base_color_index) ]).rgb ; 
+            c = (ubo.base_colors[ int(pc.base_color_index) ]).rgb ; 
         else // otherwise, use the interpolated vertex color
-            return in_color ;
+            c = in_color ;
+
+        return c ;
     }
 
     // -----------------------------------------------------------------------------

@@ -36,7 +36,10 @@ std::string FolderPath( const std::string & carpeta, unsigned int n )
       if ( stat( c_str, &info ) == 0 )
          // if ( S_ISDIR( info.st_mode )  ) // does not work on Windows, S_ISDIR not in 'stat.h' 
          if ( info.st_mode & S_IFDIR ) 
+         {
+            cout << "Folder path found for '" << carpeta << "' at level " << i << ": '" << path << "'" << endl ;
             return path ;
+         }
       
       if ( i < n-1 )
          prefijo = prefijo + "../" ;
@@ -74,18 +77,22 @@ std::string SearchFile( const std::string & file_path, const std::string & subfo
 
    // remove the path and keep only the basename:
 
-   const std::string basename = RemovePath( file_path );
+   //const std::string basename = RemovePath( file_path );
+   const std::string basename = file_path ; // do not remove path
 
    // search in the materials folder:
 
    const string nombre_path_mat = FolderPath( subfolder, 4 )  + "/" + basename ;
    ifstream     archivo_mat ;
 
+   cout << "Trying to open file '" << nombre_path_mat << "' ..." << endl ;
+
    archivo_mat.open( nombre_path_mat.c_str() ); // try to open it
 
    if ( archivo_mat.is_open() ) // if it opened successfully, close it and finish
    {
       archivo_mat.close();
+      cout << "File found: '" << nombre_path_mat << "'" << endl ;
       return nombre_path_mat ;
    }
 

@@ -1,7 +1,7 @@
 // *********************************************************************
 // **
-// ** Lector de archivos PLY (vértices y caras únicamente)
-// ** Implementación
+// ** PLY file reader (vertices and faces only)
+// ** Implementation
 // **
 // ** Carlos Ureña - 2012- 2019
 // **
@@ -47,53 +47,53 @@ namespace ilc
 using namespace std ;
 
 //**********************************************************************
-// constantes y funciones auxiliares (privadas)
+// Constants and auxiliary functions (private)
 
 static constexpr streamsize tam_buffer = streamsize(10L)*streamsize(1024L) ;
 
-// clase que contiene el estado del proceso de parsing de un archivo, y
-// proporciona diversos métodos para hacer dicho parsing
+// Class containing the state of the file parsing process and
+// providing several methods for performing that parsing
 
-class LectorPLY
+class PLYReader
 {
    public:
 
-   ifstream       src ;                        // stream de entrada
-   char           buffer[ (unsigned long)tam_buffer ]; // buffer para leer hasta fin de línea
-   unsigned long  num_linea_actual = 0 ;       // número de linea que está siendo procesada
-   std::string    nom_archivo      = "none" ;  // nombre del archivo que está siendo procesado
-   unsigned long  num_vertices     = 0;        // número de vértices según cabecera del ply
-   unsigned long  num_caras        = 0;        // número de caras según cabecera del ply
+   ifstream       src ;                        // input stream
+   char           buffer[ (unsigned long)tam_buffer ]; // buffer for reading through the end of a line
+   unsigned long  num_linea_actual = 0 ;       // number of the line currently being processed
+   std::string    nom_archivo      = "none" ;  // name of the file currently being processed
+   unsigned long  num_vertices     = 0;        // number of vertices according to the PLY header
+   unsigned long  num_caras        = 0;        // number of faces according to the PLY header
 
-   LectorPLY() {}
+   PLYReader() {}
 
-   void abrirArchivo  ( const std::string & p_nombre_archivo ) ;
-   void leerCabecera  ( const bool lee_num_caras ) ;
-   void leerVertices  ( std::vector<glm::vec3> & vertices  ) ;
-   void leerCaras     ( std::vector<glm::uvec3> & caras   ) ;
-   void leerRestoLinea() ;
-   void error         ( const char *msg_error ) ;
+   void openFile       ( const std::string & p_nombre_archivo ) ;
+   void readHeader     ( const bool lee_num_caras ) ;
+   void readVertices   ( std::vector<glm::vec3> & vertices  ) ;
+   void readFaces      ( std::vector<glm::uvec3> & caras   ) ;
+   void readRestOfLine() ;
+   void reportError    ( const char *msg_error ) ;
 } ;
 
 //**********************************************************************
-// funcion principal de lectura
+// Main reading function
 
 void ReadPLY
 (
-   const std::string &       nombre_archivo_pse, // entrada: nombre de archivo
-   std::vector<glm::vec3> &  vertices,           // salida:  vector de coords. de vert.
-   std::vector<glm::uvec3> & caras               // salida:  vector de triángulos (índices)
+   const std::string &       nombre_archivo_pse, // input: file name
+   std::vector<glm::vec3> &  vertices,           // output: vector of vertex coordinates
+   std::vector<glm::uvec3> & caras               // output: vector of triangles (indices)
 )
 {
    using namespace std ;
-   LectorPLY lector ;
+   PLYReader lector ;
 
-   lector.abrirArchivo( nombre_archivo_pse ) ;
-   lector.leerCabecera( true ) ;
-   lector.leerVertices( vertices ) ;
-   lector.leerCaras   ( caras ) ;
+   lector.openFile    ( nombre_archivo_pse ) ;
+   lector.readHeader  ( true ) ;
+   lector.readVertices( vertices ) ;
+   lector.readFaces   ( caras ) ;
 
-   //cout << "archivo ply '" << lector.nom_archivo << "' leido: núm. vértices == " << vertices.size() << ", núm caras == " << caras.size() << endl << flush ;
+   //cout << "PLY file '" << lector.nom_archivo << "' read: number of vertices == " << vertices.size() << ", number of faces == " << caras.size() << endl << flush ;
 }
 
 //**********************************************************************
@@ -105,18 +105,18 @@ void ReadPLYVertexes
 )
 {
    using namespace std ;
-   LectorPLY lector  ;
+   PLYReader lector  ;
 
-   lector.abrirArchivo( nombre_archivo_pse ) ;
-   lector.leerCabecera( false ) ;
-   lector.leerVertices( vertices ) ;
+   lector.openFile    ( nombre_archivo_pse ) ;
+   lector.readHeader  ( false ) ;
+   lector.readVertices( vertices ) ;
 
-   //cout << "archivo ply '" << lector.nom_archivo << "' leido (únicamente vértices) : núm. vértices == " << vertices.size() << endl << flush ;
+   //cout << "PLY file '" << lector.nom_archivo << "' read (vertices only): number of vertices == " << vertices.size() << endl << flush ;
 }
 
 //**********************************************************************
 
-void LectorPLY::leerRestoLinea()
+void PLYReader::readRestOfLine()
 {
    src.getline( buffer, tam_buffer );
    num_linea_actual ++ ;
@@ -124,7 +124,7 @@ void LectorPLY::leerRestoLinea()
 
 //**********************************************************************
 
-void LectorPLY::abrirArchivo( const std::string & p_nombre_archivo )
+void PLYReader::openFile( const std::string & p_nombre_archivo )
 {
    using namespace std ;
    string token ;
@@ -142,96 +142,96 @@ void LectorPLY::abrirArchivo( const std::string & p_nombre_archivo )
    //    nom_archivo_path_1    = PathCarpetaMateriales() + "/plys/" + nom_archivo ,
    //    nom_archivo_procesado = ProcesarNombreArchivo( nom_archivo_path_1 );
 
-   const std::string nom_archivo_path = SearchFile( nom_archivo, "assets" );
+   const std::string nom_archivo_path = SearchFile( "plys/"+nom_archivo, "assets" );
 
-   src.open( nom_archivo_path.c_str() ) ; // abrir (¿en modo lectura?)
+   src.open( nom_archivo_path.c_str() ) ; // open (in read mode?)
    assert( src.is_open());
 
    src >> token ;
 
    if ( token != "ply" )
-      error("input file does not starts with 'ply'.");
+      reportError("input file does not start with 'ply'.");
 
-   leerRestoLinea();
+   readRestOfLine();
 
-   //cout << "leyendo archivo ply '" + nombre_archivo + "'" << endl ;
+   //cout << "reading PLY file '" + nombre_archivo + "'" << endl ;
 }
 
 //**********************************************************************
 
-void LectorPLY::leerCabecera( const bool lee_num_caras )
+void PLYReader::readHeader( const bool lee_num_caras )
 {
    string        token ;
-   unsigned      state       = 0; // 0 antes de leer 'element vertex' (o 'element face'), 1 antes de leer 'element face', 2 después
+   unsigned      state       = 0; // 0 before reading 'element vertex' (or 'element face'), 1 before reading 'element face', 2 afterward
    bool          en_cabecera = true ;
    long long int nv          = 0,
                  nc          = 0 ;
 
-   // leer cabecera:
+   // Read header:
 
    while( en_cabecera )
    {
       if ( src.eof() )
-         error("fin de archivo prematuro antes de end_header");
+         reportError("premature end of file before end_header");
 
      src >> token ;
 
      if ( token == "end_header" )
      {  if ( state != 2 )
-           error("no encuentro 'element vertex' o 'element face' en la cabecera");
-        leerRestoLinea();
+           reportError("'element vertex' or 'element face' not found in header");
+        readRestOfLine();
         en_cabecera = false ;
      }
      else if ( token == "comment" )
-     {  leerRestoLinea();
+   {  readRestOfLine();
      }
      else if ( token == "format" )
      {  src >> token ;
         if ( token != "ascii" )
-        {  string msg = string("el formato del ply no es 'ascii', es '")+token+"', no lo puedo leer" ;
-           error(msg.c_str());
+      {  string msg = string("the PLY format is not 'ascii'; it is '")+token+"', which cannot be read" ;
+           reportError(msg.c_str());
         }
-        leerRestoLinea();
+      readRestOfLine();
      }
      else if ( token == "element" )
      {  src >> token ;
         if ( token == "vertex" )
         {  if ( state != 0 )
-              error("la línea 'element vertex' va después de 'element face'");
+              reportError("the 'element vertex' line comes after 'element face'");
            src >> nv ;
-           //cout << "  numero de vértices == " << nv << endl ;
+           //cout << "  number of vertices == " << nv << endl ;
            state = lee_num_caras ? 1 : 2 ;
         }
         else if ( lee_num_caras && token == "face" )
         {  if ( state != 1 )
-              error("'element vertex' va después de 'element face'");
+              reportError("'element vertex' comes after 'element face'");
            src >> nc ;
-           //cout << "  número de caras == " << nc << endl ;
+           //cout << "  number of faces == " << nc << endl ;
            state = 2 ;
         }
         else
-        {  //cout << "  elemento '" + token + "' ignorado." << endl ;
+      {  //cout << "  element '" + token + "' ignored." << endl ;
         }
-        leerRestoLinea();
+      readRestOfLine();
      }
      else if ( token == "property" )
-     {  leerRestoLinea();
+   {  readRestOfLine();
      }
    } // end of while( en_cabecera )
 
    if ( nv <= 0 )
-      error("no se ha encontrado el número de vértices, o bien es 0 o negativo");
+      reportError("the number of vertices was not found, or it is zero or negative");
 
 
    if ( lee_num_caras ) if ( nc <= 0 )
-      error("no se ha encontrado el número de caras, o bien es 0 o negativo");
+      reportError("the number of faces was not found, or it is zero or negative");
 
    if ( nv > numeric_limits<int>::max() )
-      error("el número de vértices es superior al valor 'int' más grande posible.");
+      reportError("the number of vertices exceeds the largest possible 'int' value.");
 
    if ( lee_num_caras )
    if ( nc > numeric_limits<int>::max() )
-      error("el número de caras es superior al valor 'int' más grande posible.");
+      reportError("the number of faces exceeds the largest possible 'int' value.");
 
    num_vertices = unsigned(nv) ;
    num_caras    = unsigned(nc) ;
@@ -239,7 +239,7 @@ void LectorPLY::leerCabecera( const bool lee_num_caras )
 
 //**********************************************************************
 
-void LectorPLY::leerVertices( std::vector<glm::vec3> & vertices  )
+void PLYReader::readVertices( std::vector<glm::vec3> & vertices  )
 {
    using namespace glm ;
    
@@ -250,40 +250,40 @@ void LectorPLY::leerVertices( std::vector<glm::vec3> & vertices  )
    for( unsigned long long iv = 0 ; iv < num_vertices ; iv++ )
    {
       if ( src.eof() )
-         error("encontrado fin de archivo prematuro en la lista de vértices.");
+         reportError("premature end of file found in the vertex list.");
       long double x,y,z ;
       src >> x >> y >> z ;
-      leerRestoLinea();
+      readRestOfLine();
       vertices[iv] = vec3( float(x), float(y), float(z) );
    }
-   //cout << "  fin de la lista de vértices" << endl << flush ;
+   //cout << "  end of vertex list" << endl << flush ;
 }
 
 //**********************************************************************
 
-void LectorPLY::leerCaras( std::vector<glm::uvec3> & caras )
+void PLYReader::readFaces( std::vector<glm::uvec3> & caras )
 {
    using namespace glm ;
    
    string        token ;
    constexpr int nvc = 3 ;
 
-   assert( nvc > 2 ) ; // tipicamente, 3 o 4.
+   assert( nvc > 2 ) ; // typically, 3 or 4.
 
-   //cout << "  leyendo " << num_caras << " caras ...." << endl << flush ;
+   //cout << "  reading " << num_caras << " faces ...." << endl << flush ;
 
    caras.resize( num_caras );
 
    for( unsigned long long ifa = 0 ; ifa < num_caras ; ifa++ )
    {
       if ( src.eof() )
-         error("fin de archivo prematuro en la lista de caras");
+         reportError("premature end of file in the face list");
 
       unsigned nv ; src >> nv ;
       //cout << "reading face #" << ifa << " with " << nv << " vertexes: " ;
 
       if ( nv != nvc )
-         error("encontrada una cara con un número de vértices distinto de 3.");
+         reportError("a face with a number of vertices other than 3 was found.");
 
       //long long       iv[nvc] ;
       //const long long base = ifa*nvc ;
@@ -294,21 +294,21 @@ void LectorPLY::leerCaras( std::vector<glm::uvec3> & caras )
       {
          src >> cara_leida[ivc] ;
          if ( num_vertices <= cara_leida[ivc] )
-            error("encontrado algún índice de vértice igual o superior al número de vértices");
+            reportError("a vertex index equal to or greater than the number of vertices was found");
          caras[ ifa ] = cara_leida ;
       }
-      leerRestoLinea();
+      readRestOfLine();
    }
-   //cout << "  fin de la lista de caras." << endl ;
+   //cout << "  end of face list." << endl ;
 }
 
 //**********************************************************************
 
-void LectorPLY::error( const char *msg_error )
+void PLYReader::reportError( const char *msg_error )
 {
    using namespace std ;
-   cout << "error leyendo archivo ply '" << msg_error << "' en la línea " << num_linea_actual << endl
-        << "programa terminado." << endl
+      cout << "error reading PLY file '" << msg_error << "' on line " << num_linea_actual << endl
+         << "program terminated." << endl
         << flush ;
 
    exit(1);
