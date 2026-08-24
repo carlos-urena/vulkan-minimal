@@ -6,6 +6,7 @@
 
 #include <vkhc/pipeline3D.h>
 #include <ilc/indexed-mesh.h> 
+#include <ilc/ply-reader.h>
 
 // *****************************************************************************
 // funciones auxiliares
@@ -316,8 +317,8 @@ void IndexedMesh::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & 
 
 PLYMesh::PLYMesh( const std::string & nombre_arch )
 {
-   setName( std::string("Malla en archivo PLY (") + nombre_arch + ")" );
-   //LeerPLY( nombre_arch, vertices, triangles );
+   setName( std::string("PLY mesh in ") + nombre_arch  );
+   ilc::ReadPLY( nombre_arch, vertices, triangles );
    computeNormals(); // calcular la tabla de normales
 }
 

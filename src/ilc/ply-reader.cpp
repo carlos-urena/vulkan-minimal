@@ -33,13 +33,16 @@
 #include <cassert>
 
 
-
+#include <ilc/utils.h>
 #include <ilc/ply-reader.h>
 
-// modelos ply en:
+namespace ilc 
+{
+
+// Example PLY files are available at:
+   // http://graphics.stanford.edu/data/3Dscanrep/
    // http://graphics.im.ntu.edu.tw/~robin/courses/cg03/model/
    // http://people.sc.fsu.edu/~jburkardt/data/ply/ply.html
-   // univ stanford ?
 
 using namespace std ;
 
@@ -75,7 +78,7 @@ class LectorPLY
 //**********************************************************************
 // funcion principal de lectura
 
-void LeerPLY
+void ReadPLY
 (
    const std::string &       nombre_archivo_pse, // entrada: nombre de archivo
    std::vector<glm::vec3> &  vertices,           // salida:  vector de coords. de vert.
@@ -95,7 +98,7 @@ void LeerPLY
 
 //**********************************************************************
 
-void LeerVerticesPLY
+void ReadPLYVertexes
 (
    const std::string &  nombre_archivo_pse,
    vector<glm::vec3> &    vertices
@@ -139,7 +142,7 @@ void LectorPLY::abrirArchivo( const std::string & p_nombre_archivo )
    //    nom_archivo_path_1    = PathCarpetaMateriales() + "/plys/" + nom_archivo ,
    //    nom_archivo_procesado = ProcesarNombreArchivo( nom_archivo_path_1 );
 
-   const std::string nom_archivo_path = BuscarArchivo( nom_archivo, "plys" );
+   const std::string nom_archivo_path = SearchFile( nom_archivo, "assets" );
 
    src.open( nom_archivo_path.c_str() ) ; // abrir (¿en modo lectura?)
    assert( src.is_open());
@@ -147,7 +150,7 @@ void LectorPLY::abrirArchivo( const std::string & p_nombre_archivo )
    src >> token ;
 
    if ( token != "ply" )
-      error("el archivo de entrada no comienza con 'ply'.");
+      error("input file does not starts with 'ply'.");
 
    leerRestoLinea();
 
@@ -310,3 +313,5 @@ void LectorPLY::error( const char *msg_error )
 
    exit(1);
 }
+
+} // end of namespace ilc

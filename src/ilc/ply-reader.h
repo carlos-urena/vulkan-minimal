@@ -1,5 +1,3 @@
-
-
 #pragma once
 
 
@@ -8,29 +6,31 @@
 
 #include <glm/glm.hpp>
 
+namespace ilc 
+{
 
 // **********************************************************************
 // **
 // ** ply::read
 // **
-// **  lee un archivo ply y lo carga en 'vertices' y 'caras'
+// **  reads a ply file and loads it into 'vertices' and 'faces'
 // **
-// **   - 'nombre_archivo' nombre del archivo (se le añade .ply si no
-// **     acaba en .ply)
-// **   - si hay un error, aborta
-// **   - elimina cualquier contenido previo en los
-// **     vectores 'vertices' y 'caras'
-// **   - lee el archivo .ply y lo carga en 'vertices' y 'faces'
-// **   - solo admite plys con triángulos,
-// **   - no lee colores, coordenadas de textura, ni normales.
+// **   - 'nombre_archivo' file name (adds .ply if it does not end
+// **     with .ply)
+// **   - if there is an error, aborts
+// **   - clears any previous contents in the
+// **     vectors 'vertices' and 'faces'
+// **   - reads the .ply file and loads it into 'vertices' and 'faces'
+// **   - only supports triangle ply files,
+// **   - does not read colors, texture coordinates, or normals.
 // **
 // *********************************************************************
 
-void LeerPLY
+void ReadPLY
 (
-   const std::string &       nombre_archivo_pse, // entrada: nombre de archivo
-   std::vector<glm::vec3>  & vertices,           // salida:  vector de coords. de vert.
-   std::vector<glm::uvec3> & caras               // salida:  vector de triángulos (índices)
+   const std::string &       nombre_archivo_pse, // input: file name
+   std::vector<glm::vec3>  & vertices,           // output: vector of vertex coords.
+   std::vector<glm::uvec3> & caras               // output: vector of triangles (indices)
 );
 
 
@@ -38,24 +38,25 @@ void LeerPLY
 // **
 // ** ply::read_vertices
 // **
-// **  lee los vértices de un archivo ply y los carga en 'vertices'
+// **  reads the vertices of a ply file and loads them into 'vertices'
 // **
-// **   - 'nombre_archivo' nombre del archivo (se le añade .ply si no
-// **     acaba en .ply)
-// **   - si hay un error, aborta
-// **   - elimina cualquier contenido previo en el
+// **   - 'nombre_archivo' file name (adds .ply if it does not end
+// **     with .ply)
+// **   - if there is an error, aborts
+// **   - clears any previous contents in the
 // **     vector 'vertices'
-// **   - lee el archivo .ply y carga los vértices en 'vertices'
-// **   - no lee colores, caras, coordenadas de textura, ni normales.
-// **   - se ignora la información de caras
+// **   - reads the .ply file and loads the vertices into 'vertices'
+// **   - does not read colors, faces, texture coordinates, or normals.
+// **   - face information is ignored
 // **
 // *********************************************************************
 
-void LeerVerticesPLY
+void ReadPLYVertexes
 (
-   const std::string &      nombre_archivo_pse, // entrada: nombre de archivo
-   std::vector<glm::vec3> & vertices            // salida:  vector de coords. de vert.
+   const std::string &      nombre_archivo_pse, // input: file name
+   std::vector<glm::vec3> & vertices            // output: vector of vertex coords.
 );
 
 
 
+} // end of namespace ilc

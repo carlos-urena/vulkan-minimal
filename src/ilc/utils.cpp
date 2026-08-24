@@ -1,35 +1,10 @@
-// *********************************************************************
-// **
-// ** Rutinas auxiliares:
-// ** - Gestión de errores en general
-// ** - Comprobación de errores de OpenGL (implementación)
-// ** - Inicialización de GLEW,
-// ** - Comprobación de la versión de OpenGL
-// **
-// ** Copyright (C) 2014-2022 Carlos Ureña
-// **
-// ** This program is free software: you can redistribute it and/or modify
-// ** it under the terms of the GNU General Public License as published by
-// ** the Free Software Foundation, either version 3 of the License, or
-// ** (at your option) any later version.
-// **
-// ** This program is distributed in the hope that it will be useful,
-// ** but WITHOUT ANY WARRANTY; without even the implied warranty of
-// ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// ** GNU General Public License for more details.
-// **
-// ** You should have received a copy of the GNU General Public License
-// ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
-// **
-// *********************************************************************
-
-#include <sys/types.h>  // para buscar carpetas con 'stat'
-#include <sys/stat.h>   // para buscar carpetas con 'stat'
+#include <sys/types.h>  // for searching folders with 'stat'
+#include <sys/stat.h>   // for searching folders with 'stat'
 
 #ifndef _WIN32
-#include <unistd.h>      // para 'getcwd', stat y otros ...
+#include <unistd.h>      // for 'getcwd', stat and others ...
 //#else 
-//#include <sys/stat.h> // stat() en msvc
+//#include <sys/stat.h> // stat() in msvc
 #endif 
 
 #include <iostream>
@@ -37,17 +12,17 @@
 #include <string>
 
 // -----------------------------------------------------------------------------
-// Devuelve el path relativo hasta una carpeta con cierto nombre ('carpeta')
-// busca la carpeta en el directorio de trabajo, si no está busca en el padre, y 
-// así sucesivamente hasta 'n' veces como mucho
-// Es decir, busca: ./<carpeta>, ./../<carpeta>, ../../<carpeta>, ../../../<carpeta> y ../../../../<carpeta>
-// (funciona tmb en windows)
+// Returns the relative path to a folder with a given name ('folder')
+// searches for the folder in the current working directory, then in its parent,
+// and so on up to 'n' levels at most.
+// In other words, it searches: ./<folder>, ./../<folder>, ../../<folder>, ../../../<folder> and ../../../../<folder>
+// (also works on Windows)
 //
-// Basado en:
+// Based on:
 // https://stackoverflow.com/questions/18100097/portable-way-to-check-if-directory-exists-windows-linux-c
-// (respuesta de Adam Parson)
+// (answer by Adam Parson)
 
-std::string PathCarpeta( const std::string & carpeta, unsigned int n )
+std::string FolderPath( const std::string & carpeta, unsigned int n )
 {
    using namespace std ;
    string prefijo = "" ; 
@@ -59,7 +34,7 @@ std::string PathCarpeta( const std::string & carpeta, unsigned int n )
       struct stat        info ;
 
       if ( stat( c_str, &info ) == 0 )
-         // if ( S_ISDIR( info.st_mode )  ) // no va en windows, S_ISDIR no en 'stat.h' 
+         // if ( S_ISDIR( info.st_mode )  ) // does not work on Windows, S_ISDIR not in 'stat.h' 
          if ( info.st_mode & S_IFDIR ) 
             return path ;
       
@@ -67,61 +42,57 @@ std::string PathCarpeta( const std::string & carpeta, unsigned int n )
          prefijo = prefijo + "../" ;
    }
 
-   cout << "No encuentro el path hasta la carpeta '" << carpeta << "' (aborto)" << endl ;
+   cout << "Folder path not found for '" << carpeta << "' (aborting)" << endl ;
    exit(1);   
 }
 
 // ---------------------------------------------------------------------
-// quita el path de un nombre de archivo con path
+// removes the path from a file name that includes a path
 
-std::string QuitarPath( const std::string & path_arch )
+std::string RemovePath( const std::string & file_path )
 {
-   const size_t pos_barra = path_arch.find_last_of('/') ;
+   const size_t pos_barra = file_path.find_last_of('/') ;
 
    if ( pos_barra == std::string::npos ) 
-      return path_arch ;
+      return file_path ;
    else
-      return path_arch.substr( pos_barra+1 );
+      return file_path.substr( pos_barra+1 );
 }
 
 // ---------------------------------------------------------------------------
-// busca un archivo dado su nombre (nombre_arch) con extensión, sin path alguno.
+// searches for a file given its name (nombre_arch) with extension, without any path.
 //
-// - en 1er lugar lo busca en la carpeta de materiales, dentro de la subcarpeta especificada 
-// - si no está, lo busca en la carpeta de archivos del alumno
+// - first it searches in the materials folder, inside the specified subfolder
+// - if it is not there, it searches in the student's files folder
 //
-// devuelve el nombre del archivo con la ruta completa, listo para ser abierto.
-// si el archivo no se encuentra en ninguna de ambas carpetas, se invoca 'error' (aborta)
+// returns the file name with the full path, ready to be opened.
+// if the file is not found in either folder, 'error' is invoked (abort)
 
-std::string BuscarArchivo( const std::string & nombre_arch, const std::string & subcarpeta )
+std::string SearchFile( const std::string & file_path, const std::string & subfolder )
 {
    using namespace std ;
 
-   // quitar el path y quedarnos simplemente con el basename:
+   // remove the path and keep only the basename:
 
-   const std::string basename = QuitarPath( nombre_arch );
+   const std::string basename = RemovePath( file_path );
 
-   
+   // search in the materials folder:
 
-   // buscar en la carpeta de materiales:
-
-   const string nombre_path_mat = PathCarpeta( subcarpeta, 4 )  + "/" + basename ;
+   const string nombre_path_mat = FolderPath( subfolder, 4 )  + "/" + basename ;
    ifstream     archivo_mat ;
 
-   archivo_mat.open( nombre_path_mat.c_str() ); // intentar abrirlo
+   archivo_mat.open( nombre_path_mat.c_str() ); // try to open it
 
-   if ( archivo_mat.is_open() ) // si se ha podido abrir, cerrarlo y terminar
+   if ( archivo_mat.is_open() ) // if it opened successfully, close it and finish
    {
       archivo_mat.close();
       return nombre_path_mat ;
    }
 
-   
+   // not found: print an error message and abort
 
-   // no se ha encontrado: producir mensaje de error y abortar 
-
-   cout << "No se encuentra el archivo: '" << nombre_arch << "'" << endl 
-        << "Programa abortado." << endl ; 
+   cout << "File not found: '" << file_path << "'" << endl 
+        << "Program aborted." << endl ; 
 
    exit(1);
 }
