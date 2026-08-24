@@ -30,7 +30,8 @@ static const char* common_decls = R"glsl(
         int  texture_index ;     // active texture index, -1 if no texture is active.
         int  brdf_params_index ;  // active material paramaters index, -1 if no material is active (do not evaluate illumination)
         int  eval_illumination ; // if not 0, evaluate illumination, if 0, use base color .
-        int  wireframe_mode ; 
+        int  wireframe_mode ; // if not 0, we are drawing wireframe, if 0, we are drawing filled triangles
+
     } pc ;
 
     // Inputs: uniform buffer object (WIP):
@@ -45,6 +46,7 @@ static const char* common_decls = R"glsl(
         mat4 view_mat_inv ; // inverse view matrix (camera to world)
         mat4 proj_mat; // projection matrix (camera to clip)
 
+        
         vec4 base_colors[max_num_base_colors]; // array of base colors, indexed by 'base_color_index' push constant
         int  num_base_colors ; // current number of entries used in the 'base_colors' array (used?)
         
@@ -54,6 +56,8 @@ static const char* common_decls = R"glsl(
         vec4 lights_dir[max_num_lights] ;
         vec4 lights_color[max_num_lights] ;
         int  num_lights ;
+
+        int use_flat_normals ; // if not 0, use flat normals (per triangle), if 0, use smooth normals (per vertex)
         
     } ubo ;
 
@@ -155,6 +159,8 @@ static const char* frag_shader_src = R"glsl(
 
     // --------------------------------------------  
     // increase luminosity of a color 
+    //   color == original color (RGB)
+    //   exp  == exponent to increase luminosity (exp>1.0 increases luminosity, exp<1.0 decreases it)
 
     vec3 increaseV( vec3 color, float exp)
     {
@@ -222,6 +228,22 @@ static const char* frag_shader_src = R"glsl(
     }
 
     // -----------------------------------------------------------------------------
+    // returns the normal vector (normalized) at the current fragment, in world coordinates
+    // facing the view vector
+
+    vec3 NNormalWCC( vec3 view_vector )
+    {
+        vec3 nn ;
+
+        if ( ubo.use_flat_normals != 0 )
+            nn = normalize( cross( dFdx(in_position_wcc), dFdy(in_position_wcc) ) ) ;
+        else
+            nn = normalize( in_normal_wcc ) ;
+
+        return dot( nn, view_vector ) < 0.0 ? -nn : nn ; // flip normal if it is facing away from the view vector
+    }
+
+    // -----------------------------------------------------------------------------
     // returns the view vector 
 
     vec3 ViewVectorWCC()
@@ -236,7 +258,7 @@ static const char* frag_shader_src = R"glsl(
     vec3 EvalIllumination( const vec3 base_color )
     {
         vec3  v = ViewVectorWCC() ;
-        vec3  n = normalize( in_normal_wcc ) ;
+        vec3  n = NNormalWCC( v ) ; 
         
         vec3  l0  = normalize( vec3( 0.5, 1.0, 0.5 ) ) ;
         vec3  h0  = normalize( l0 + v ) ;
@@ -322,17 +344,17 @@ Pipeline3D::Pipeline3D( VulkanContext & vulkan_context, const bool p_z_buffer_en
     addPushConstant( "eval_illumination", sizeof(int) ); // if not 0, evaluate illumination, if 0, use base color .
     addPushConstant( "wireframe_mode",    sizeof(int) ); // if not 0, we are drawing wireframe, if 0, we are drawing
     
-    addUBOUniform( "view_mat",         VType::MAT4x4, 1 ); // view matrix
-    addUBOUniform( "view_mat_inv",     VType::MAT4x4, 1 ); // inverse view matrix
-    addUBOUniform( "proj_mat",         VType::MAT4x4, 1 ); // projection matrix
-    addUBOUniform( "base_colors",      VType::VEC4,   max_num_base_colors ); // array of base colors
-    addUBOUniform( "num_base_colors",  VType::INT,    1 ); // current number of entries used in the 'base_colors' array
-    addUBOUniform( "brdfs_params",     VType::VEC4,   max_num_materials ); // array of materials parameters
-    addUBOUniform( "num_brdfs_params", VType::INT,    1 ); // current number of entries used in the 'material_params' and 'materials_colors' arrays
-    addUBOUniform( "lights_dir",       VType::VEC4,   max_num_lights ); // array of light directions
-    addUBOUniform( "lights_color",     VType::VEC4,   max_num_lights ); // array of light colors
-    addUBOUniform( "num_lights",       VType::INT,    1 ); // current number of entries used in the 'light_dir' and 'light_color' arrays
-
+    addUBOUniform( "view_mat",          VType::MAT4x4, 1 ); // view matrix
+    addUBOUniform( "view_mat_inv",      VType::MAT4x4, 1 ); // inverse view matrix
+    addUBOUniform( "proj_mat",          VType::MAT4x4, 1 ); // projection matrix
+    addUBOUniform( "base_colors",       VType::VEC4,   max_num_base_colors ); // array of base colors
+    addUBOUniform( "num_base_colors",   VType::INT,    1 ); // current number of entries used in the 'base_colors' array
+    addUBOUniform( "brdfs_params",      VType::VEC4,   max_num_materials ); // array of materials parameters
+    addUBOUniform( "num_brdfs_params",  VType::INT,    1 ); // current number of entries used in the 'material_params' and 'materials_colors' arrays
+    addUBOUniform( "lights_dir",        VType::VEC4,   max_num_lights ); // array of light directions
+    addUBOUniform( "lights_color",      VType::VEC4,   max_num_lights ); // array of light colors
+    addUBOUniform( "num_lights",        VType::INT,    1 ); // current number of entries used in the 'light_dir' and 'light_color' arrays
+    addUBOUniform( "use_flat_normals",  VType::INT,    1 ); // if not 0, use flat normals (per triangle), if 0, use smooth normals (per vertex)
     // set shaders sources 
     shaders_sources = 
     {   .vertex_shader_src   = & vertShaderSrc_string, 
@@ -378,6 +400,8 @@ void Pipeline3D::setTextureIndex( VkCommandBuffer & vk_cmd, int index )
     current_texture_index = index ;
     setPushConstant( vk_cmd, "texture_index", &index ); 
 }
+
+
 // ------------------------------------------------------------------------------
 
 void Pipeline3D::setBaseColorIndex( VkCommandBuffer & vk_cmd, int index ) 
@@ -529,18 +553,9 @@ void Pipeline3D::setBrdfParamsSet( BrdfParamsSet & bps )
 
 void Pipeline3D::updateBrdfParams( const int index, const BrdfParams & brdf_params ) 
 {
-    //Assert( brdf_params_set != nullptr, "Pipeline3D::updateBrdfParams: BRDF params set is not initialized." ) ;
-    //uint32_t nb = brdf_params_set->brdfs_params.size() ;
-    //Assert( 0 <= index  && index < nb, "Pipeline3D::updateBrdfParams: BRDF params index out of range." ) ;
-
     Assert( 0 <= index && index < num_brdfs_params, "Pipeline3D::updateBrdfParams: BRDF params index out of range." ) ;
     glm::vec4 params_v4 = glm::vec4( brdf_params.ka, brdf_params.kd, brdf_params.ks, brdf_params.exp ) ;
     setUBOUniform( "brdfs_params", index, value_ptr( params_v4 ) ) ;
-
-    using namespace std ;
-    // cout << "---> Pipeline3D::updateBrdfParams: updated BRDF params at index " << index 
-    // << ": ka=" << brdf_params.ka << ", kd=" << brdf_params.kd << ", ks=" << brdf_params.ks << ", exp=" << brdf_params.exp 
-    // << endl ;
 }
 
 // ------------------------------------------------------------------------------
@@ -550,6 +565,15 @@ void Pipeline3D::setEvalIllumination( VkCommandBuffer & vk_cmd, bool new_eval_il
     eval_illumination = new_eval_illumination ;
     int eval_illumination_int = eval_illumination ? 1 : 0 ;
     setPushConstant( vk_cmd, "eval_illumination", & eval_illumination_int );
+}
+
+// ------------------------------------------------------------------------------
+
+void Pipeline3D::setUseFlatNormals( const bool new_use_flat_normals )
+{
+    use_flat_normals = new_use_flat_normals ;
+    int use_flat_normals_int = use_flat_normals ? 1 : 0 ;
+    setUBOUniform( "use_flat_normals", & use_flat_normals_int );
 }
 
 // ------------------------------------------------------------------------------

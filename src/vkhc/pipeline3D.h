@@ -99,8 +99,12 @@ class Pipeline3D : public BasicPipeline
     // current value for the eval_illumination push constant (true or false)
     bool eval_illumination = true ; // default value, can be changed dynamically in command
 
+
     // current value for the 'wireframe_mode' push constant (true or false)
     bool wireframe_mode = false ; // default value, can be changed dynamically in command
+
+    // current value for the 'use_flat_normals' UBO uniform (true or false)
+    bool use_flat_normals = false ; // default value, can be changed dynamically in command
 
     // current values for various rendering parameters 
     bool draw_normals = false ; // draw normals (as line segments) of indexed triangle meshes 
@@ -168,6 +172,9 @@ class Pipeline3D : public BasicPipeline
 
     // sets the current illumination evaluation mode (true or false) in the shaders
     void setEvalIllumination( VkCommandBuffer & vk_cmd, bool new_eval_illumination );
+
+    // set the 'use_flat_normals' UBO uniform 
+    void setUseFlatNormals( const bool new_use_flat_normals ) ;
     
 } ; // end class 'Pipeline3D' 
 

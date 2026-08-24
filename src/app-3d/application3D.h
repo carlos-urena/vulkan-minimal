@@ -43,6 +43,9 @@ class App3D : public ilc::Application
     
     // eval illumination switch (true or false)
     bool eval_illumination = true ; // default value, can be changed dynamically in command
+
+    // use flat normal 
+    bool use_flat_normals = false ; // default value, can be changed before command 
       
 
     // model, view and projection matrices

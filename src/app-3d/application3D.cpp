@@ -382,7 +382,10 @@ void App3D::drawIMGUIWidgets(  )
             pipeline->setDrawNormals( draw_normals ) ; 
     }
     if (CollapsingHeader("Illumination controls", ImGuiTreeNodeFlags_DefaultOpen))
+    {
         Checkbox("Evaluate illumination", &eval_illumination);
+        Checkbox("Use flat normals", &use_flat_normals);
+    }
 
     if (CollapsingHeader("Default material controls", ImGuiTreeNodeFlags_DefaultOpen))
     {
@@ -418,6 +421,8 @@ void App3D::initFrame( const vkhc::seconds_f  time_elapsed )
     updateViewProjMats( time_elapsed ) ; // updates 'view_mat' and 'proj_mat' 
     pipeline->setViewMatrix( view_mat, view_mat_inv ) ;
     pipeline->setProjectionMatrix( proj_mat ) ;
+
+    pipeline->setUseFlatNormals( use_flat_normals ) ; // sets the 'use_flat_normals' uniform in the UBO (if it changed)
 
     // no need to send all colors and BRDF params each frame, just the modified material (if any) is sent 
     //pipeline->setBaseColorsSet( *(materials_set->base_colors_set) ) ; //unnecessary if it didn't change 
