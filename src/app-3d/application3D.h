@@ -55,10 +55,10 @@ class App3D : public ilc::Application
     glm::mat4 proj_mat = glm::mat4(1.0f) ; // projection matrix passed via UBO
 
     // drawable 3D object (triangle) with the axes.
-    AxesObject * axes3D = nullptr ;
+    ilc::AxesObject * axes3D = nullptr ;
 
     // array of drawable objects 
-    std::vector<DrawableObject*> drawable_objects ;
+    std::vector<ilc::DrawableObject*> drawable_objects ;
 
     // index for current object being displayed (in the 'drawable_objects' vector)
     uint32_t current_object_index = 0 ;
@@ -80,20 +80,7 @@ class App3D : public ilc::Application
     double prev_posy = 0.0 ;
 
     // Draw IMGUIcurrent drawable object selection combo
-    void drawIMGUIObjectSelectionCombo() 
-    {
-        using namespace ImGui ;
-        if (CollapsingHeader("Drawable object selection", ImGuiTreeNodeFlags_DefaultOpen))
-        {       
-            std::vector<const char*> object_names ;
-            for (auto* obj : drawable_objects)
-                object_names.push_back( obj->getName().c_str() );
-            if ( Combo("Current object", reinterpret_cast<int*>(&current_object_index), object_names.data(), int(object_names.size()) ) )
-            {
-                std::cout << "App3D::drawIMGUIObjectSelectionCombo: new current_object_index == " << current_object_index << std::endl ;
-            }
-        }
-    }
+    void drawIMGUIObjectSelectionCombo() ;
 
 
     // -----------------------------------------------------------------------------

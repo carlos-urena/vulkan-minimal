@@ -1,10 +1,13 @@
-
+    
 
 #pragma once
 
 #include <string>
 #include <vkhc/common.h>
 #include <ilc/materials.h>
+
+namespace ilc 
+{
 
 class DrawableObject 
 {
@@ -57,11 +60,12 @@ class MaterialObject : public DrawableObject
 {
     private:
 
-    uint32_t material_index ; // index of the material in the materials set (once added, in the constructor)
+    int material_index = -1 ; // index of the material in the materials set (once added, in the constructor)
     ilc::MaterialsSet * materials_set = nullptr ; // pointer to the materials set to which the material belongs
     DrawableObject * drawable_object = nullptr ; // pointer to the drawable object to be drawn with the material
 
     public:
+    uint32_t getMaterialIndex() const { return material_index ; } // returns the index of this material in the materials set (or -1 if not yet added to any set)
 
     // initializes the material object by crating a new material in the materials set, and storing its index in 'material_index'
     MaterialObject( ilc::Material * p_material, ilc::MaterialsSet * p_materials_set, DrawableObject * p_drawable_object ) ;
@@ -71,3 +75,5 @@ class MaterialObject : public DrawableObject
 } ;
 
 // -------------------------------------------------------------------------------------------------------------
+
+}  // end namespace ilc 

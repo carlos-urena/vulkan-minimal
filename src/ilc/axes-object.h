@@ -4,6 +4,8 @@
 #include <vkhc/pipeline3D.h>
 #include <ilc/indexed-mesh.h>
 
+namespace ilc 
+{ 
 
 // aux helper classes used to debug
 
@@ -51,3 +53,5 @@ class AxesObject : public DrawableObject
     virtual void drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & context, VkCommandBuffer & cmd_vk ) override ;
 
 } ;
+
+} // end namespace ilc

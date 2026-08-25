@@ -36,7 +36,7 @@
 // -------------------------------------------------------------------------------  
 // class 'Triangle' (a 'vertex-array' like object ) - the unavoidable "hello triangle" example.
 
-class Triangle : public DrawableObject
+class Triangle : public ilc::DrawableObject
 {
     private:
     
@@ -102,25 +102,21 @@ void Triangle::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & con
 
 void Triangle::drawIMGUIWidgets() 
 {
-    using namespace ImGui ;
-
-    if (CollapsingHeader("Triangle object controls", ImGuiTreeNodeFlags_DefaultOpen))
-    {       
-        
-        int texture_combo_index = texture_index + 1 ; // map -1..3 to 0..4 for ImGui combo
-        
-        if ( Combo("Texture", &texture_combo_index, textures_set->getNamesBuffer() ) )
-        {
-            texture_index = texture_combo_index - 1 ;
-            std::cout << "Triangle::drawIMGUIWidgets: new texture_index == " << texture_index << std::endl ;
-        }
+    using namespace ImGui ;   
+    int texture_combo_index = texture_index + 1 ; // map -1..3 to 0..4 for ImGui combo
+    
+    Text( "Triangle controls:" ) ;
+    if ( Combo("Texture", &texture_combo_index, textures_set->getNamesBuffer() ) )
+    {
+        texture_index = texture_combo_index - 1 ;
+        std::cout << "Triangle::drawIMGUIWidgets: new texture_index == " << texture_index << std::endl ;
     }
 }
 
 // ------------------------------------------------------------------------------
 // A class for an object with various spheres with different materials (just for texting)
 
-class SpheresObject : public CompositeObject
+class SpheresObject : public ilc::CompositeObject
 {
     private: 
     ilc::MallaSupPar * sphere_mesh = nullptr ; // pointer to the sphere mesh (to be shared by all spheres)
@@ -158,35 +154,62 @@ SpheresObject::SpheresObject( ilc::MaterialsSet * materials_set )
 
 // ------------------------------------------------------------------------------
 
-class Earth : public CompositeObject 
+class Earth : public ilc::CompositeObject 
 {
     private:
-        ilc::MallaSupPar * sphere_mesh = nullptr ; // pointer to the sphere mesh (to be shared by all spheres)
+        ilc::MallaSupPar * sphere_mesh = nullptr ; // pointer to the sphere mesh 
+        ilc::MaterialObject * material_object = nullptr ; // pointer to the material object (sphere mesh + earth material)
+        ilc::MaterialsSet * materials_set = nullptr ; // pointer to the materials set (to be shared with other objects)
+        int material_index = -1 ; // index of the earth material in the materials set (once added, in the constructor)
 
     public:
-        Earth( ilc::MaterialsSet * materials_set );
+        Earth( ilc::MaterialsSet * p_materials_set );
+        virtual void drawIMGUIWidgets() override ;
         virtual ~Earth() ; 
 };
 
-Earth::Earth( ilc::MaterialsSet * materials_set )
+Earth::Earth( ilc::MaterialsSet * p_materials_set )
 {
     using namespace ilc ;
     using namespace glm ;
     using namespace vkhc ;
+
+    Assert( p_materials_set != nullptr, "Earth::Earth: 'materials_set' pointer is null !!" ) ;
+    materials_set = p_materials_set ;
 
     setName("Earth");
 
     sphere_mesh = new MallaSupPar( new FPEsfera(), 64, 64, true ) ; Assert( sphere_mesh != nullptr, "App3D::App3D: cannot create sphere mesh" ) ;
 
 
-    Material texture_mat { "../assets/earth-clouds-hires.jpg", BrdfParams{ 0.3, 0.8, 1.0, 64.0 } } ;
-    MaterialObject * mo4 = new MaterialObject( &texture_mat, materials_set, sphere_mesh ) ;
-    add( new TransformedObject( scale( vec3(1.5f)), mo4 ) );
+    Material * new_earth_material = new Material  { "../assets/earth-clouds-hires.jpg", BrdfParams{ 0.1, 1.0, 1.0, 128.0 } } ;
+    material_object = new MaterialObject( new_earth_material, materials_set, sphere_mesh ) ;
+    add( new TransformedObject( scale( vec3(1.5f)), material_object ) );
+
+    material_index = material_object->getMaterialIndex() ;
+    Assert( material_index >= 0, "Earth::Earth: cannot add earth material to materials set !!" ) ;
 }
+// ------------------------------------------------------------------------------
+
+void Earth::drawIMGUIWidgets()
+{
+    using namespace ImGui ;
+    Text("Earth material BRDF parameters:");
+    Assert( material_object != nullptr, "Earth::drawIMGUIWidgets: 'material_object' pointer is null !!" ) ;
+    Assert( materials_set != nullptr, "Earth::drawIMGUIWidgets: 'materials_set' pointer is null !!" ) ;
+    Assert( material_index >= 0, "Earth::drawIMGUIWidgets: 'material_index' is invalid !!" ) ;
+
+    // edit material (turn this into a method of materials set, with the index as parameter)
+    ilc::Material earth_material_copy = materials_set->getMaterial( material_index ) ;
+    if ( earth_material_copy.drawIMGUIWidgets("Earth material BRDF parameters:") )
+        materials_set->updateMaterial( material_index, earth_material_copy ) ;
+}
+// ------------------------------------------------------------------------------
 
 Earth::~Earth()
 {
     delete sphere_mesh ;
+    delete material_object ;
 }
 
 // ------------------------------------------------------------------------------
@@ -370,7 +393,7 @@ void App3D::drawIMGUIWidgets(  )
     //cout << "App3D::drawIMGUIWidgets: drawing IMGUI widgets -- close_requested:" << close_requested << endl ;
 
     if ( Button("Close window" ) ) close_requested = true ;
-    if (CollapsingHeader("View and render config", ImGuiTreeNodeFlags_DefaultOpen))
+    if (CollapsingHeader("View and render config" )) //, ImGuiTreeNodeFlags_DefaultOpen))
     {
         Checkbox("Draw grid", &draw_grid);
         Checkbox("Draw axes", &draw_axes);
@@ -380,14 +403,16 @@ void App3D::drawIMGUIWidgets(  )
         bool draw_normals = pipeline->getDrawNormals() ;
         if ( Checkbox("Draw normals", &draw_normals) )
             pipeline->setDrawNormals( draw_normals ) ; 
+        ImGui::Separator() ;
     }
-    if (CollapsingHeader("Illumination controls", ImGuiTreeNodeFlags_DefaultOpen))
+    if (CollapsingHeader("Illumination controls"))//, ImGuiTreeNodeFlags_DefaultOpen))
     {
         Checkbox("Evaluate illumination", &eval_illumination);
         Checkbox("Use flat normals", &use_flat_normals);
+        ImGui::Separator() ;
     }
 
-    if (CollapsingHeader("Default material controls", ImGuiTreeNodeFlags_DefaultOpen))
+    if (CollapsingHeader("Default material controls")) //, ImGuiTreeNodeFlags_DefaultOpen))
     {
         Assert( materials_set != nullptr, "App3D::drawIMGUIWidgets: 'materials_set' instance is null !!" ) ;
 
@@ -395,19 +420,41 @@ void App3D::drawIMGUIWidgets(  )
         
         if ( default_material.drawIMGUIWidgets( "Default material" ) )
             materials_set->updateMaterial( default_material_index, default_material ) ; // update the material in the materials set
-        
+
+        ImGui::Separator() ;
     }
 
     drawIMGUIObjectSelectionCombo() ; // draw the current object selection combo
-    drawable_objects[current_object_index]->drawIMGUIWidgets() ; // draw the current object widgets
     
-    if ( InputText("Input text (debug)", buffer, IM_ARRAYSIZE(buffer)) ) // debug
-    {
-        // do something with the input text in 'buffer'
-        using namespace std ;
-        cout << "Input text: " << buffer << endl ;
-    }
+    // if ( InputText("Input text (debug)", buffer, IM_ARRAYSIZE(buffer)) ) // debug
+    // {
+    //     // do something with the input text in 'buffer'
+    //     using namespace std ;
+    //     cout << "Input text: " << buffer << endl ;
+    // }
     Text("FPS: %.1f (%.1f ms)", ImGui::GetIO().Framerate, 1000.0f / ImGui::GetIO().Framerate);
+}
+
+// ----------------------------------------------------------------------------------
+// Draw IMGUIcurrent drawable object selection combo
+
+void App3D::drawIMGUIObjectSelectionCombo() 
+{
+    using namespace ImGui ;
+    if (CollapsingHeader("Drawable object selection", ImGuiTreeNodeFlags_Framed)) // , ImGuiTreeNodeFlags_DefaultOpen))
+    {       
+        std::vector<const char*> object_names ;
+        for (auto* obj : drawable_objects)
+            object_names.push_back( obj->getName().c_str() );
+        if ( Combo("Current object", reinterpret_cast<int*>(&current_object_index), object_names.data(), int(object_names.size()) ) )
+        {
+            std::cout << "App3D::drawIMGUIObjectSelectionCombo: new current_object_index == " << current_object_index << std::endl ;
+        }
+        drawable_objects[current_object_index]->drawIMGUIWidgets() ; // draw the current object widgets
+    
+        ImGui::Separator() ;
+    }
+    
 }
 // ----------------------------------------------------------------------------------
 

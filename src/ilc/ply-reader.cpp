@@ -60,10 +60,10 @@ class PLYReader
 
    ifstream       src ;                        // input stream
    char           buffer[ (unsigned long)tam_buffer ]; // buffer for reading through the end of a line
-   unsigned long  num_linea_actual = 0 ;       // number of the line currently being processed
-   std::string    nom_archivo      = "none" ;  // name of the file currently being processed
-   unsigned long  num_vertices     = 0;        // number of vertices according to the PLY header
-   unsigned long  num_caras        = 0;        // number of faces according to the PLY header
+   unsigned long  current_line_number = 0 ;       // number of the line currently being processed
+   std::string    file_name      = "none" ;  // name of the file currently being processed
+   unsigned long  vertex_count     = 0;        // number of vertices according to the PLY header
+   unsigned long  face_count       = 0;        // number of faces according to the PLY header
 
    PLYReader() {}
 
@@ -93,7 +93,7 @@ void ReadPLY
    lector.readVertices( vertices ) ;
    lector.readFaces   ( caras ) ;
 
-   //cout << "PLY file '" << lector.nom_archivo << "' read: number of vertices == " << vertices.size() << ", number of faces == " << caras.size() << endl << flush ;
+   //cout << "PLY file '" << lector.file_name << "' read: number of vertices == " << vertices.size() << ", number of faces == " << caras.size() << endl << flush ;
 }
 
 //**********************************************************************
@@ -111,7 +111,7 @@ void ReadPLYVertexes
    lector.readHeader  ( false ) ;
    lector.readVertices( vertices ) ;
 
-   //cout << "PLY file '" << lector.nom_archivo << "' read (vertices only): number of vertices == " << vertices.size() << endl << flush ;
+   //cout << "PLY file '" << lector.file_name << "' read (vertices only): number of vertices == " << vertices.size() << endl << flush ;
 }
 
 //**********************************************************************
@@ -119,7 +119,7 @@ void ReadPLYVertexes
 void PLYReader::readRestOfLine()
 {
    src.getline( buffer, tam_buffer );
-   num_linea_actual ++ ;
+   current_line_number ++ ;
 }
 
 //**********************************************************************
@@ -129,20 +129,16 @@ void PLYReader::openFile( const std::string & p_nombre_archivo )
    using namespace std ;
    string token ;
 
-   num_vertices     = 0 ;
-   num_caras        = 0 ;
-   num_linea_actual = 0 ;
+   vertex_count     = 0 ;
+   face_count       = 0 ;
+   current_line_number = 0 ;
 
-   nom_archivo = p_nombre_archivo ;
-   if ( nom_archivo.substr( nom_archivo.find_last_of(".")+1 ) != "ply" )
-      nom_archivo += ".ply" ;
+   file_name = p_nombre_archivo ;
+   if ( file_name.substr( file_name.find_last_of(".")+1 ) != "ply" )
+      file_name += ".ply" ;
 
 
-   // const std::string  
-   //    nom_archivo_path_1    = PathCarpetaMateriales() + "/plys/" + nom_archivo ,
-   //    nom_archivo_procesado = ProcesarNombreArchivo( nom_archivo_path_1 );
-
-   const std::string nom_archivo_path = SearchFile( "plys/"+nom_archivo, "assets" );
+   const std::string nom_archivo_path = SearchFile( "plys/"+file_name, "assets" );
 
    src.open( nom_archivo_path.c_str() ) ; // open (in read mode?)
    assert( src.is_open());
@@ -154,7 +150,7 @@ void PLYReader::openFile( const std::string & p_nombre_archivo )
 
    readRestOfLine();
 
-   //cout << "reading PLY file '" + nombre_archivo + "'" << endl ;
+   //cout << "reading PLY file '" + file_name + "'" << endl ;
 }
 
 //**********************************************************************
@@ -233,8 +229,8 @@ void PLYReader::readHeader( const bool lee_num_caras )
    if ( nc > numeric_limits<int>::max() )
       reportError("the number of faces exceeds the largest possible 'int' value.");
 
-   num_vertices = unsigned(nv) ;
-   num_caras    = unsigned(nc) ;
+   vertex_count = unsigned(nv) ;
+   face_count    = unsigned(nc) ;
 }
 
 //**********************************************************************
@@ -245,9 +241,9 @@ void PLYReader::readVertices( std::vector<glm::vec3> & vertices  )
    
    string token ;
 
-   vertices.resize( num_vertices );
+   vertices.resize( vertex_count );
 
-   for( unsigned long long iv = 0 ; iv < num_vertices ; iv++ )
+   for( unsigned long long iv = 0 ; iv < vertex_count ; iv++ )
    {
       if ( src.eof() )
          reportError("premature end of file found in the vertex list.");
@@ -270,11 +266,11 @@ void PLYReader::readFaces( std::vector<glm::uvec3> & caras )
 
    assert( nvc > 2 ) ; // typically, 3 or 4.
 
-   //cout << "  reading " << num_caras << " faces ...." << endl << flush ;
+   //cout << "  reading " << face_count << " faces ...." << endl << flush ;
 
-   caras.resize( num_caras );
+   caras.resize( face_count );
 
-   for( unsigned long long ifa = 0 ; ifa < num_caras ; ifa++ )
+   for( unsigned long long ifa = 0 ; ifa < face_count ; ifa++ )
    {
       if ( src.eof() )
          reportError("premature end of file in the face list");
@@ -293,7 +289,7 @@ void PLYReader::readFaces( std::vector<glm::uvec3> & caras )
       for ( unsigned ivc = 0 ; ivc < nvc ; ivc++ )
       {
          src >> cara_leida[ivc] ;
-         if ( num_vertices <= cara_leida[ivc] )
+         if ( vertex_count <= cara_leida[ivc] )
             reportError("a vertex index equal to or greater than the number of vertices was found");
          caras[ ifa ] = cara_leida ;
       }
@@ -307,7 +303,7 @@ void PLYReader::readFaces( std::vector<glm::uvec3> & caras )
 void PLYReader::reportError( const char *msg_error )
 {
    using namespace std ;
-      cout << "error reading PLY file '" << msg_error << "' on line " << num_linea_actual << endl
+      cout << "error reading PLY file '" << msg_error << "' on line " << current_line_number << endl
          << "program terminated." << endl
         << flush ;
 

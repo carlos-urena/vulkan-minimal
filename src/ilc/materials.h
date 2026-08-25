@@ -22,7 +22,7 @@ class MaterialsSet ;
 class Material
 {
 
-    private:
+    protected:
         glm::vec3        base_color;     // base color (RGB)
         bool             use_base_color; // true for using base color, false for not using it (uses either texture or vertex colors).
         std::string      texture_path ;  // path to the texture file ("" for no texture)
@@ -30,6 +30,7 @@ class Material
         vkhc::BrdfParams brdf_params ;   // coefficients of the Blinn-Phong model
 
         MaterialsSet * materials_set = nullptr ; // pointer to the materials set to which this material belongs (nullptr if still not added to any set)
+        int material_index = -1 ; // index of this material in the materials set (or -1 if not yet added to any set)
 
         int color_base_index  = -1 ; // index of the base color in the UBO base color array (or -1 if no base color)
         int texture_index     = -1 ; // index of the texture in the shader (or -1 if no texture)
@@ -49,8 +50,10 @@ class Material
 
         bool drawIMGUIWidgets( const std::string & title )  ;
 
-        //void activate( VkCommandBuffer & vk_cmd, vkhc::Pipeline3D & pipeline ) ; // activates this material in the given pipeline, by setting the push constants and UBOs in the shaders
+        int getMaterialIndex() const { return material_index ; } // returns the index of this material in the materials set (or -1 if not yet added to any set)
         
+        //void activate( VkCommandBuffer & vk_cmd, vkhc::Pipeline3D & pipeline ) ; // activates this material in the given pipeline, by setting the push constants and UBOs in the shaders
+
 } ;
 
 // ----------------------------------------------------------------------------------------------
@@ -71,7 +74,7 @@ class MaterialsSet
         vkhc::BrdfParamsSet * brdfs_params_set = nullptr ; // set of BRDF parameters, to be sent to the GPU via UBO
 
         MaterialsSet(  vkhc::VulkanContext * p_context )  ;
-        uint32_t add( const Material & material ) ;
+        uint32_t add( Material & material ) ;
 
         // returns a copy of the material with the given index in the set
         Material getMaterial( const uint32_t material_index ) 

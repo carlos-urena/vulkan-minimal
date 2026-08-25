@@ -9,6 +9,9 @@
 #include <ilc/drobject.h>
 
 
+namespace ilc 
+{
+
 // ---------------------------------------------------------------------
 ///
 /// @brief  Indexed triangle mesh class 
@@ -95,3 +98,5 @@ class Cube24 : public IndexedMesh
   public:
       Cube24();
 } ;
+
+} // end namespace ilc

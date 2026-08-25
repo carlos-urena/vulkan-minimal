@@ -4,6 +4,9 @@
 #include <vkhc/pipeline3D.h>
 #include <ilc/axes-object.h>
 
+namespace ilc 
+{ 
+
 // ---------------------------------------------------------------------------
 // crea una tabla de índices para una rejilla con topología cilindrica
 
@@ -483,3 +486,4 @@ void AxesObject::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext & c
 
 // ---------------------------------------------------------------------------------------
 
+} // end namespace ilc

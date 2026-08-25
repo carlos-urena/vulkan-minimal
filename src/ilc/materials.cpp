@@ -102,15 +102,20 @@ MaterialsSet::MaterialsSet( vkhc::VulkanContext * p_context )
 
 // ------------------------------------------------------------------------------
 
-uint32_t MaterialsSet::add( const Material & material ) 
+uint32_t MaterialsSet::add( Material & material ) 
 {
     using namespace std ;
     cout << "MaterialsSet::add: adding material with context == " << context << endl ;
     Assert( context != nullptr, "MaterialsSet::add: 'context' instance is null !!" );
     Assert( material.materials_set == nullptr, "Material::add: this material is already part of a materials set !!" );
+    Assert( material.material_index == -1, "Material::add: this material already has a valid index in a materials set !!" );
+
+    const uint32_t pos = materials.size() ; 
+    material.material_index = pos ; 
+    material.materials_set = this ; // set the pointer to this materials set in the material
 
     materials.push_back( material ) ;
-    return static_cast<uint32_t>( materials.size() - 1 ) ; // return index of the added material
+    return pos ; // return index of the added material
 }
 // ------------------------------------------------------------------------------
 
@@ -179,22 +184,22 @@ void MaterialsSet::updateMaterial( const uint32_t material_index, const Material
     // Handle a material which uses a texture: copy the new textura index to the array of textures
     ///// This isn't quite right designed and less tested !!!!
 
-    if ( newm.use_texture )
-    {
-        Assert( textures_set != nullptr, 
-                "MaterialsSet::updateMaterial: 'textures_set' instance is null !!" ) ;
+    // if ( newm.use_texture )
+    // {
+    //     Assert( textures_set != nullptr, 
+    //             "MaterialsSet::updateMaterial: 'textures_set' instance is null !!" ) ;
 
-        Assert( currm.use_texture , "MaterialsSet::updateMaterial: the current material does not use a texture, but the new material does !!" ) ;
-        Assert( 0 <= newm.texture_index && newm.texture_index < (int) textures_set->textures.size(), 
-                "MaterialsSet::updateMaterial: the new material texture index is out of range !!" ) ;
+    //     Assert( currm.use_texture , "MaterialsSet::updateMaterial: the current material does not use a texture, but the new material does !!" ) ;
+    //     Assert( 0 <= newm.texture_index && newm.texture_index < (int) textures_set->textures.size(), 
+    //             "MaterialsSet::updateMaterial: the new material texture index is out of range !!" ) ;
         
         
-        currm.texture_path = newm.texture_path ; // update the texture path in the materials vector
-        currm.texture_index = newm.texture_index ; // update the texture index in the materials vector
+    //     currm.texture_path = newm.texture_path ; // update the texture path in the materials vector
+    //     currm.texture_index = newm.texture_index ; // update the texture index in the materials vector
 
-        cout << "MaterialsSet::updateMaterial: updating texture at index " << currm.texture_index << " to new value: " 
-             << newm.texture_path << endl ;
-    }
+    //     cout << "MaterialsSet::updateMaterial: updating texture at index " << currm.texture_index << " to new value: " 
+    //          << newm.texture_path << endl ;
+    // }
 }
 
 // ------------------------------------------------------------------------------

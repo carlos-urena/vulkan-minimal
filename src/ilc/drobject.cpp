@@ -1,6 +1,10 @@
 #include <ilc/drobject.h>
 #include <vkhc/pipeline3D.h>
 
+
+namespace ilc 
+{
+
 const std::string & DrawableObject::getName() const 
 {
     return name_str ;
@@ -69,7 +73,8 @@ MaterialObject::MaterialObject( ilc::Material * p_material, ilc::MaterialsSet * 
     Assert( p_drawable_object != nullptr, "MaterialObject constructor: 'p_drawable_object' instance is null !!" ) ;
 
     materials_set   = p_materials_set ;
-    material_index  = materials_set->add( *p_material ) ;
+    material_index  = (int)materials_set->add( *p_material ) ; 
+    Assert( material_index >= 0, "MaterialObject constructor: cannot add material to materials set !!" ) ;   
     drawable_object = p_drawable_object ;
 }
 
@@ -98,3 +103,4 @@ void MaterialObject::drawVK( vkhc::BasicPipeline * pipeline, vkhc::VulkanContext
     p->setBrdfParamsIndex( cmd_vk, prev_brdf_params_index ) ;
 }
 
+} // end namespace ilc ;
