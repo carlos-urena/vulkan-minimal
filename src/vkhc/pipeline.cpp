@@ -379,7 +379,7 @@ void BasicPipeline::setUBOUniform( const std::string & name, const int index, co
 
     const uint32_t 
         offset = unif_data[ubo_index].offset,
-        size   = unif_data[ubo_index].size,
+        //size   = unif_data[ubo_index].size,
         num_values = unif_data[ubo_index].num_values ;
 
     const VType type = unif_data[ubo_index].type ;

@@ -553,7 +553,7 @@ void Pipeline3D::setBrdfParamsSet( BrdfParamsSet & bps )
 
 void Pipeline3D::updateBrdfParams( const int index, const BrdfParams & brdf_params ) 
 {
-    Assert( 0 <= index && index < num_brdfs_params, "Pipeline3D::updateBrdfParams: BRDF params index out of range." ) ;
+    Assert( 0 <= index && index < (int)num_brdfs_params, "Pipeline3D::updateBrdfParams: BRDF params index out of range." ) ;
     glm::vec4 params_v4 = glm::vec4( brdf_params.ka, brdf_params.kd, brdf_params.ks, brdf_params.exp ) ;
     setUBOUniform( "brdfs_params", index, value_ptr( params_v4 ) ) ;
 }
