@@ -8,11 +8,12 @@ cpp_opts:=         -g -Wall
 bin_folder:=       ./bin
 
 stb_git:=          ~/git-ct/otros/stb.git## folder with STB sources
-vkhc_folder:=      ../src/vkhc## folder with sources for the VKHC classes (Vulkan Helper Classes)
+src_folder:=       ../src
+vkhc_folder:=      $(src_folder)/vkhc## folder with sources for the VKHC classes (Vulkan Helper Classes)
 imgui_git:=        ~/git-ct/otros/imgui.git## folder with IMGUI repo clone
 vulkan_sdk_base:=  ~/VulkanSDK/1.4.341.1/macOS## vulkan SDK base folder 
 homebrew_base:=    /opt/homebrew## homebrew base folder 
-ilc_folder:=       ../src/ilc## folder with sources for the ILC classes (Intermediate Level Classes)
+ilc_folder:=       $(src_folder)/ilc## folder with sources for the ILC classes (Intermediate Level Classes)
 
 ## -------------------------------------
 ## target binary executable  (in)
@@ -24,6 +25,7 @@ target:= $(bin_folder)/$(target_base)_exe
 objs_dir:=         ./objs
 compile_options:=  -std=c++20 $(cpp_opts)
 link_options:= 
+src_include:=      -I $(src_folder)
 
 ## --------------------------------------------------------------------------------
 ## Tools options
@@ -38,19 +40,19 @@ app_include:=  -I $(app_src_folder)
 vkhc_sources:= $(wildcard $(vkhc_folder)/*.cpp)
 vkhc_headers:= $(wildcard $(vkhc_folder)/*.h)
 vkhc_objs:=    $(addprefix $(objs_dir)/vkhc/, $(notdir $(vkhc_sources:.cpp=.o)))
-vkhc_include:= -I $(vkhc_folder)
+## vkhc_include:= -I $(vkhc_folder)
 
 ## ILC objects variables
 
 ilc_sources:= $(wildcard $(ilc_folder)/*.cpp)
 ilc_headers:= $(wildcard $(ilc_folder)/*.h)
 ilc_objs:=    $(addprefix $(objs_dir)/ilc/, $(notdir $(ilc_sources:.cpp=.o)))
-ilc_include:= -I $(ilc_folder)
+## ilc_include:= -I $(ilc_folder)
 
 ## IMGUI definitions 
 ## (IMGUI repository must be cloned in 'imgui_git' path)
 
-imgui_incl:=        -I $(imgui_git)  -I $(imgui_git)/backends
+imgui_include:=     -I $(imgui_git)  -I $(imgui_git)/backends
 imgui_src_names_1:= imgui.cpp imgui_draw.cpp imgui_widgets.cpp imgui_tables.cpp 
 imgui_src_names_2:= imgui_impl_glfw.cpp imgui_impl_vulkan.cpp
 imgui_objs_1:=      $(addprefix $(objs_dir)/imgui/, $(notdir $(imgui_src_names_1:.cpp=.o)))
@@ -82,7 +84,8 @@ stb_include:= -I $(stb_git)
 
 libs:= $(glfw_libs) $(vulkan_libs) -ldl -lpthread  $(vulkan_frameworks) $(apple_frameworks)
 objs:= $(app_objs) $(vkhc_objs) $(ilc_objs) $(imgui_objs)
-incl:= $(app_include) $(vkhc_include) $(ilc_include) $(imgui_incl) $(vulkan_include) $(homebrew_include) $(stb_include)
+## incl:= $(app_include) $(vkhc_include) $(ilc_include) $(imgui_incl) $(vulkan_include) $(homebrew_include) $(stb_include)
+incl:= $(app_include) $(src_include) $(imgui_include) $(vulkan_include) $(homebrew_include) $(stb_include)
 
 ## Compile and link flags
 
