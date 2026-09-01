@@ -32,6 +32,8 @@
 #include <cmath>     // std::cos, std::sin
 #include <algorithm> // std::min, std::max
 
+#define GLM_ENABLE_EXPERIMENTAL
+
 #include <glm/glm.hpp>
 #include <glm/gtx/norm.hpp>
 #include <glm/geometric.hpp> // cross 
