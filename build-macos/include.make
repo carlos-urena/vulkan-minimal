@@ -33,7 +33,7 @@ src_include:=      -I $(src_folder)
 # App-specific objects
 app_sources:=  $(wildcard $(app_src_folder)/*.cpp)
 app_objs:=     $(addprefix $(objs_dir)/$(target_base)/, $(notdir $(app_sources:.cpp=.o)))
-app_include:=  -I $(app_src_folder)
+## app_include:=  -I $(app_src_folder)
 
 ## VKHC objects 
 
@@ -85,7 +85,7 @@ stb_include:= -I $(stb_git)
 libs:= $(glfw_libs) $(vulkan_libs) -ldl -lpthread  $(vulkan_frameworks) $(apple_frameworks)
 objs:= $(app_objs) $(vkhc_objs) $(ilc_objs) $(imgui_objs)
 ## incl:= $(app_include) $(vkhc_include) $(ilc_include) $(imgui_incl) $(vulkan_include) $(homebrew_include) $(stb_include)
-incl:= $(app_include) $(src_include) $(imgui_include) $(vulkan_include) $(homebrew_include) $(stb_include)
+incl:=  $(src_include) $(imgui_include) $(vulkan_include) $(homebrew_include) $(stb_include)
 
 ## Compile and link flags
 

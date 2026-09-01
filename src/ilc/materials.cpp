@@ -47,6 +47,7 @@ bool Material::drawIMGUIWidgets( const std::string & title )
     using namespace std ;
 
     bool changed = false ;
+    PushID(title.c_str()) ; // this is because we may have multiple materials in the same IMGUI window, and we want to avoid ID collisions
 
     // draw sliders for the BRDF params 
     if ( SliderFloat("Ka", &brdf_params.ka, 0.0f, 1.0f ) ) 
@@ -81,7 +82,7 @@ bool Material::drawIMGUIWidgets( const std::string & title )
     }
     
 
-    
+    PopID() ;
     return changed ;
 }
 // ------------------------------------------------------------------------------
