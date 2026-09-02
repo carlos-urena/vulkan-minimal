@@ -171,7 +171,8 @@ void VertexArray::draw( VkCommandBuffer & vk_cmd_buffer )
     else 
     {
         // if no index buffer is set, we can draw non-indexed with the number of vertexes determined by the first vertex buffer (assuming all vertex buffers have the same number of vertexes)
-        vkCmdDraw( vk_cmd_buffer, static_cast<uint32_t>(vertex_buffers[0]->num_values), 1, 0, 0 );
+        //vkCmdDraw( vk_cmd_buffer, static_cast<uint32_t>(vertex_buffers[0]->num_values), 1, 0, 0 );
+        vkCmdDraw( vk_cmd_buffer, static_cast<uint32_t>(vertex_buffers[0]->num_tuples), 1, 0, 0 );
     }
 }
 
